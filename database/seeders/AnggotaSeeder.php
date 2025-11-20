@@ -12,6 +12,14 @@ class AnggotaSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $anggota = User::factory()->create([
+            'name' => 'Anggota',
+            'email' => 'anggota@example.com',
+            'password' => Hash::make('password'),
+        ]);
+        $anggota->assignRole('Anggota');
+
+        $anggota = User::factory(10)->create();
+        $anggota->assignRole('Anggota');
     }
 }
