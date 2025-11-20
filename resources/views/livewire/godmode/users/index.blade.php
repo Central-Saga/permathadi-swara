@@ -112,7 +112,9 @@ $users = computed(function () {
                         </button>
                     </flux:table.column>
                     <flux:table.column>{{ __('Role') }}</flux:table.column>
+                    @if (auth()->user()->can('mengubah user') || auth()->user()->can('menghapus user'))
                     <flux:table.column>{{ __('Aksi') }}</flux:table.column>
+                    @endif
                 </flux:table.columns>
                 <flux:table.rows>
                     @forelse ($this->users as $user)
@@ -136,6 +138,7 @@ $users = computed(function () {
                                 @endforelse
                             </div>
                         </flux:table.cell>
+                        @if (auth()->user()->can('mengubah user') || auth()->user()->can('menghapus user'))
                         <flux:table.cell>
                             <div class="flex items-center gap-2">
                                 @can('mengubah user')
@@ -153,10 +156,11 @@ $users = computed(function () {
                                 @endcan
                             </div>
                         </flux:table.cell>
+                        @endif
                     </flux:table.row>
                     @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="4" class="text-center text-gray-500 dark:text-gray-400">
+                        <flux:table.cell colspan="{{ auth()->user()->can('mengubah user') || auth()->user()->can('menghapus user') ? '4' : '3' }}" class="text-center text-gray-500 dark:text-gray-400">
                             {{ __('Tidak ada user') }}
                         </flux:table.cell>
                     </flux:table.row>

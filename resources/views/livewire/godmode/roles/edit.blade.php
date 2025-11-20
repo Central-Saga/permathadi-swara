@@ -18,14 +18,14 @@ mount(function (Role $role) {
     $this->role = $role;
     $this->role->load('permissions');
     $this->name = $role->name;
-    $this->permissions = $role->permissions->pluck('id')->toArray();
+    $this->permissions = $role->permissions->pluck('name')->toArray();
 });
 
 $update = action(function () {
     $validated = $this->validate([
         'name' => ['required', 'string', 'max:255', Rule::unique('roles', 'name')->ignore($this->role->id)],
         'permissions' => ['nullable', 'array'],
-        'permissions.*' => ['exists:permissions,id'],
+        'permissions.*' => ['exists:permissions,name'],
     ]);
 
     $this->role->update([
@@ -41,11 +41,8 @@ $update = action(function () {
     $this->redirect(route('godmode.roles.index'), navigate: true);
 });
 
-$permissions = computed(function () {
-    return Permission::all()->groupBy(function ($permission) {
-        $parts = explode(' ', $permission->name);
-        return $parts[1] ?? 'other';
-    });
+$getPermissions = computed(function () {
+    return Permission::orderBy('name')->get();
 }); ?>
 
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
@@ -54,7 +51,7 @@ $permissions = computed(function () {
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Edit Role') }}</h1>
                 <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Ubah role dan permission') }}</p>
             </div>
-            <flux:button :href="route('godmode.roles.index')" variant="ghost" wire:navigate>
+            <flux:button :href="route('godmode.roles.index')" variant="ghost" icon="arrow-left" wire:navigate>
                 {{ __('Kembali') }}
             </flux:button>
         </div>
@@ -65,21 +62,19 @@ $permissions = computed(function () {
 
                 <div>
                     <flux:label>{{ __('Permission') }}</flux:label>
-                    <div class="mt-2 space-y-4">
-                        @foreach ($this->permissions as $group => $groupPermissions)
-                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <h3 class="mb-3 font-semibold text-gray-900 dark:text-white capitalize">
-                                {{ $group }}
-                            </h3>
-                            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                @foreach ($groupPermissions as $permission)
-                                <flux:checkbox wire:model="permissions" name="permissions[]" value="{{ $permission->id }}"
-                                    :label="$permission->name" />
-                                @endforeach
-                            </div>
+                    <flux:pillbox wire:model="permissions" multiple searchable placeholder="{{ __('Pilih permission...') }}"
+                        class="mt-2">
+                        @php
+                        $allPermissions = $this->getPermissions()->toArray() ?? [];
+                        @endphp
+                        @forelse ($allPermissions as $permission)
+                        <flux:pillbox.option value="{{ $permission['name'] }}">{{ $permission['name'] }}
+                        </flux:pillbox.option>
+                        @empty
+                        <div class="p-4 text-sm text-gray-500 dark:text-gray-400">{{ __('Tidak ada permission tersedia') }}
                         </div>
-                        @endforeach
-                    </div>
+                        @endforelse
+                    </flux:pillbox>
                 </div>
 
                 <div class="flex items-center gap-4">

@@ -67,7 +67,7 @@ $roles = computed(fn () => Role::all()); ?>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Edit User') }}</h1>
             <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Ubah informasi user') }}</p>
         </div>
-        <flux:button :href="route('godmode.users.index')" variant="ghost" wire:navigate>
+        <flux:button :href="route('godmode.users.index')" variant="ghost" icon="arrow-left" wire:navigate>
             {{ __('Kembali') }}
         </flux:button>
     </div>

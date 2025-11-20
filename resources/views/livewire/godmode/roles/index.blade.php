@@ -71,9 +71,11 @@ $roles = computed(function () {
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Role') }}</h1>
                 <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola role dan permission sistem') }}</p>
             </div>
+            @can('membuat role')
             <flux:button :href="route('godmode.roles.create')" variant="primary" icon="plus" wire:navigate>
                 {{ __('Tambah Role') }}
             </flux:button>
+            @endcan
         </div>
 
         <flux:card>
@@ -92,7 +94,9 @@ $roles = computed(function () {
                         </button>
                     </flux:table.column>
                     <flux:table.column>{{ __('Permission') }}</flux:table.column>
+                    @if (auth()->user()->can('mengubah role') || auth()->user()->can('menghapus role'))
                     <flux:table.column>{{ __('Aksi') }}</flux:table.column>
+                    @endif
                 </flux:table.columns>
                 <flux:table.rows>
                     @forelse ($this->roles as $role)
@@ -119,23 +123,31 @@ $roles = computed(function () {
                                 @endif
                             </div>
                         </flux:table.cell>
+                        @if (auth()->user()->can('mengubah role') || auth()->user()->can('menghapus role'))
                         <flux:table.cell>
                             <div class="flex items-center gap-2">
+                                @can('mengubah role')
                                 <flux:button :href="route('godmode.roles.edit', $role)" variant="ghost" size="sm"
                                     icon="pencil" wire:navigate
                                     class="!p-2 !bg-blue-600 hover:!bg-blue-700 dark:!bg-blue-500 dark:hover:!bg-blue-600 !text-white !rounded-md"
                                     title="{{ __('Edit') }}" />
+                                @endcan
+                                @can('menghapus role')
                                 <flux:button wire:click="deleteRole({{ $role->id }})"
                                     wire:confirm="{{ __('Apakah Anda yakin ingin menghapus role ini?') }}"
                                     variant="ghost" size="sm" icon="trash"
                                     class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
                                     title="{{ __('Hapus') }}" />
+                                @endcan
                             </div>
                         </flux:table.cell>
+                        @endif
                     </flux:table.row>
                     @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="3" class="text-center text-gray-500 dark:text-gray-400">
+                        <flux:table.cell
+                            colspan="{{ auth()->user()->can('mengubah role') || auth()->user()->can('menghapus role') ? '3' : '2' }}"
+                            class="text-center text-gray-500 dark:text-gray-400">
                             {{ __('Tidak ada role') }}
                         </flux:table.cell>
                     </flux:table.row>
