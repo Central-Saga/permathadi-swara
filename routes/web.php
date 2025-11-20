@@ -55,4 +55,9 @@ Route::middleware(['auth'])->prefix('godmode')->name('godmode.')->group(function
     Volt::route('layanan', 'godmode.layanan.index')->name('layanan.index');
     Volt::route('layanan/create', 'godmode.layanan.create')->name('layanan.create');
     Volt::route('layanan/{layanan}/edit', 'godmode.layanan.edit')->name('layanan.edit');
+    
+    // Subscriptions routes
+    Volt::route('subscriptions', 'godmode.subscriptions.index')->name('subscriptions.index');
+    Volt::route('subscriptions/create', 'godmode.subscriptions.create')->name('subscriptions.create');
+    Volt::route('subscriptions/{subscription}/edit', 'godmode.subscriptions.edit')->name('subscriptions.edit');
 });
