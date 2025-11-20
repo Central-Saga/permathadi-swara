@@ -50,4 +50,9 @@ Route::middleware(['auth'])->prefix('godmode')->name('godmode.')->group(function
     Volt::route('anggota', 'godmode.anggota.index')->name('anggota.index');
     Volt::route('anggota/create', 'godmode.anggota.create')->name('anggota.create');
     Volt::route('anggota/{anggota}/edit', 'godmode.anggota.edit')->name('anggota.edit');
+    
+    // Layanan routes
+    Volt::route('layanan', 'godmode.layanan.index')->name('layanan.index');
+    Volt::route('layanan/create', 'godmode.layanan.create')->name('layanan.create');
+    Volt::route('layanan/{layanan}/edit', 'godmode.layanan.edit')->name('layanan.edit');
 });
