@@ -119,15 +119,17 @@ $store = action(function () {
                 <div x-data>
                     <flux:input wire:model.live.debounce.300ms="name" name="name" :label="__('Nama Layanan')"
                         type="text" required autofocus x-on:input.debounce.300ms="$wire.generateSlug()" />
+                </div>
 
+                <div x-data class="mt-4">
                     <flux:input wire:model.live.debounce.300ms="slug" name="slug" :label="__('Slug')" type="text"
                         placeholder="{{ __('Akan otomatis di-generate dari nama (unique)') }}"
                         x-on:input.debounce.300ms="$wire.markSlugAsEdited()" />
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {{ __('Slug akan otomatis dibuat dari nama layanan dan dijamin unique. Anda bisa mengubahnya
+                        manual jika diperlukan.') }}
+                    </p>
                 </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {{ __('Slug akan otomatis dibuat dari nama layanan dan dijamin unique. Anda bisa mengubahnya manual
-                    jika diperlukan.') }}
-                </p>
 
                 <flux:textarea wire:model="description" name="description" :label="__('Deskripsi Lengkap')" rows="5" />
 
