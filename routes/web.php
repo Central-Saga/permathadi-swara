@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
+use Spatie\Permission\Models\Role;
 
 Route::get('/', function () {
     return view('landing.welcome');
@@ -46,4 +47,13 @@ Route::middleware(['auth'])->group(function () {
     //         ),
     //     )
     //     ->name('two-factor.show');
+});
+
+Route::middleware(['auth'])->prefix('godmode')->name('godmode.')->group(function () {
+    Route::bind('role', function ($value) {
+        return Role::findOrFail($value);
+    });
+
+    Route::resource('users', \App\Http\Controllers\Godmode\UserController::class);
+    Route::resource('roles', \App\Http\Controllers\Godmode\RoleController::class);
 });
