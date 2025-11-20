@@ -2,6 +2,10 @@
 
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Collection;
 use function Livewire\Volt\{layout, title, state, mount, action, computed, on, uses};
 
 uses(WithPagination::class);
@@ -41,6 +45,74 @@ $deleteRole = action(function ($roleId) {
     $this->dispatch('role-deleted');
 });
 
+$exportExcel = action(function () {
+    $query = Role::with('permissions');
+
+    if (!empty($this->search)) {
+        $query->where('name', 'like', "%{$this->search}%");
+    }
+
+    $allowedSorts = ['name', 'created_at'];
+    if (in_array($this->sortBy, $allowedSorts)) {
+        $query->orderBy($this->sortBy, $this->sortDir);
+    } else {
+        $query->orderBy('name', 'asc');
+    }
+
+    $roles = $query->get();
+
+    $data = $roles->map(function ($role) {
+        return [
+            $role->name,
+            $role->permissions->pluck('name')->implode(', '),
+            $role->permissions->count(),
+            $role->created_at->format('d/m/Y H:i'),
+        ];
+    });
+
+    $filename = 'roles_' . now()->format('Y-m-d_His') . '.xlsx';
+
+    $export = new class(Collection::make($data)) implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+        public function __construct(public Collection $data) {}
+
+        public function collection() {
+            return $this->data;
+        }
+
+        public function headings(): array {
+            return ['Nama Role', 'Permission', 'Jumlah Permission', 'Dibuat'];
+        }
+    };
+
+    return Excel::download($export, $filename);
+});
+
+$exportPdf = action(function () {
+    $query = Role::with('permissions');
+
+    if (!empty($this->search)) {
+        $query->where('name', 'like', "%{$this->search}%");
+    }
+
+    $allowedSorts = ['name', 'created_at'];
+    if (in_array($this->sortBy, $allowedSorts)) {
+        $query->orderBy($this->sortBy, $this->sortDir);
+    } else {
+        $query->orderBy('name', 'asc');
+    }
+
+    $roles = $query->get();
+
+    $html = view('exports.roles-pdf', ['roles' => $roles])->render();
+
+    $pdf = Pdf::loadHTML($html);
+    $filename = 'roles_' . now()->format('Y-m-d_His') . '.pdf';
+
+    return Response::streamDownload(function () use ($pdf) {
+        echo $pdf->output();
+    }, $filename);
+});
+
 $roles = computed(function () {
     $query = Role::with('permissions');
 
@@ -71,11 +143,23 @@ $roles = computed(function () {
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Role') }}</h1>
                 <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola role dan permission sistem') }}</p>
             </div>
-            @can('membuat role')
-            <flux:button :href="route('godmode.roles.create')" variant="primary" icon="plus" wire:navigate>
-                {{ __('Tambah Role') }}
-            </flux:button>
-            @endcan
+            <div class="flex items-center gap-2">
+                @can('mengekspor role')
+                <flux:button wire:click="exportExcel" variant="ghost" icon="table-cells"
+                    class="!bg-green-600 hover:!bg-green-700 dark:!bg-green-500 dark:hover:!bg-green-600 !text-white">
+                    {{ __('Excel') }}
+                </flux:button>
+                <flux:button wire:click="exportPdf" variant="ghost" icon="document-text"
+                    class="!bg-red-900 hover:!bg-red-950 dark:!bg-red-950 dark:hover:!bg-red-900 !text-white">
+                    {{ __('PDF') }}
+                </flux:button>
+                @endcan
+                @can('membuat role')
+                <flux:button :href="route('godmode.roles.create')" variant="primary" icon="plus" wire:navigate>
+                    {{ __('Tambah Role') }}
+                </flux:button>
+                @endcan
+            </div>
         </div>
 
         <flux:card>

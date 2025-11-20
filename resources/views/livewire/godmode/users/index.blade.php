@@ -2,6 +2,10 @@
 
 use App\Models\User;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Collection;
 use function Livewire\Volt\{layout, title, state, computed, on, action, uses};
 
 uses(WithPagination::class);
@@ -49,6 +53,81 @@ $deleteUser = action(function ($userId) {
     $this->dispatch('user-deleted');
 });
 
+$exportExcel = action(function () {
+    $query = User::with('roles');
+    
+    if (!empty($this->search)) {
+        $query->where(function ($q) {
+            $q->where('name', 'like', "%{$this->search}%")
+                ->orWhere('email', 'like', "%{$this->search}%");
+        });
+    }
+    
+    $allowedSorts = ['name', 'email', 'created_at'];
+    if (in_array($this->sortBy, $allowedSorts)) {
+        $query->orderBy($this->sortBy, $this->sortDir);
+    } else {
+        $query->orderBy('name', 'asc');
+    }
+    
+    $users = $query->get();
+    
+    $data = $users->map(function ($user) {
+        return [
+            $user->name,
+            $user->email,
+            $user->roles->pluck('name')->implode(', '),
+            $user->roles->count(),
+            $user->created_at->format('d/m/Y H:i'),
+        ];
+    });
+    
+    $filename = 'users_' . now()->format('Y-m-d_His') . '.xlsx';
+    
+    $export = new class(Collection::make($data)) implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+        public function __construct(public Collection $data) {}
+        
+        public function collection() {
+            return $this->data;
+        }
+        
+        public function headings(): array {
+            return ['Nama', 'Email', 'Role', 'Jumlah Role', 'Dibuat'];
+        }
+    };
+    
+    return Excel::download($export, $filename);
+});
+
+$exportPdf = action(function () {
+    $query = User::with('roles');
+    
+    if (!empty($this->search)) {
+        $query->where(function ($q) {
+            $q->where('name', 'like', "%{$this->search}%")
+                ->orWhere('email', 'like', "%{$this->search}%");
+        });
+    }
+    
+    $allowedSorts = ['name', 'email', 'created_at'];
+    if (in_array($this->sortBy, $allowedSorts)) {
+        $query->orderBy($this->sortBy, $this->sortDir);
+    } else {
+        $query->orderBy('name', 'asc');
+    }
+    
+    $users = $query->get();
+    
+    $html = view('exports.users-pdf', ['users' => $users])->render();
+    
+    $pdf = Pdf::loadHTML($html);
+    $filename = 'users_' . now()->format('Y-m-d_His') . '.pdf';
+    
+    return Response::streamDownload(function () use ($pdf) {
+        echo $pdf->output();
+    }, $filename);
+});
+
 $users = computed(function () {
     $query = User::with('roles');
 
@@ -82,11 +161,23 @@ $users = computed(function () {
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('User') }}</h1>
                 <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola pengguna sistem') }}</p>
             </div>
-            @can('membuat user')
-            <flux:button :href="route('godmode.users.create')" variant="primary" icon="plus" wire:navigate>
-                {{ __('Tambah User') }}
-            </flux:button>
-            @endcan
+            <div class="flex items-center gap-2">
+                @can('mengekspor user')
+                <flux:button wire:click="exportExcel" variant="ghost" icon="table-cells"
+                    class="!bg-green-600 hover:!bg-green-700 dark:!bg-green-500 dark:hover:!bg-green-600 !text-white">
+                    {{ __('Excel') }}
+                </flux:button>
+                <flux:button wire:click="exportPdf" variant="ghost" icon="document-text"
+                    class="!bg-red-900 hover:!bg-red-950 dark:!bg-red-950 dark:hover:!bg-red-900 !text-white">
+                    {{ __('PDF') }}
+                </flux:button>
+                @endcan
+                @can('membuat user')
+                <flux:button :href="route('godmode.users.create')" variant="primary" icon="plus" wire:navigate>
+                    {{ __('Tambah User') }}
+                </flux:button>
+                @endcan
+            </div>
         </div>
 
         <flux:card>
