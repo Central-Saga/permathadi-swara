@@ -14,6 +14,7 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.1.1",
+        "livewire/flux-pro": "^2.6",
         "livewire/volt": "^1.7.0",
         "spatie/laravel-permission": "^6.23"
     },
@@ -27,6 +28,12 @@
         "pestphp/pest": "^4.1",
         "pestphp/pest-plugin-laravel": "^4.0"
     },
+    "repositories": [
+       {
+           "type": "artifact",
+           "url": "./packages"
+       }
+   ],
     "autoload": {
         "psr-4": {
             "App\\": "app/",
