@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Layanan;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Layanan>
@@ -16,8 +18,25 @@ class LayananFactory extends Factory
      */
     public function definition(): array
     {
+        $name = $this->faker->randomElement([
+            'Kelas Tari Tradisional',
+            'Jasa Website Development',
+            'Kelas Musik Gamelan',
+            'Konsultasi Desain Grafis',
+            'Workshop Fotografi',
+            'Kelas Tari Modern',
+            'Jasa Branding & Logo',
+            'Kelas Vokal',
+            'Jasa Video Production',
+            'Kelas Teater',
+        ]);
+
         return [
-            //
+            'name' => $name,
+            'slug' => Str::slug($name),
+            'description' => $this->faker->paragraph(3),
+            'price' => $this->faker->randomFloat(2, 100000, 5000000),
+            'is_active' => $this->faker->boolean(80), // 80% chance aktif
         ];
     }
 }

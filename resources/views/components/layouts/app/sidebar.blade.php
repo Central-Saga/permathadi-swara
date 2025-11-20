@@ -33,6 +33,10 @@
                 {{ __('Anggota') }}
             </flux:sidebar.item>
             @endcan
+            <flux:sidebar.item icon="sparkles" :href="route('godmode.layanan.index')"
+                :current="request()->routeIs('godmode.layanan.*')" wire:navigate>
+                {{ __('Layanan') }}
+            </flux:sidebar.item>
             @can('melihat role')
             <flux:sidebar.item icon="shield-check" :href="route('godmode.roles.index')"
                 :current="request()->routeIs('godmode.roles.*')" wire:navigate>
