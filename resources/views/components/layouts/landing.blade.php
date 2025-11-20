@@ -15,6 +15,7 @@
     <x-layouts.landing.footer />
 
     @fluxScripts
+    @vite('resources/js/landing-animations.js')
 </body>
 
 </html>
