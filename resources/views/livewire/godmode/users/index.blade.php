@@ -82,9 +82,11 @@ $users = computed(function () {
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('User') }}</h1>
                 <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola pengguna sistem') }}</p>
             </div>
+            @can('membuat user')
             <flux:button :href="route('godmode.users.create')" variant="primary" icon="plus" wire:navigate>
                 {{ __('Tambah User') }}
             </flux:button>
+            @endcan
         </div>
 
         <flux:card>
@@ -136,15 +138,19 @@ $users = computed(function () {
                         </flux:table.cell>
                         <flux:table.cell>
                             <div class="flex items-center gap-2">
+                                @can('mengubah user')
                                 <flux:button :href="route('godmode.users.edit', $user)" variant="ghost" size="sm"
                                     icon="pencil" wire:navigate
                                     class="!p-2 !bg-blue-600 hover:!bg-blue-700 dark:!bg-blue-500 dark:hover:!bg-blue-600 !text-white !rounded-md"
                                     title="{{ __('Edit') }}" />
+                                @endcan
+                                @can('menghapus user')
                                 <flux:button wire:click="deleteUser({{ $user->id }})"
                                     wire:confirm="{{ __('Apakah Anda yakin ingin menghapus user ini?') }}"
                                     variant="ghost" size="sm" icon="trash"
                                     class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
                                     title="{{ __('Hapus') }}" />
+                                @endcan
                             </div>
                         </flux:table.cell>
                     </flux:table.row>

@@ -21,14 +21,18 @@
                 wire:navigate>
                 {{ __('Dashboard') }}
             </flux:sidebar.item>
+            @can('melihat user')
             <flux:sidebar.item icon="users" :href="route('godmode.users.index')"
                 :current="request()->routeIs('godmode.users.*')" wire:navigate>
                 {{ __('User') }}
             </flux:sidebar.item>
+            @endcan
+            @can('melihat role')
             <flux:sidebar.item icon="shield-check" :href="route('godmode.roles.index')"
                 :current="request()->routeIs('godmode.roles.*')" wire:navigate>
                 {{ __('Role') }}
             </flux:sidebar.item>
+            @endcan
         </flux:sidebar.nav>
 
         <flux:sidebar.spacer />
