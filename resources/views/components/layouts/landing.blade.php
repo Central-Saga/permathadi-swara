@@ -5,16 +5,14 @@
     @include('partials.head')
 </head>
 
-<body
-    class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
-    <x-layouts.landing.header />
+<body class="bg-white dark:bg-gray-900">
+    <x-landing.header />
 
-    <div
-        class="flex items-center justify-center w-full transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0">
-        <main class="flex max-w-[335px] w-full flex-col-reverse lg:max-w-4xl lg:flex-row">
-            {{ $slot }}
-        </main>
-    </div>
+    <x-landing.hero />
+
+    <main>
+        {{ $slot }}
+    </main>
 
     <x-layouts.landing.footer />
 
@@ -22,4 +20,3 @@
 </body>
 
 </html>
-
