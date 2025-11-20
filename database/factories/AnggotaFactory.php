@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Anggota;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +19,13 @@ class AnggotaFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => User::factory(),
+            'telepon' => fake()->phoneNumber(),
+            'alamat' => fake()->address(),
+            'tanggal_lahir' => fake()->date('Y-m-d', '-18 years'),
+            'tanggal_registrasi' => fake()->date('Y-m-d', '-1 year'),
+            'status' => fake()->randomElement(['Aktif', 'Non Aktif']),
+            'catatan' => fake()->optional()->sentence(),
         ];
     }
 }

@@ -2,8 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Anggota;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class AnggotaSeeder extends Seeder
 {
@@ -12,14 +15,21 @@ class AnggotaSeeder extends Seeder
      */
     public function run(): void
     {
-        $anggota = User::factory()->create([
+        // Create single anggota with user
+        $user = User::factory()->create([
             'name' => 'Anggota',
             'email' => 'anggota@example.com',
             'password' => Hash::make('password'),
         ]);
-        $anggota->assignRole('Anggota');
+        $user->assignRole('Anggota');
+        
+        Anggota::factory()->create([
+            'user_id' => $user->id,
+        ]);
 
-        $anggota = User::factory(10)->create();
-        $anggota->assignRole('Anggota');
+        // Create 10 anggota with users
+        Anggota::factory(10)->create()->each(function ($anggota) {
+            $anggota->user->assignRole('Anggota');
+        });
     }
 }

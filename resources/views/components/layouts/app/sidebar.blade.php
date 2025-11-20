@@ -27,6 +27,12 @@
                 {{ __('User') }}
             </flux:sidebar.item>
             @endcan
+            @can('melihat anggota')
+            <flux:sidebar.item icon="user-group" :href="route('godmode.anggota.index')"
+                :current="request()->routeIs('godmode.anggota.*')" wire:navigate>
+                {{ __('Anggota') }}
+            </flux:sidebar.item>
+            @endcan
             @can('melihat role')
             <flux:sidebar.item icon="shield-check" :href="route('godmode.roles.index')"
                 :current="request()->routeIs('godmode.roles.*')" wire:navigate>

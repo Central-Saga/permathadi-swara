@@ -54,7 +54,7 @@ $deleteUser = action(function ($userId) {
 });
 
 $exportExcel = action(function () {
-    $query = User::with('roles');
+    $query = User::with('roles')->whereDoesntHave('anggota');
     
     if (!empty($this->search)) {
         $query->where(function ($q) {
@@ -100,7 +100,7 @@ $exportExcel = action(function () {
 });
 
 $exportPdf = action(function () {
-    $query = User::with('roles');
+    $query = User::with('roles')->whereDoesntHave('anggota');
     
     if (!empty($this->search)) {
         $query->where(function ($q) {
@@ -129,7 +129,7 @@ $exportPdf = action(function () {
 });
 
 $users = computed(function () {
-    $query = User::with('roles');
+    $query = User::with('roles')->whereDoesntHave('anggota');
 
     // Search
     if (!empty($this->search)) {
@@ -159,7 +159,7 @@ $users = computed(function () {
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('User') }}</h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola pengguna sistem') }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola pengguna sistem (non-anggota)') }}</p>
             </div>
             <div class="flex items-center gap-2">
                 @can('mengekspor user')
