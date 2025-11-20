@@ -1,5 +1,51 @@
-<x-layouts.app :title="__('Tambah Role')">
-    <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
+<?php
+
+use Illuminate\Validation\Rule;
+use Livewire\Volt\Component;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use function Livewire\Volt\{layout, title};
+
+layout('components.layouts.app');
+title(fn () => __('Tambah Role'));
+
+new class extends Component {
+    public string $name = '';
+    public array $permissions = [];
+
+    public function store(): void
+    {
+        $validated = $this->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['exists:permissions,id'],
+        ]);
+
+        $role = Role::create([
+            'name' => $validated['name'],
+        ]);
+
+        if (!empty($validated['permissions'])) {
+            $role->syncPermissions($validated['permissions']);
+        }
+
+        $this->redirect(route('godmode.roles.index'), navigate: true);
+    }
+
+    public function with(): array
+    {
+        $permissions = Permission::all()->groupBy(function ($permission) {
+            $parts = explode(' ', $permission->name);
+            return $parts[1] ?? 'other';
+        });
+
+        return [
+            'permissions' => $permissions,
+        ];
+    }
+}; ?>
+
+<div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Tambah Role') }}</h1>
@@ -11,11 +57,8 @@
         </div>
 
         <flux:card>
-            <form action="{{ route('godmode.roles.store') }}" method="POST" class="space-y-6">
-                @csrf
-
-                <flux:input name="name" :label="__('Nama Role')" type="text" required autofocus
-                    value="{{ old('name') }}" :error="$errors->first('name')" />
+            <form wire:submit="store" class="space-y-6">
+                <flux:input wire:model="name" name="name" :label="__('Nama Role')" type="text" required autofocus />
 
                 <div>
                     <flux:label>{{ __('Permission') }}</flux:label>
@@ -27,17 +70,13 @@
                                 </h3>
                                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                     @foreach ($groupPermissions as $permission)
-                                        <flux:checkbox name="permissions[]" value="{{ $permission->id }}"
-                                            :label="$permission->name"
-                                            :checked="in_array($permission->id, old('permissions', []))" />
+                                        <flux:checkbox wire:model="permissions" name="permissions[]" value="{{ $permission->id }}"
+                                            :label="$permission->name" />
                                     @endforeach
                                 </div>
                             </div>
                         @endforeach
                     </div>
-                    @error('permissions')
-                        <flux:error class="mt-1">{{ $message }}</flux:error>
-                    @enderror
                 </div>
 
                 <div class="flex items-center gap-4">
@@ -50,6 +89,5 @@
                 </div>
             </form>
         </flux:card>
-    </div>
-</x-layouts.app>
+</div>
 

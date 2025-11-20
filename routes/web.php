@@ -5,27 +5,13 @@ use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 use Spatie\Permission\Models\Role;
 
-Route::get('/', function () {
-    return view('landing.welcome');
-})->name('home');
+Volt::route('/', 'landing.welcome')->name('home');
+Volt::route('tentang', 'landing.tentang')->name('landing.tentang');
+Volt::route('program', 'landing.program')->name('landing.program');
+Volt::route('galeri', 'landing.galeri')->name('landing.galeri');
+Volt::route('kontak', 'landing.kontak')->name('landing.kontak');
 
-Route::get('tentang', function () {
-    return view('landing.tentang');
-})->name('landing.tentang');
-
-Route::get('program', function () {
-    return view('landing.program');
-})->name('landing.program');
-
-Route::get('galeri', function () {
-    return view('landing.galeri');
-})->name('landing.galeri');
-
-Route::get('kontak', function () {
-    return view('landing.kontak');
-})->name('landing.kontak');
-
-Route::view('dashboard', 'godmode.dashboard')
+Volt::route('dashboard', 'godmode.dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -50,10 +36,13 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->prefix('godmode')->name('godmode.')->group(function () {
-    Route::bind('role', function ($value) {
-        return Role::findOrFail($value);
-    });
-
-    Route::resource('users', \App\Http\Controllers\Godmode\UserController::class);
-    Route::resource('roles', \App\Http\Controllers\Godmode\RoleController::class);
+    // Users routes
+    Volt::route('users', 'godmode.users.index')->name('users.index');
+    Volt::route('users/create', 'godmode.users.create')->name('users.create');
+    Volt::route('users/{user}/edit', 'godmode.users.edit')->name('users.edit');
+    
+    // Roles routes
+    Volt::route('roles', 'godmode.roles.index')->name('roles.index');
+    Volt::route('roles/create', 'godmode.roles.create')->name('roles.create');
+    Volt::route('roles/{role}/edit', 'godmode.roles.edit')->name('roles.edit');
 });

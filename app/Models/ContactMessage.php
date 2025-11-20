@@ -9,4 +9,11 @@ class ContactMessage extends Model
 {
     /** @use HasFactory<\Database\Factories\ContactMessageFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'subject',
+        'message',
+    ];
 }

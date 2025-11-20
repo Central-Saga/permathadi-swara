@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
 
 <head>
-    @include('partials.head')
+    @include('partials.head', ['title' => $title ?? null])
 </head>
 
 <body class="min-h-screen bg-white dark:bg-zinc-800 antialiased">
@@ -34,7 +34,7 @@
         <flux:sidebar.spacer />
 
         <flux:dropdown position="top" align="start" class="max-lg:hidden">
-            <flux:sidebar.profile :name="auth()->user()->name" :initials="auth()->user()->initials()" />
+            <flux:sidebar.profile :name="auth()->user()?->name ?? ''" :initials="auth()->user()?->initials() ?? ''" />
 
             <flux:menu>
                 <flux:menu.radio.group>
@@ -43,13 +43,13 @@
                             <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
                                 <span
                                     class="flex h-full w-full items-center justify-center rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-200">
-                                    {{ auth()->user()->initials() }}
+                                    {{ auth()->user()?->initials() ?? '' }}
                                 </span>
                             </span>
 
                             <div class="grid flex-1 text-start text-sm leading-tight">
-                                <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
-                                <span class="truncate text-xs">{{ auth()->user()->email }}</span>
+                                <span class="truncate font-semibold">{{ auth()->user()?->name ?? '' }}</span>
+                                <span class="truncate text-xs">{{ auth()->user()?->email ?? '' }}</span>
                             </div>
                         </div>
                     </div>
@@ -82,7 +82,7 @@
         <flux:spacer />
 
         <flux:dropdown position="top" align="end">
-            <flux:profile :initials="auth()->user()->initials()" />
+            <flux:profile :initials="auth()->user()?->initials() ?? ''" />
 
             <flux:menu>
                 <flux:menu.radio.group>
@@ -91,13 +91,13 @@
                             <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
                                 <span
                                     class="flex h-full w-full items-center justify-center rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-200">
-                                    {{ auth()->user()->initials() }}
+                                    {{ auth()->user()?->initials() ?? '' }}
                                 </span>
                             </span>
 
                             <div class="grid flex-1 text-start text-sm leading-tight">
-                                <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
-                                <span class="truncate text-xs">{{ auth()->user()->email }}</span>
+                                <span class="truncate font-semibold">{{ auth()->user()?->name ?? '' }}</span>
+                                <span class="truncate text-xs">{{ auth()->user()?->email ?? '' }}</span>
                             </div>
                         </div>
                     </div>

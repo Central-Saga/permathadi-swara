@@ -1,18 +1,88 @@
-@php
-function getSortUrl($currentSortBy, $currentSortDir, $column) {
-$newSortDir = ($currentSortBy === $column && $currentSortDir === 'asc') ? 'desc' : 'asc';
-return request()->fullUrlWithQuery(['sort_by' => $column, 'sort_dir' => $newSortDir]);
-}
+<?php
 
-function getSortIcon($currentSortBy, $currentSortDir, $column) {
-if ($currentSortBy !== $column) {
-return 'chevrons-up-down';
-}
-return $currentSortDir === 'asc' ? 'chevron-up' : 'chevron-down';
-}
-@endphp
+use App\Models\User;
+use Livewire\Volt\Component;
+use Livewire\WithPagination;
+use function Livewire\Volt\{layout, title};
 
-<x-layouts.app :title="__('User')">
+layout('components.layouts.app');
+title(fn () => __('User'));
+
+new class extends Component {
+    use WithPagination;
+
+    public string $search = '';
+    public string $sortBy = 'name';
+    public string $sortDir = 'asc';
+
+    public function mount(): void
+    {
+        $this->search = request()->get('search', '');
+        $this->sortBy = request()->get('sort_by', 'name');
+        $this->sortDir = request()->get('sort_dir', 'asc');
+    }
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function sort($column): void
+    {
+        if ($this->sortBy === $column) {
+            $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortBy = $column;
+            $this->sortDir = 'asc';
+        }
+    }
+
+    public function getSortIcon($column): string
+    {
+        if ($this->sortBy !== $column) {
+            return 'chevrons-up-down';
+        }
+        return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
+    }
+
+    public function deleteUser($userId): void
+    {
+        $user = User::findOrFail($userId);
+        $user->delete();
+        $this->dispatch('user-deleted');
+    }
+
+    public function with(): array
+    {
+        $query = User::with('roles');
+
+        // Search
+        if (!empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('name', 'like', "%{$this->search}%")
+                    ->orWhere('email', 'like', "%{$this->search}%");
+            });
+        }
+
+        // Sorting
+        $allowedSorts = ['name', 'email', 'created_at'];
+        if (!in_array($this->sortBy, $allowedSorts)) {
+            $this->sortBy = 'name';
+        }
+
+        if (!in_array($this->sortDir, ['asc', 'desc'])) {
+            $this->sortDir = 'asc';
+        }
+
+        $query->orderBy($this->sortBy, $this->sortDir);
+
+        return [
+            'users' => $query->paginate(15),
+        ];
+    }
+}; ?>
+
+<div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="flex items-center justify-between">
             <div>
@@ -25,45 +95,26 @@ return $currentSortDir === 'asc' ? 'chevron-up' : 'chevron-down';
         </div>
 
         <flux:card>
-            <div class="mb-4" x-data="{
-                     search: '{{ request('search') }}',
-                     timeout: null,
-                     performSearch() {
-                         clearTimeout(this.timeout);
-                         this.timeout = setTimeout(() => {
-                             const params = new URLSearchParams(window.location.search);
-                             if (this.search) {
-                                 params.set('search', this.search);
-                             } else {
-                                 params.delete('search');
-                             }
-                             params.set('sort_by', '{{ $sortBy ?? 'name' }}');
-                             params.set('sort_dir', '{{ $sortDir ?? 'asc' }}');
-                             window.location.href = '{{ route('godmode.users.index') }}?' + params.toString();
-                         }, 500);
-                     }
-                 }" x-init="$watch('search', () => performSearch())">
-                <flux:input x-model="search" name="search" type="search" icon="magnifying-glass"
+            <div class="mb-4">
+                <flux:input wire:model.live.debounce.500ms="search" name="search" type="search" icon="magnifying-glass"
                     placeholder="{{ __('Cari nama atau email...') }}" class="w-full" />
             </div>
 
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column>
-                        <a href="{{ getSortUrl($sortBy ?? 'name', $sortDir ?? 'asc', 'name') }}"
+                        <button wire:click="sort('name')"
                             class="flex items-center gap-1 hover:text-orange-600 dark:hover:text-orange-400">
                             {{ __('Nama') }}
-                            <flux:icon :name="getSortIcon($sortBy ?? 'name', $sortDir ?? 'asc', 'name')"
-                                variant="mini" />
-                        </a>
+                            <flux:icon :name="$this->getSortIcon('name')" variant="mini" />
+                        </button>
                     </flux:table.column>
                     <flux:table.column>
-                        <a href="{{ getSortUrl($sortBy ?? 'name', $sortDir ?? 'asc', 'email') }}"
+                        <button wire:click="sort('email')"
                             class="flex items-center gap-1 hover:text-orange-600 dark:hover:text-orange-400">
                             {{ __('Email') }}
-                            <flux:icon :name="getSortIcon($sortBy ?? 'name', $sortDir ?? 'asc', 'email')"
-                                variant="mini" />
-                        </a>
+                            <flux:icon :name="$this->getSortIcon('email')" variant="mini" />
+                        </button>
                     </flux:table.column>
                     <flux:table.column>{{ __('Role') }}</flux:table.column>
                     <flux:table.column>{{ __('Aksi') }}</flux:table.column>
@@ -85,7 +136,8 @@ return $currentSortDir === 'asc' ? 'chevron-up' : 'chevron-down';
                                     {{ $role->name }}
                                 </span>
                                 @empty
-                                <span class="text-sm text-gray-400 dark:text-gray-500">{{ __('Tidak ada role') }}</span>
+                                <span class="text-sm text-gray-400 dark:text-gray-500">{{ __('Tidak ada role')
+                                    }}</span>
                                 @endforelse
                             </div>
                         </flux:table.cell>
@@ -95,14 +147,11 @@ return $currentSortDir === 'asc' ? 'chevron-up' : 'chevron-down';
                                     icon="pencil" wire:navigate
                                     class="!p-2 !bg-blue-600 hover:!bg-blue-700 dark:!bg-blue-500 dark:hover:!bg-blue-600 !text-white !rounded-md"
                                     title="{{ __('Edit') }}" />
-                                <form action="{{ route('godmode.users.destroy', $user) }}" method="POST"
-                                    onsubmit="return confirm('{{ __('Apakah Anda yakin ingin menghapus user ini?') }}');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <flux:button type="submit" variant="ghost" size="sm" icon="trash"
-                                        class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
-                                        title="{{ __('Hapus') }}" />
-                                </form>
+                                <flux:button wire:click="deleteUser({{ $user->id }})"
+                                    wire:confirm="{{ __('Apakah Anda yakin ingin menghapus user ini?') }}"
+                                    variant="ghost" size="sm" icon="trash"
+                                    class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
+                                    title="{{ __('Hapus') }}" />
                             </div>
                         </flux:table.cell>
                     </flux:table.row>
@@ -118,8 +167,8 @@ return $currentSortDir === 'asc' ? 'chevron-up' : 'chevron-down';
 
             <div class="mt-4 flex items-center justify-between">
                 <div class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ __('Menampilkan') }} {{ $users->firstItem() ?? 0 }} {{ __('sampai') }} {{ $users->lastItem() ?? 0
-                    }}
+                    {{ __('Menampilkan') }} {{ $users->firstItem() ?? 0 }} {{ __('sampai') }} {{ $users->lastItem()
+                    ?? 0 }}
                     {{ __('dari') }} {{ $users->total() }} {{ __('hasil') }}
                 </div>
                 @if ($users->hasPages())
@@ -130,4 +179,8 @@ return $currentSortDir === 'asc' ? 'chevron-up' : 'chevron-down';
             </div>
         </flux:card>
     </div>
-</x-layouts.app>
+
+    <x-action-message on="user-deleted">
+        {{ __('User berhasil dihapus.') }}
+    </x-action-message>
+</div>
