@@ -138,6 +138,40 @@ a[data-flux-sidebar-item][current],
     @apply bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-orange-300;
 }
 
+/* Hero Section Initial State - untuk mencegah delay sebelum GSAP animasi */
+/* Initial state langsung di-set di CSS agar tidak ada flash of content */
+[data-gsap="hero-title"],
+[data-gsap="hero-description"],
+[data-gsap="hero-button"],
+[data-gsap="hero-image"] {
+    opacity: 0;
+    transform: translateY(30px);
+    will-change: opacity, transform; /* Optimize for animation */
+}
+
+[data-gsap="hero-blur-1"],
+[data-gsap="hero-blur-2"] {
+    opacity: 0;
+    transform: scale(0.8);
+    will-change: opacity, transform; /* Optimize for animation */
+}
+
+/* Lazy loaded sections - hidden by default */
+[data-lazy-section] {
+    min-height: 200px; /* Prevent layout shift */
+}
+
+[data-lazy-section]:not([data-loaded]) {
+    opacity: 0;
+    visibility: hidden;
+}
+
+[data-lazy-section][data-loaded] {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease-in-out;
+}
+
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */

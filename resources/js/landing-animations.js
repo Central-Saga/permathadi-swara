@@ -8,38 +8,58 @@ gsap.registerPlugin(ScrollTrigger);
  * Initialize all landing page animations
  */
 export function initLandingAnimations() {
-    // Wait for DOM and Livewire to be ready
+    // Hero section harus langsung di-animate saat pertama kali page diakses
+    // Tidak perlu menunggu Livewire atau scroll
+    const initHeroImmediately = () => {
+        // Cek apakah hero section sudah ada di DOM
+        const heroSection = document.querySelector('[data-gsap="hero-title"]') || 
+                           document.querySelector('[data-gsap="hero-description"]');
+        if (heroSection) {
+            // Gunakan requestAnimationFrame untuk memastikan elemen sudah rendered
+            requestAnimationFrame(() => {
+                initHeroAnimations();
+            });
+            return true;
+        }
+        return false;
+    };
+
+    // Coba langsung init hero section jika DOM sudah ready
     if (document.readyState === 'loading') {
+        // Jika DOM masih loading, tunggu DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
-            initAnimations();
+            // Hero section langsung di-animate
+            initHeroImmediately();
+            // Init lazy loading untuk section lainnya
+            initLazyLoading();
         });
     } else {
-        // If DOM is already loaded, wait for Livewire
+        // Jika DOM sudah ready, langsung init hero section
+        const heroInitialized = initHeroImmediately();
+        
+        // Init lazy loading untuk section lainnya
+        initLazyLoading();
+        
+        // Jika Livewire ada, re-init saat morph (untuk navigasi Livewire)
         if (window.Livewire) {
             window.Livewire.hook('morph.updated', () => {
-                initAnimations();
+                // Reset hero animated flag untuk halaman baru
+                heroAnimated = false;
+                // Re-init hero section jika kembali ke landing page
+                initHeroAnimations();
+                // Re-init lazy loading
+                initLazyLoading();
             });
         }
-        initAnimations();
     }
 }
 
-function initAnimations() {
-    // Hero Section Animations (On Load)
-    initHeroAnimations();
-    
-    // Stats Section Animations (Scroll Triggered)
-    initStatsAnimations();
-    
-    // Features Section Animations (Scroll Triggered)
-    initFeaturesAnimations();
-    
-    // Testimonials Section Animations (Scroll Triggered)
-    initTestimonialsAnimations();
-}
+// Track if hero section has been animated
+let heroAnimated = false;
 
 /**
- * Hero Section: Fade in + slide up on page load
+ * Initialize hero section animations (NO SCROLL TRIGGER)
+ * Hero section langsung di-animate saat pertama kali page diakses
  */
 function initHeroAnimations() {
     const heroTitle = document.querySelector('[data-gsap="hero-title"]');
@@ -49,12 +69,25 @@ function initHeroAnimations() {
     const heroBlur1 = document.querySelector('[data-gsap="hero-blur-1"]');
     const heroBlur2 = document.querySelector('[data-gsap="hero-blur-2"]');
 
-    // Set initial states (only if elements exist)
+    // Check if hero elements exist
+    if (!heroTitle && !heroDescription && heroButtons.length === 0 && !heroImage) {
+        return; // Exit if no hero elements found
+    }
+
+    // Check if hero section sudah ter-animate (untuk mencegah re-animation)
+    // Jika elemen sudah visible (opacity > 0), berarti sudah ter-animate
+    if (heroAnimated && heroTitle && gsap.getProperty(heroTitle, 'opacity') > 0) {
+        return; // Skip jika sudah ter-animate
+    }
+
+    // Set initial states dengan gsap.set untuk memastikan konsistensi
+    // (meskipun sudah di CSS, ini memastikan GSAP langsung mengambil alih)
     const heroElements = [heroTitle, heroDescription, ...heroButtons, heroImage].filter(Boolean);
     if (heroElements.length > 0) {
         gsap.set(heroElements, {
             opacity: 0,
-            y: 30
+            y: 30,
+            immediateRender: true
         });
     }
 
@@ -62,12 +95,17 @@ function initHeroAnimations() {
     if (blurElements.length > 0) {
         gsap.set(blurElements, {
             opacity: 0,
-            scale: 0.8
+            scale: 0.8,
+            immediateRender: true
         });
     }
 
-    // Create timeline for hero animations
-    const heroTimeline = gsap.timeline();
+    // Create timeline for hero animations - NO SCROLL TRIGGER
+    // Timeline akan langsung play saat dibuat tanpa delay
+    const heroTimeline = gsap.timeline({
+        immediateRender: true,
+        delay: 0
+    });
 
     // Animate blur backgrounds first
     if (heroBlur1) {
@@ -128,6 +166,57 @@ function initHeroAnimations() {
             ease: 'power2.out'
         }, '-=0.8');
     }
+
+    // Mark hero section sebagai sudah ter-animate
+    heroAnimated = true;
+
+    // Timeline akan langsung play tanpa scroll trigger
+    // Hero section langsung ter-animate saat pertama kali page diakses
+}
+
+/**
+ * Initialize lazy loading for sections using Intersection Observer
+ * Section baru akan di-render dan di-animate ketika mendekati viewport
+ */
+function initLazyLoading() {
+    // Hapus observer lama jika ada
+    if (window.lazySectionObserver) {
+        window.lazySectionObserver.disconnect();
+    }
+
+    // Buat Intersection Observer untuk lazy loading
+    window.lazySectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const section = entry.target;
+                const sectionType = section.getAttribute('data-lazy-section');
+                
+                // Mark section as loaded
+                section.setAttribute('data-loaded', 'true');
+                
+                // Initialize animations berdasarkan tipe section
+                if (sectionType === 'stats') {
+                    initStatsAnimations();
+                } else if (sectionType === 'features') {
+                    initFeaturesAnimations();
+                } else if (sectionType === 'testimonials') {
+                    initTestimonialsAnimations();
+                }
+                
+                // Stop observing setelah di-load
+                window.lazySectionObserver.unobserve(section);
+            }
+        });
+    }, {
+        rootMargin: '100px', // Start loading 100px sebelum masuk viewport
+        threshold: 0.01
+    });
+
+    // Observe semua lazy sections
+    const lazySections = document.querySelectorAll('[data-lazy-section]');
+    lazySections.forEach(section => {
+        window.lazySectionObserver.observe(section);
+    });
 }
 
 /**
@@ -139,6 +228,10 @@ function initStatsAnimations() {
     const statNumbers = document.querySelectorAll('[data-gsap="stat-number"]');
 
     if (!statsSection) return;
+    
+    // Skip jika sudah di-animate
+    if (statsSection.hasAttribute('data-animated')) return;
+    statsSection.setAttribute('data-animated', 'true');
 
     // Set initial states
     if (statCards.length === 0) return;
@@ -207,6 +300,10 @@ function initFeaturesAnimations() {
     const featureIcons = document.querySelectorAll('[data-gsap="feature-icon"]');
 
     if (!featuresSection) return;
+    
+    // Skip jika sudah di-animate
+    if (featuresSection.hasAttribute('data-animated')) return;
+    featuresSection.setAttribute('data-animated', 'true');
 
     // Set initial states
     if (featuresHeading) {
@@ -282,6 +379,10 @@ function initTestimonialsAnimations() {
     const testimonialAuthor = document.querySelector('[data-gsap="testimonial-author"]');
 
     if (!testimonialsSection) return;
+    
+    // Skip jika sudah di-animate
+    if (testimonialsSection.hasAttribute('data-animated')) return;
+    testimonialsSection.setAttribute('data-animated', 'true');
 
     // Set initial states
     const testimonialElements = [testimonialLogo, testimonialQuote, testimonialAuthor].filter(Boolean);

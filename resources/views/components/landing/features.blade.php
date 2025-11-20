@@ -1,4 +1,4 @@
-<div class="bg-white py-24 sm:py-32 dark:bg-gray-900" data-gsap="features-section">
+<div class="bg-white py-24 sm:py-32 dark:bg-gray-900" data-gsap="features-section" data-lazy-section="features">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="mx-auto max-w-2xl lg:text-center" data-gsap="features-heading">
             <h2 class="text-base/7 font-semibold text-orange-600 dark:text-orange-400">Program Unggulan</h2>
