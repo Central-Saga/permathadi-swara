@@ -138,8 +138,22 @@ a[data-flux-sidebar-item][current],
     @apply bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-orange-300;
 }
 
-/* Hero Section Initial State - untuk mencegah delay sebelum GSAP animasi */
-/* Initial state langsung di-set di CSS agar tidak ada flash of content */
+/* Navbar - Initial state untuk fade-in animation */
+[data-gsap="navbar"] {
+    opacity: 0;
+    transform: translateY(-20px);
+    will-change: opacity, transform;
+}
+
+/* Footer - Initial state untuk fade-in animation */
+[data-gsap="footer"] {
+    opacity: 0;
+    transform: translateY(20px);
+    will-change: opacity, transform;
+}
+
+/* Hero Section - Initial state untuk fade-in animation */
+/* Elemen mulai invisible dan di posisi bawah, lalu fade-in dengan animasi */
 [data-gsap="hero-title"],
 [data-gsap="hero-description"],
 [data-gsap="hero-button"],

@@ -8,54 +8,125 @@ gsap.registerPlugin(ScrollTrigger);
  * Initialize all landing page animations
  */
 export function initLandingAnimations() {
-    // Hero section harus langsung di-animate saat pertama kali page diakses
-    // Tidak perlu menunggu Livewire atau scroll
-    const initHeroImmediately = () => {
+    // Navbar dan footer harus langsung di-animate terlebih dahulu
+    // Lalu hero section
+    const initAllAnimations = () => {
+        // Init navbar dan footer terlebih dahulu (lebih cepat)
+        initNavbarAnimation();
+        initFooterAnimation();
+        
         // Cek apakah hero section sudah ada di DOM
         const heroSection = document.querySelector('[data-gsap="hero-title"]') || 
                            document.querySelector('[data-gsap="hero-description"]');
         if (heroSection) {
-            // Gunakan requestAnimationFrame untuk memastikan elemen sudah rendered
-            requestAnimationFrame(() => {
-                initHeroAnimations();
-            });
+            // Langsung init hero tanpa delay - animasi fade-in langsung dimulai
+            initHeroAnimations();
             return true;
         }
         return false;
     };
 
-    // Coba langsung init hero section jika DOM sudah ready
+    // Fungsi untuk init dengan retry mechanism jika elemen belum ada
+    // Menggunakan delay minimal untuk retry
+    const initWithRetry = (maxRetries = 5, delay = 0) => {
+        if (initAllAnimations()) {
+            // Berhasil init, lanjutkan dengan lazy loading
+            initLazyLoading();
+            return;
+        }
+        
+        // Jika belum berhasil dan masih ada retry, coba lagi dengan delay minimal
+        if (maxRetries > 0) {
+            // Gunakan requestAnimationFrame untuk retry yang lebih cepat
+            requestAnimationFrame(() => {
+                initWithRetry(maxRetries - 1, delay);
+            });
+        } else {
+            // Jika sudah habis retry, tetap init lazy loading
+            initLazyLoading();
+        }
+    };
+
+    // Coba langsung init semua animasi - sangat agresif
+    // Langsung coba init tanpa menunggu apapun
+    if (!initAllAnimations()) {
+        // Jika belum berhasil, coba lagi dengan retry
+        initWithRetry();
+    } else {
+        initLazyLoading();
+    }
+
+    // Backup: Jika DOM belum ready, tunggu DOMContentLoaded
     if (document.readyState === 'loading') {
-        // Jika DOM masih loading, tunggu DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
-            // Hero section langsung di-animate
-            initHeroImmediately();
-            // Init lazy loading untuk section lainnya
+            if (!heroAnimated) {
+                initAllAnimations();
+            }
+        }, { once: true });
+    }
+    
+    // Jika Livewire ada, re-init saat morph (untuk navigasi Livewire)
+    if (window.Livewire) {
+        window.Livewire.hook('morph.updated', () => {
+            // Reset hero animated flag untuk halaman baru
+            heroAnimated = false;
+            // Re-init semua animasi
+            initNavbarAnimation();
+            initFooterAnimation();
+            initHeroAnimations();
+            // Re-init lazy loading
             initLazyLoading();
         });
-    } else {
-        // Jika DOM sudah ready, langsung init hero section
-        const heroInitialized = initHeroImmediately();
-        
-        // Init lazy loading untuk section lainnya
-        initLazyLoading();
-        
-        // Jika Livewire ada, re-init saat morph (untuk navigasi Livewire)
-        if (window.Livewire) {
-            window.Livewire.hook('morph.updated', () => {
-                // Reset hero animated flag untuk halaman baru
-                heroAnimated = false;
-                // Re-init hero section jika kembali ke landing page
-                initHeroAnimations();
-                // Re-init lazy loading
-                initLazyLoading();
-            });
-        }
     }
 }
 
 // Track if hero section has been animated
 let heroAnimated = false;
+
+/**
+ * Initialize navbar animation - fade-in dari atas
+ * Navbar fade-in lebih cepat dari hero section
+ */
+function initNavbarAnimation() {
+    const navbar = document.querySelector('[data-gsap="navbar"]');
+    if (!navbar) return;
+
+    // Skip jika sudah ter-animate
+    if (navbar.hasAttribute('data-animated')) return;
+    navbar.setAttribute('data-animated', 'true');
+
+    // Animate navbar dengan fade-in dan slide-down
+    gsap.to(navbar, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'power2.out',
+        delay: 0
+    });
+}
+
+/**
+ * Initialize footer animation - fade-in dari bawah
+ * Footer fade-in setelah hero section atau bersamaan
+ */
+function initFooterAnimation() {
+    const footer = document.querySelector('[data-gsap="footer"]');
+    if (!footer) return;
+
+    // Skip jika sudah ter-animate
+    if (footer.hasAttribute('data-animated')) return;
+    footer.setAttribute('data-animated', 'true');
+
+    // Animate footer dengan fade-in dan slide-up
+    // Delay sedikit agar tidak terlalu cepat, tapi tetap smooth
+    gsap.to(footer, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: 'power2.out',
+        delay: 0.3
+    });
+}
 
 /**
  * Initialize hero section animations (NO SCROLL TRIGGER)
@@ -75,39 +146,21 @@ function initHeroAnimations() {
     }
 
     // Check if hero section sudah ter-animate (untuk mencegah re-animation)
-    // Jika elemen sudah visible (opacity > 0), berarti sudah ter-animate
-    if (heroAnimated && heroTitle && gsap.getProperty(heroTitle, 'opacity') > 0) {
+    if (heroAnimated) {
         return; // Skip jika sudah ter-animate
     }
 
-    // Set initial states dengan gsap.set untuk memastikan konsistensi
-    // (meskipun sudah di CSS, ini memastikan GSAP langsung mengambil alih)
-    const heroElements = [heroTitle, heroDescription, ...heroButtons, heroImage].filter(Boolean);
-    if (heroElements.length > 0) {
-        gsap.set(heroElements, {
-            opacity: 0,
-            y: 30,
-            immediateRender: true
-        });
-    }
-
-    const blurElements = [heroBlur1, heroBlur2].filter(Boolean);
-    if (blurElements.length > 0) {
-        gsap.set(blurElements, {
-            opacity: 0,
-            scale: 0.8,
-            immediateRender: true
-        });
-    }
+    // Initial states sudah di-set di CSS (opacity: 0, transform)
+    // GSAP akan langsung fade-in dan animate tanpa delay
 
     // Create timeline for hero animations - NO SCROLL TRIGGER
     // Timeline akan langsung play saat dibuat tanpa delay
     const heroTimeline = gsap.timeline({
-        immediateRender: true,
+        paused: false,
         delay: 0
     });
 
-    // Animate blur backgrounds first
+    // Animate blur backgrounds first dengan fade-in
     if (heroBlur1) {
         heroTimeline.to(heroBlur1, {
             opacity: 1,
@@ -126,7 +179,7 @@ function initHeroAnimations() {
         }, '-=1');
     }
 
-    // Animate title
+    // Animate title dengan fade-in dan slide-up
     if (heroTitle) {
         heroTimeline.to(heroTitle, {
             opacity: 1,
@@ -136,7 +189,7 @@ function initHeroAnimations() {
         }, '-=0.5');
     }
 
-    // Animate description
+    // Animate description dengan fade-in dan slide-up
     if (heroDescription) {
         heroTimeline.to(heroDescription, {
             opacity: 1,
@@ -146,7 +199,7 @@ function initHeroAnimations() {
         }, '-=0.6');
     }
 
-    // Animate buttons with stagger
+    // Animate buttons dengan fade-in dan slide-up (stagger)
     if (heroButtons.length > 0) {
         heroTimeline.to(heroButtons, {
             opacity: 1,
@@ -157,7 +210,7 @@ function initHeroAnimations() {
         }, '-=0.4');
     }
 
-    // Animate image
+    // Animate image dengan fade-in dan slide-up
     if (heroImage) {
         heroTimeline.to(heroImage, {
             opacity: 1,
@@ -169,6 +222,11 @@ function initHeroAnimations() {
 
     // Mark hero section sebagai sudah ter-animate
     heroAnimated = true;
+
+    // Pastikan timeline langsung play (jika belum play)
+    if (heroTimeline.paused()) {
+        heroTimeline.play();
+    }
 
     // Timeline akan langsung play tanpa scroll trigger
     // Hero section langsung ter-animate saat pertama kali page diakses

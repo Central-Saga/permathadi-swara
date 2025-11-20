@@ -1,4 +1,4 @@
-<footer class="bg-white dark:bg-gray-900">
+<footer class="bg-white dark:bg-gray-900" data-gsap="footer">
     <div class="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
         <div class="flex justify-center gap-x-6 md:order-2">
             <a href="#" class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white">
