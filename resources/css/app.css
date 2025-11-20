@@ -85,6 +85,59 @@ select:focus[data-flux-control] {
     @apply text-orange-600 dark:text-orange-400;
 }
 
+/* Sidebar item default state */
+[data-flux-sidebar-item] {
+    @apply text-gray-700 dark:text-gray-300;
+}
+
+/* Sidebar item active states dengan orange theme - menggunakan !important untuk override Flux default */
+[data-flux-sidebar-item][aria-current="page"],
+[data-flux-sidebar-item][data-current="true"],
+[data-flux-sidebar-item][data-current],
+[data-flux-sidebar-item][current],
+button[data-flux-sidebar-item][aria-current="page"],
+a[data-flux-sidebar-item][aria-current="page"],
+button[data-flux-sidebar-item][current],
+a[data-flux-sidebar-item][current],
+[data-flux-sidebar-item].current {
+    background-color: rgb(255 237 213) !important; /* orange-100 */
+    color: rgb(194 65 12) !important; /* orange-700 */
+}
+
+.dark [data-flux-sidebar-item][aria-current="page"],
+.dark [data-flux-sidebar-item][data-current="true"],
+.dark [data-flux-sidebar-item][data-current],
+.dark [data-flux-sidebar-item][current],
+.dark button[data-flux-sidebar-item][aria-current="page"],
+.dark a[data-flux-sidebar-item][aria-current="page"],
+.dark button[data-flux-sidebar-item][current],
+.dark a[data-flux-sidebar-item][current],
+.dark [data-flux-sidebar-item].current {
+    background-color: rgb(124 45 18 / 0.5) !important; /* orange-900/50 */
+    color: rgb(254 243 199) !important; /* orange-200 */
+}
+
+/* Icon di dalam sidebar item active juga harus orange */
+[data-flux-sidebar-item][aria-current="page"] svg,
+[data-flux-sidebar-item][data-current="true"] svg,
+[data-flux-sidebar-item][data-current] svg,
+[data-flux-sidebar-item][current] svg,
+[data-flux-sidebar-item].current svg {
+    color: rgb(194 65 12) !important; /* orange-700 */
+}
+
+.dark [data-flux-sidebar-item][aria-current="page"] svg,
+.dark [data-flux-sidebar-item][data-current="true"] svg,
+.dark [data-flux-sidebar-item][data-current] svg,
+.dark [data-flux-sidebar-item][current] svg,
+.dark [data-flux-sidebar-item].current svg {
+    color: rgb(254 243 199) !important; /* orange-200 */
+}
+
+[data-flux-sidebar-item]:hover:not([aria-current="page"]):not([data-current="true"]):not([data-current]):not(.current) {
+    @apply bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-orange-300;
+}
+
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
