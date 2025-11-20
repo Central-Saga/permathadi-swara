@@ -38,6 +38,7 @@ $update = action(function () {
         $this->role->syncPermissions([]);
     }
 
+    $this->dispatch('toast', message: __('Role berhasil diupdate.'), variant: 'success');
     $this->redirect(route('godmode.roles.index'), navigate: true);
 });
 

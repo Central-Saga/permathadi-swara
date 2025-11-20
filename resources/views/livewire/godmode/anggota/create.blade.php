@@ -135,17 +135,5 @@ $store = action(function () {
             </div>
         </form>
     </flux:card>
-
-    <div 
-        x-data
-        x-on:toast.window="
-            if (window.Flux && typeof window.Flux.toast === 'function') {
-                window.Flux.toast({
-                    variant: $event.detail.variant || 'success',
-                    text: $event.detail.message
-                });
-            }
-        "
-    ></div>
 </div>
 

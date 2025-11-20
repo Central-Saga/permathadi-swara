@@ -28,6 +28,7 @@ $store = action(function () {
         $role->syncPermissions($validated['permissions']);
     }
 
+    $this->dispatch('toast', message: __('Role berhasil dibuat.'), variant: 'success');
     $this->redirect(route('godmode.roles.index'), navigate: true);
 });
 

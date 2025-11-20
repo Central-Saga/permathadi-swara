@@ -136,8 +136,20 @@
     {{ $slot }}
 
     @persist('toast')
-    <flux:toast position="top end" />
+    <flux:toast position="bottom end" />
     @endpersist
+
+    <div 
+        x-data
+        x-on:toast.window="
+            if (window.Flux && typeof window.Flux.toast === 'function') {
+                window.Flux.toast({
+                    variant: $event.detail.variant || 'success',
+                    text: $event.detail.message
+                });
+            }
+        "
+    ></div>
 
     @if (session('success'))
     <script>

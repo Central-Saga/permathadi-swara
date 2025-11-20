@@ -20,6 +20,8 @@ state([
     'sortDir' => fn () => request()->get('sort_dir', 'desc'),
     'selectedAnggota' => null,
     'showDetailModal' => false,
+    'showDeleteModal' => false,
+    'anggotaToDelete' => null,
 ]);
 
 on(['updatingSearch' => function () {
@@ -59,16 +61,26 @@ $closeDetail = action(function () {
     $this->selectedAnggota = null;
 });
 
-$deleteAnggota = action(function ($anggotaId) {
-    $anggota = Anggota::with('user')->findOrFail($anggotaId);
-    $user = $anggota->user;
-    
-    $anggota->delete();
-    if ($user) {
-        $user->delete();
+$openDeleteModal = action(function ($anggotaId) {
+    $this->anggotaToDelete = Anggota::with('user')->findOrFail($anggotaId);
+    $this->showDeleteModal = true;
+});
+
+$closeDeleteModal = action(function () {
+    $this->showDeleteModal = false;
+    $this->anggotaToDelete = null;
+});
+
+$deleteAnggota = action(function () {
+    if ($this->anggotaToDelete) {
+        $user = $this->anggotaToDelete->user;
+        $this->anggotaToDelete->delete();
+        if ($user) {
+            $user->delete();
+        }
+        $this->dispatch('toast', message: __('Anggota berhasil dihapus.'), variant: 'success');
+        $this->closeDeleteModal();
     }
-    
-    $this->dispatch('toast', message: __('Anggota berhasil dihapus.'), variant: 'success');
 });
 
 $exportExcel = action(function () {
@@ -271,8 +283,7 @@ $anggotas = computed(function () {
                                     title="{{ __('Edit') }}" />
                                 @endcan
                                 @can('menghapus anggota')
-                                <flux:button wire:click="deleteAnggota({{ $anggota->id }})"
-                                    wire:confirm="{{ __('Apakah Anda yakin ingin menghapus anggota ini? User terkait juga akan dihapus.') }}"
+                                <flux:button wire:click="openDeleteModal({{ $anggota->id }})"
                                     variant="ghost" size="sm" icon="trash"
                                     class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
                                     title="{{ __('Hapus') }}" />
@@ -384,16 +395,32 @@ $anggotas = computed(function () {
     </flux:modal>
     @endif
 
-    <div 
-        x-data
-        x-on:toast.window="
-            if (window.Flux && typeof window.Flux.toast === 'function') {
-                window.Flux.toast({
-                    variant: $event.detail.variant || 'success',
-                    text: $event.detail.message
-                });
-            }
-        "
-    ></div>
+    <!-- Delete Confirmation Modal -->
+    <flux:modal name="delete-anggota" :show="$showDeleteModal" wire:model="showDeleteModal" class="max-w-lg">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Hapus Anggota') }}</flux:heading>
+                <flux:subheading>{{ __('Apakah Anda yakin ingin menghapus anggota ini?') }}</flux:subheading>
+            </div>
+
+            @if ($anggotaToDelete)
+            <div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
+                <p class="text-sm text-red-800 dark:text-red-200">
+                    <strong>{{ $anggotaToDelete->user->name ?? '-' }}</strong> ({{ $anggotaToDelete->user->email ?? '-' }}) akan dihapus secara permanen.
+                </p>
+                <p class="text-sm text-red-700 dark:text-red-300 mt-2">
+                    {{ __('User terkait juga akan dihapus.') }}
+                </p>
+            </div>
+            @endif
+
+            <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                <flux:modal.close>
+                    <flux:button variant="ghost" wire:click="closeDeleteModal">{{ __('Batal') }}</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="deleteAnggota" variant="danger">{{ __('Hapus') }}</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>
 
