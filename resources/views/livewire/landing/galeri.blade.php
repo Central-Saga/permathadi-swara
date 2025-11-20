@@ -1,13 +1,10 @@
 <?php
 
-use Livewire\Volt\Component;
 use function Livewire\Volt\{layout};
 
-layout('layouts.landing');
+layout('components.layouts.landing');
 
-new class extends Component {
-    // Galeri page - statis
-}; ?>
+?>
 
 <div>
     <div class="bg-gray-50 dark:bg-gray-800 pt-24 pb-24 sm:pt-32 sm:pb-32">

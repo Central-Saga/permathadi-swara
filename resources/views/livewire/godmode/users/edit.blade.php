@@ -3,72 +3,64 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
-use Livewire\Volt\Component;
 use Spatie\Permission\Models\Role;
-use function Livewire\Volt\{layout, title};
+use function Livewire\Volt\{layout, title, state, mount, action, computed};
 
-layout('components.layouts.app');
+layout('components.layouts.admin');
 title(fn () => __('Edit User'));
 
-new class extends Component {
-    public User $user;
-    public string $name = '';
-    public string $email = '';
-    public string $password = '';
-    public string $password_confirmation = '';
-    public array $roles = [];
+state([
+    'user' => null,
+    'name' => '',
+    'email' => '',
+    'password' => '',
+    'password_confirmation' => '',
+    'roles' => [],
+]);
 
-    public function mount(User $user): void
-    {
-        $this->user = $user;
-        $this->user->load('roles');
-        $this->name = $user->name;
-        $this->email = $user->email;
-        $this->roles = $user->roles->pluck('id')->toArray();
+mount(function (User $user) {
+    $this->user = $user;
+    $this->user->load('roles');
+    $this->name = $user->name;
+    $this->email = $user->email;
+    $this->roles = $user->roles->pluck('id')->toArray();
+});
+
+$update = action(function () {
+    $rules = [
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $this->user->id],
+        'roles' => ['nullable', 'array'],
+        'roles.*' => ['exists:roles,id'],
+    ];
+
+    if (!empty($this->password)) {
+        $rules['password'] = ['required', 'string', Password::defaults(), 'confirmed'];
     }
 
-    public function update(): void
-    {
-        $rules = [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $this->user->id],
-            'roles' => ['nullable', 'array'],
-            'roles.*' => ['exists:roles,id'],
-        ];
+    $validated = $this->validate($rules);
 
-        if (!empty($this->password)) {
-            $rules['password'] = ['required', 'string', Password::defaults(), 'confirmed'];
-        }
+    $this->user->update([
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+    ]);
 
-        $validated = $this->validate($rules);
-
+    if (!empty($validated['password'])) {
         $this->user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
         ]);
-
-        if (!empty($validated['password'])) {
-            $this->user->update([
-                'password' => Hash::make($validated['password']),
-            ]);
-        }
-
-        if (isset($validated['roles'])) {
-            $this->user->syncRoles($validated['roles']);
-        } else {
-            $this->user->syncRoles([]);
-        }
-
-        $this->redirect(route('godmode.users.index'), navigate: true);
     }
 
-    public function with(): array
-    {
-        return [
-            'allRoles' => Role::all(),
-        ];
+    if (isset($validated['roles'])) {
+        $this->user->syncRoles($validated['roles']);
+    } else {
+        $this->user->syncRoles([]);
     }
-}; ?>
+
+    $this->redirect(route('godmode.users.index'), navigate: true);
+});
+
+$allRoles = computed(fn () => Role::all()); ?>
 
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="flex items-center justify-between">
@@ -95,7 +87,7 @@ new class extends Component {
                 <div>
                     <flux:label>{{ __('Role') }}</flux:label>
                     <div class="mt-2 space-y-2">
-                        @foreach ($allRoles as $role)
+                        @foreach ($this->allRoles as $role)
                             <flux:checkbox wire:model="roles" name="roles[]" value="{{ $role->id }}" :label="$role->name" />
                         @endforeach
                     </div>

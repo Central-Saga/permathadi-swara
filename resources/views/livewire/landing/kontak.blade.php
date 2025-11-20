@@ -1,33 +1,31 @@
 <?php
 
 use App\Models\ContactMessage;
-use Livewire\Volt\Component;
-use function Livewire\Volt\{layout};
+use function Livewire\Volt\{layout, state, action};
 
-layout('layouts.landing');
+layout('components.layouts.landing');
 
-new class extends Component {
-    public string $name = '';
-    public string $email = '';
-    public string $subject = '';
-    public string $message = '';
+state([
+    'name' => '',
+    'email' => '',
+    'subject' => '',
+    'message' => '',
+]);
 
-    public function submit(): void
-    {
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255'],
-            'subject' => ['required', 'string', 'max:255'],
-            'message' => ['required', 'string', 'max:5000'],
-        ]);
+$submit = action(function () {
+    $validated = $this->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255'],
+        'subject' => ['required', 'string', 'max:255'],
+        'message' => ['required', 'string', 'max:5000'],
+    ]);
 
-        ContactMessage::create($validated);
+    ContactMessage::create($validated);
 
-        $this->reset('name', 'email', 'subject', 'message');
-        
-        $this->dispatch('message-sent');
-    }
-}; ?>
+    $this->reset('name', 'email', 'subject', 'message');
+
+    $this->dispatch('message-sent');
+}); ?>
 
 <div>
     <div class="pt-24 pb-24 sm:pt-32 sm:pb-32">
@@ -38,7 +36,7 @@ new class extends Component {
                     Hubungi kami untuk informasi lebih lanjut tentang program dan pendaftaran.
                 </p>
             </div>
-            
+
             <div class="mx-auto mt-16 max-w-2xl">
                 <flux:card>
                     <form wire:submit="submit" class="space-y-6">
@@ -67,4 +65,3 @@ new class extends Component {
         </div>
     </div>
 </div>
-

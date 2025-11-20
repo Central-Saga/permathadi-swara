@@ -1,49 +1,42 @@
 <?php
 
 use Illuminate\Validation\Rule;
-use Livewire\Volt\Component;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use function Livewire\Volt\{layout, title};
+use function Livewire\Volt\{layout, title, state, action, computed};
 
-layout('components.layouts.app');
+layout('components.layouts.admin');
 title(fn () => __('Tambah Role'));
 
-new class extends Component {
-    public string $name = '';
-    public array $permissions = [];
+state([
+    'name' => '',
+    'permissions' => [],
+]);
 
-    public function store(): void
-    {
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
-            'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['exists:permissions,id'],
-        ]);
+$store = action(function () {
+    $validated = $this->validate([
+        'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
+        'permissions' => ['nullable', 'array'],
+        'permissions.*' => ['exists:permissions,id'],
+    ]);
 
-        $role = Role::create([
-            'name' => $validated['name'],
-        ]);
+    $role = Role::create([
+        'name' => $validated['name'],
+    ]);
 
-        if (!empty($validated['permissions'])) {
-            $role->syncPermissions($validated['permissions']);
-        }
-
-        $this->redirect(route('godmode.roles.index'), navigate: true);
+    if (!empty($validated['permissions'])) {
+        $role->syncPermissions($validated['permissions']);
     }
 
-    public function with(): array
-    {
-        $permissions = Permission::all()->groupBy(function ($permission) {
-            $parts = explode(' ', $permission->name);
-            return $parts[1] ?? 'other';
-        });
+    $this->redirect(route('godmode.roles.index'), navigate: true);
+});
 
-        return [
-            'permissions' => $permissions,
-        ];
-    }
-}; ?>
+$permissions = computed(function () {
+    return Permission::all()->groupBy(function ($permission) {
+        $parts = explode(' ', $permission->name);
+        return $parts[1] ?? 'other';
+    });
+}); ?>
 
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="flex items-center justify-between">
@@ -63,7 +56,7 @@ new class extends Component {
                 <div>
                     <flux:label>{{ __('Permission') }}</flux:label>
                     <div class="mt-2 space-y-4">
-                        @foreach ($permissions as $group => $groupPermissions)
+                        @foreach ($this->permissions as $group => $groupPermissions)
                             <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                                 <h3 class="mb-3 font-semibold text-gray-900 dark:text-white capitalize">
                                     {{ $group }}

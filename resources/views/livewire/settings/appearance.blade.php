@@ -1,10 +1,12 @@
 <?php
 
 use Livewire\Volt\Component;
+use function Livewire\Volt\{layout, title};
 
-new class extends Component {
-    //
-}; ?>
+layout('components.layouts.admin');
+title(fn () => __('Appearance'));
+
+?>
 
 <section class="w-full">
     @include('partials.settings-heading')

@@ -1,13 +1,10 @@
 <?php
 
-use Livewire\Volt\Component;
 use function Livewire\Volt\{layout};
 
-layout('layouts.landing');
+layout('components.layouts.landing');
 
-new class extends Component {
-    // Welcome page - statis
-}; ?>
+?>
 
 <div>
     <x-landing.hero />

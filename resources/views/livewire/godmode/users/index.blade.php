@@ -1,86 +1,79 @@
 <?php
 
 use App\Models\User;
-use Livewire\Volt\Component;
 use Livewire\WithPagination;
-use function Livewire\Volt\{layout, title};
+use function Livewire\Volt\{layout, title, state, computed, on, action, uses};
 
-layout('components.layouts.app');
+uses(WithPagination::class);
+
+layout('components.layouts.admin');
 title(fn () => __('User'));
 
-new class extends Component {
-    use WithPagination;
+state([
+    'search' => fn () => request()->get('search', ''),
+    'sortBy' => fn () => request()->get('sort_by', 'name'),
+    'sortDir' => fn () => request()->get('sort_dir', 'asc'),
+]);
 
-    public string $search = '';
-    public string $sortBy = 'name';
-    public string $sortDir = 'asc';
+on(['updatingSearch' => function () {
+    $this->resetPage();
+}]);
 
-    public function mount(): void
-    {
-        $this->search = request()->get('search', '');
-        $this->sortBy = request()->get('sort_by', 'name');
-        $this->sortDir = request()->get('sort_dir', 'asc');
+$sort = action(function ($column) {
+    if ($this->sortBy === $column) {
+        $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        $this->sortBy = $column;
+        $this->sortDir = 'asc';
+    }
+});
+
+// Helper computed properties untuk mendapatkan sort icon
+$sortIconName = computed(function () {
+    if ($this->sortBy !== 'name') {
+        return 'chevrons-up-down';
+    }
+    return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
+});
+
+$sortIconEmail = computed(function () {
+    if ($this->sortBy !== 'email') {
+        return 'chevrons-up-down';
+    }
+    return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
+});
+
+$deleteUser = action(function ($userId) {
+    $user = User::findOrFail($userId);
+    $user->delete();
+    $this->dispatch('user-deleted');
+});
+
+$users = computed(function () {
+    $query = User::with('roles');
+
+    // Search
+    if (!empty($this->search)) {
+        $query->where(function ($q) {
+            $q->where('name', 'like', "%{$this->search}%")
+                ->orWhere('email', 'like', "%{$this->search}%");
+        });
     }
 
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
+    // Sorting
+    $allowedSorts = ['name', 'email', 'created_at'];
+    if (!in_array($this->sortBy, $allowedSorts)) {
+        $this->sortBy = 'name';
     }
 
-    public function sort($column): void
-    {
-        if ($this->sortBy === $column) {
-            $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortBy = $column;
-            $this->sortDir = 'asc';
-        }
+    if (!in_array($this->sortDir, ['asc', 'desc'])) {
+        $this->sortDir = 'asc';
     }
 
-    public function getSortIcon($column): string
-    {
-        if ($this->sortBy !== $column) {
-            return 'chevrons-up-down';
-        }
-        return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
-    }
+    $query->orderBy($this->sortBy, $this->sortDir);
 
-    public function deleteUser($userId): void
-    {
-        $user = User::findOrFail($userId);
-        $user->delete();
-        $this->dispatch('user-deleted');
-    }
-
-    public function with(): array
-    {
-        $query = User::with('roles');
-
-        // Search
-        if (!empty($this->search)) {
-            $query->where(function ($q) {
-                $q->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('email', 'like', "%{$this->search}%");
-            });
-        }
-
-        // Sorting
-        $allowedSorts = ['name', 'email', 'created_at'];
-        if (!in_array($this->sortBy, $allowedSorts)) {
-            $this->sortBy = 'name';
-        }
-
-        if (!in_array($this->sortDir, ['asc', 'desc'])) {
-            $this->sortDir = 'asc';
-        }
-
-        $query->orderBy($this->sortBy, $this->sortDir);
-
-        return [
-            'users' => $query->paginate(15),
-        ];
-    }
-}; ?>
+    return $query->paginate(15);
+}); ?>
 
 <div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
@@ -106,21 +99,21 @@ new class extends Component {
                         <button wire:click="sort('name')"
                             class="flex items-center gap-1 hover:text-orange-600 dark:hover:text-orange-400">
                             {{ __('Nama') }}
-                            <flux:icon :name="$this->getSortIcon('name')" variant="mini" />
+                            <flux:icon :name="$this->sortIconName" variant="mini" />
                         </button>
                     </flux:table.column>
                     <flux:table.column>
                         <button wire:click="sort('email')"
                             class="flex items-center gap-1 hover:text-orange-600 dark:hover:text-orange-400">
                             {{ __('Email') }}
-                            <flux:icon :name="$this->getSortIcon('email')" variant="mini" />
+                            <flux:icon :name="$this->sortIconEmail" variant="mini" />
                         </button>
                     </flux:table.column>
                     <flux:table.column>{{ __('Role') }}</flux:table.column>
                     <flux:table.column>{{ __('Aksi') }}</flux:table.column>
                 </flux:table.columns>
                 <flux:table.rows>
-                    @forelse ($users as $user)
+                    @forelse ($this->users as $user)
                     <flux:table.row>
                         <flux:table.cell>
                             <div class="font-medium text-gray-900 dark:text-white">{{ $user->name }}</div>
@@ -167,13 +160,14 @@ new class extends Component {
 
             <div class="mt-4 flex items-center justify-between">
                 <div class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ __('Menampilkan') }} {{ $users->firstItem() ?? 0 }} {{ __('sampai') }} {{ $users->lastItem()
+                    {{ __('Menampilkan') }} {{ $this->users->firstItem() ?? 0 }} {{ __('sampai') }} {{
+                    $this->users->lastItem()
                     ?? 0 }}
-                    {{ __('dari') }} {{ $users->total() }} {{ __('hasil') }}
+                    {{ __('dari') }} {{ $this->users->total() }} {{ __('hasil') }}
                 </div>
-                @if ($users->hasPages())
+                @if ($this->users->hasPages())
                 <div>
-                    {{ $users->links() }}
+                    {{ $this->users->links() }}
                 </div>
                 @endif
             </div>

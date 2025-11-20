@@ -3,54 +3,46 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
-use Livewire\Volt\Component;
 use Spatie\Permission\Models\Role;
-use function Livewire\Volt\{layout, title};
+use function Livewire\Volt\{layout, title, state, mount, action, computed};
 
-layout('components.layouts.app');
+layout('components.layouts.admin');
 title(fn () => __('Tambah User'));
 
-new class extends Component {
-    public string $name = '';
-    public string $email = '';
-    public string $password = '';
-    public string $password_confirmation = '';
-    public ?string $role = null;
+state([
+    'name' => '',
+    'email' => '',
+    'password' => '',
+    'password_confirmation' => '',
+    'role' => null,
+]);
 
-    public function mount(): void
-    {
-        $this->role = old('role');
+mount(function () {
+    $this->role = old('role');
+});
+
+$store = action(function () {
+    $validated = $this->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+        'password' => ['required', 'string', Password::defaults(), 'confirmed'],
+        'role' => ['nullable', 'exists:roles,name'],
+    ]);
+
+    $user = User::create([
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'password' => Hash::make($validated['password']),
+    ]);
+
+    if (!empty($validated['role'])) {
+        $user->assignRole($validated['role']);
     }
 
-    public function store(): void
-    {
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', Password::defaults(), 'confirmed'],
-            'role' => ['nullable', 'exists:roles,name'],
-        ]);
+    $this->redirect(route('godmode.users.index'), navigate: true);
+});
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
-
-        if (!empty($validated['role'])) {
-            $user->assignRole($validated['role']);
-        }
-
-        $this->redirect(route('godmode.users.index'), navigate: true);
-    }
-
-    public function with(): array
-    {
-        return [
-            'roles' => Role::all(),
-        ];
-    }
-}; ?>
+$roles = computed(fn () => Role::all()); ?>
 
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="flex items-center justify-between">
@@ -74,7 +66,7 @@ new class extends Component {
                 <flux:input wire:model="password_confirmation" name="password_confirmation" :label="__('Konfirmasi Password')" type="password" required viewable />
 
                 <flux:radio.group wire:model="role" name="role" label="{{ __('Role') }}" variant="segmented" size="sm">
-                    @foreach ($roles as $roleItem)
+                    @foreach ($this->roles as $roleItem)
                     <flux:radio value="{{ $roleItem->name }}" :label="$roleItem->name" />
                     @endforeach
                 </flux:radio.group>

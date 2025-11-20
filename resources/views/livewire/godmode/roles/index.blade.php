@@ -1,83 +1,68 @@
 <?php
 
-use Livewire\Volt\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
-use function Livewire\Volt\{layout, title};
+use function Livewire\Volt\{layout, title, state, mount, action, computed, on, uses};
 
-layout('components.layouts.app');
+uses(WithPagination::class);
+
+layout('components.layouts.admin');
 title(fn () => __('Role'));
 
-new class extends Component {
-    use WithPagination;
+state([
+    'search' => fn () => request()->get('search', ''),
+    'sortBy' => fn () => request()->get('sort_by', 'name'),
+    'sortDir' => fn () => request()->get('sort_dir', 'asc'),
+]);
 
-    public string $search = '';
-    public string $sortBy = 'name';
-    public string $sortDir = 'asc';
+on(['updatingSearch' => function () {
+    $this->resetPage();
+}]);
 
-    public function mount(): void
-    {
-        $this->search = request()->get('search', '');
-        $this->sortBy = request()->get('sort_by', 'name');
-        $this->sortDir = request()->get('sort_dir', 'asc');
+$sort = action(function ($column) {
+    if ($this->sortBy === $column) {
+        $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        $this->sortBy = $column;
+        $this->sortDir = 'asc';
+    }
+});
+
+$sortIconName = computed(function () {
+    if ($this->sortBy !== 'name') {
+        return 'chevrons-up-down';
+    }
+    return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
+});
+
+$deleteRole = action(function ($roleId) {
+    $role = Role::findOrFail($roleId);
+    $role->delete();
+    $this->dispatch('role-deleted');
+});
+
+$roles = computed(function () {
+    $query = Role::with('permissions');
+
+    // Search
+    if (!empty($this->search)) {
+        $query->where('name', 'like', "%{$this->search}%");
     }
 
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
+    // Sorting
+    $allowedSorts = ['name', 'created_at'];
+    if (!in_array($this->sortBy, $allowedSorts)) {
+        $this->sortBy = 'name';
     }
 
-    public function sort($column): void
-    {
-        if ($this->sortBy === $column) {
-            $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortBy = $column;
-            $this->sortDir = 'asc';
-        }
+    if (!in_array($this->sortDir, ['asc', 'desc'])) {
+        $this->sortDir = 'asc';
     }
 
-    public function getSortIcon($column): string
-    {
-        if ($this->sortBy !== $column) {
-            return 'chevrons-up-down';
-        }
-        return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
-    }
+    $query->orderBy($this->sortBy, $this->sortDir);
 
-    public function deleteRole($roleId): void
-    {
-        $role = Role::findOrFail($roleId);
-        $role->delete();
-        $this->dispatch('role-deleted');
-    }
-
-    public function with(): array
-    {
-        $query = Role::with('permissions');
-
-        // Search
-        if (!empty($this->search)) {
-            $query->where('name', 'like', "%{$this->search}%");
-        }
-
-        // Sorting
-        $allowedSorts = ['name', 'created_at'];
-        if (!in_array($this->sortBy, $allowedSorts)) {
-            $this->sortBy = 'name';
-        }
-
-        if (!in_array($this->sortDir, ['asc', 'desc'])) {
-            $this->sortDir = 'asc';
-        }
-
-        $query->orderBy($this->sortBy, $this->sortDir);
-
-        return [
-            'roles' => $query->paginate(15),
-        ];
-    }
-}; ?>
+    return $query->paginate(15);
+}); ?>
 
 <div>
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
@@ -100,16 +85,17 @@ new class extends Component {
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column>
-                        <button wire:click="sort('name')" class="flex items-center gap-1 hover:text-orange-600 dark:hover:text-orange-400">
+                        <button wire:click="sort('name')"
+                            class="flex items-center gap-1 hover:text-orange-600 dark:hover:text-orange-400">
                             {{ __('Nama Role') }}
-                            <flux:icon :name="$this->getSortIcon('name')" variant="mini" />
+                            <flux:icon :name="$this->sortIconName" variant="mini" />
                         </button>
                     </flux:table.column>
                     <flux:table.column>{{ __('Permission') }}</flux:table.column>
                     <flux:table.column>{{ __('Aksi') }}</flux:table.column>
                 </flux:table.columns>
                 <flux:table.rows>
-                    @forelse ($roles as $role)
+                    @forelse ($this->roles as $role)
                     <flux:table.row>
                         <flux:table.cell>
                             <div class="font-medium text-gray-900 dark:text-white">{{ $role->name }}</div>
@@ -139,7 +125,7 @@ new class extends Component {
                                     icon="pencil" wire:navigate
                                     class="!p-2 !bg-blue-600 hover:!bg-blue-700 dark:!bg-blue-500 dark:hover:!bg-blue-600 !text-white !rounded-md"
                                     title="{{ __('Edit') }}" />
-                                <flux:button wire:click="deleteRole({{ $role->id }})" 
+                                <flux:button wire:click="deleteRole({{ $role->id }})"
                                     wire:confirm="{{ __('Apakah Anda yakin ingin menghapus role ini?') }}"
                                     variant="ghost" size="sm" icon="trash"
                                     class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
@@ -159,20 +145,21 @@ new class extends Component {
 
             <div class="mt-4 flex items-center justify-between">
                 <div class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ __('Menampilkan') }} {{ $roles->firstItem() ?? 0 }} {{ __('sampai') }} {{ $roles->lastItem() ?? 0 }}
-                    {{ __('dari') }} {{ $roles->total() }} {{ __('hasil') }}
+                    {{ __('Menampilkan') }} {{ $this->roles->firstItem() ?? 0 }} {{ __('sampai') }} {{
+                    $this->roles->lastItem() ?? 0
+                    }}
+                    {{ __('dari') }} {{ $this->roles->total() }} {{ __('hasil') }}
                 </div>
-                @if ($roles->hasPages())
+                @if ($this->roles->hasPages())
                 <div>
-                    {{ $roles->links() }}
+                    {{ $this->roles->links() }}
                 </div>
                 @endif
             </div>
         </flux:card>
-        </div>
+    </div>
 
     <x-action-message on="role-deleted">
         {{ __('Role berhasil dihapus.') }}
     </x-action-message>
 </div>
-
