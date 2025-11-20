@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -61,5 +62,21 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    /**
+     * Get the anggota relationship
+     */
+    public function anggota(): HasOne
+    {
+        return $this->hasOne(Anggota::class);
+    }
+
+    /**
+     * Check if user is an anggota
+     */
+    public function isAnggota(): bool
+    {
+        return $this->anggota !== null;
     }
 }

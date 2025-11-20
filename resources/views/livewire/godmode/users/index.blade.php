@@ -17,6 +17,8 @@ state([
     'search' => fn () => request()->get('search', ''),
     'sortBy' => fn () => request()->get('sort_by', 'name'),
     'sortDir' => fn () => request()->get('sort_dir', 'asc'),
+    'showDeleteModal' => false,
+    'userToDelete' => null,
 ]);
 
 on(['updatingSearch' => function () {
@@ -47,14 +49,26 @@ $sortIconEmail = computed(function () {
     return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
 });
 
-$deleteUser = action(function ($userId) {
-    $user = User::findOrFail($userId);
-    $user->delete();
-    $this->dispatch('user-deleted');
+$openDeleteModal = action(function ($userId) {
+    $this->userToDelete = User::findOrFail($userId);
+    $this->showDeleteModal = true;
+});
+
+$closeDeleteModal = action(function () {
+    $this->showDeleteModal = false;
+    $this->userToDelete = null;
+});
+
+$deleteUser = action(function () {
+    if ($this->userToDelete) {
+        $this->userToDelete->delete();
+        $this->dispatch('toast', message: __('User berhasil dihapus.'), variant: 'success');
+        $this->closeDeleteModal();
+    }
 });
 
 $exportExcel = action(function () {
-    $query = User::with('roles');
+    $query = User::with('roles')->whereDoesntHave('anggota');
     
     if (!empty($this->search)) {
         $query->where(function ($q) {
@@ -100,7 +114,7 @@ $exportExcel = action(function () {
 });
 
 $exportPdf = action(function () {
-    $query = User::with('roles');
+    $query = User::with('roles')->whereDoesntHave('anggota');
     
     if (!empty($this->search)) {
         $query->where(function ($q) {
@@ -129,7 +143,7 @@ $exportPdf = action(function () {
 });
 
 $users = computed(function () {
-    $query = User::with('roles');
+    $query = User::with('roles')->whereDoesntHave('anggota');
 
     // Search
     if (!empty($this->search)) {
@@ -159,7 +173,7 @@ $users = computed(function () {
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('User') }}</h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola pengguna sistem') }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola pengguna sistem (non-anggota)') }}</p>
             </div>
             <div class="flex items-center gap-2">
                 @can('mengekspor user')
@@ -239,8 +253,7 @@ $users = computed(function () {
                                     title="{{ __('Edit') }}" />
                                 @endcan
                                 @can('menghapus user')
-                                <flux:button wire:click="deleteUser({{ $user->id }})"
-                                    wire:confirm="{{ __('Apakah Anda yakin ingin menghapus user ini?') }}"
+                                <flux:button wire:click="openDeleteModal({{ $user->id }})"
                                     variant="ghost" size="sm" icon="trash"
                                     class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
                                     title="{{ __('Hapus') }}" />
@@ -275,7 +288,28 @@ $users = computed(function () {
         </flux:card>
     </div>
 
-    <x-action-message on="user-deleted">
-        {{ __('User berhasil dihapus.') }}
-    </x-action-message>
+    <!-- Delete Confirmation Modal -->
+    <flux:modal name="delete-user" :show="$showDeleteModal" wire:model="showDeleteModal" class="max-w-lg">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Hapus User') }}</flux:heading>
+                <flux:subheading>{{ __('Apakah Anda yakin ingin menghapus user ini?') }}</flux:subheading>
+            </div>
+
+            @if ($userToDelete)
+            <div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
+                <p class="text-sm text-red-800 dark:text-red-200">
+                    <strong>{{ $userToDelete->name }}</strong> ({{ $userToDelete->email }}) akan dihapus secara permanen.
+                </p>
+            </div>
+            @endif
+
+            <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                <flux:modal.close>
+                    <flux:button variant="ghost" wire:click="closeDeleteModal">{{ __('Batal') }}</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="deleteUser" variant="danger">{{ __('Hapus') }}</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>

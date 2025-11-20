@@ -39,6 +39,7 @@ $store = action(function () {
         $user->assignRole($validated['role']);
     }
 
+    $this->dispatch('toast', message: __('User berhasil dibuat.'), variant: 'success');
     $this->redirect(route('godmode.users.index'), navigate: true);
 });
 

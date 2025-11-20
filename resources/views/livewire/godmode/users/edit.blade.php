@@ -56,6 +56,7 @@ $update = action(function () {
         $this->user->syncRoles([]);
     }
 
+    $this->dispatch('toast', message: __('User berhasil diupdate.'), variant: 'success');
     $this->redirect(route('godmode.users.index'), navigate: true);
 });
 

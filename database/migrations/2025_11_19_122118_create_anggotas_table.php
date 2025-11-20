@@ -11,8 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('anggotas', function (Blueprint $table) {
+        Schema::create('anggota', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->string('telepon', 20);
+            $table->text('alamat')->nullable();
+            $table->date('tanggal_lahir')->nullable();
+            $table->date('tanggal_registrasi');
+            $table->enum('status', ['Aktif', 'Non Aktif'])->default('Aktif');
+            $table->text('catatan')->nullable();
             $table->timestamps();
         });
     }
@@ -22,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('anggotas');
+        Schema::dropIfExists('anggota');
     }
 };

@@ -17,6 +17,8 @@ state([
     'search' => fn () => request()->get('search', ''),
     'sortBy' => fn () => request()->get('sort_by', 'name'),
     'sortDir' => fn () => request()->get('sort_dir', 'asc'),
+    'showDeleteModal' => false,
+    'roleToDelete' => null,
 ]);
 
 on(['updatingSearch' => function () {
@@ -39,10 +41,22 @@ $sortIconName = computed(function () {
     return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
 });
 
-$deleteRole = action(function ($roleId) {
-    $role = Role::findOrFail($roleId);
-    $role->delete();
-    $this->dispatch('role-deleted');
+$openDeleteModal = action(function ($roleId) {
+    $this->roleToDelete = Role::findOrFail($roleId);
+    $this->showDeleteModal = true;
+});
+
+$closeDeleteModal = action(function () {
+    $this->showDeleteModal = false;
+    $this->roleToDelete = null;
+});
+
+$deleteRole = action(function () {
+    if ($this->roleToDelete) {
+        $this->roleToDelete->delete();
+        $this->dispatch('toast', message: __('Role berhasil dihapus.'), variant: 'success');
+        $this->closeDeleteModal();
+    }
 });
 
 $exportExcel = action(function () {
@@ -217,8 +231,7 @@ $roles = computed(function () {
                                     title="{{ __('Edit') }}" />
                                 @endcan
                                 @can('menghapus role')
-                                <flux:button wire:click="deleteRole({{ $role->id }})"
-                                    wire:confirm="{{ __('Apakah Anda yakin ingin menghapus role ini?') }}"
+                                <flux:button wire:click="openDeleteModal({{ $role->id }})"
                                     variant="ghost" size="sm" icon="trash"
                                     class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
                                     title="{{ __('Hapus') }}" />
@@ -255,7 +268,28 @@ $roles = computed(function () {
         </flux:card>
     </div>
 
-    <x-action-message on="role-deleted">
-        {{ __('Role berhasil dihapus.') }}
-    </x-action-message>
+    <!-- Delete Confirmation Modal -->
+    <flux:modal name="delete-role" :show="$showDeleteModal" wire:model="showDeleteModal" class="max-w-lg">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Hapus Role') }}</flux:heading>
+                <flux:subheading>{{ __('Apakah Anda yakin ingin menghapus role ini?') }}</flux:subheading>
+            </div>
+
+            @if ($roleToDelete)
+            <div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
+                <p class="text-sm text-red-800 dark:text-red-200">
+                    Role <strong>{{ $roleToDelete->name }}</strong> akan dihapus secara permanen.
+                </p>
+            </div>
+            @endif
+
+            <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                <flux:modal.close>
+                    <flux:button variant="ghost" wire:click="closeDeleteModal">{{ __('Batal') }}</flux:button>
+                </flux:modal.close>
+                <flux:button wire:click="deleteRole" variant="danger">{{ __('Hapus') }}</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>
