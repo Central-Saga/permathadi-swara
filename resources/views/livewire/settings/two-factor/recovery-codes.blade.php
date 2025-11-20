@@ -1,49 +1,35 @@
 <?php
 
 use Laravel\Fortify\Actions\GenerateNewRecoveryCodes;
-use Livewire\Attributes\Locked;
-use Livewire\Volt\Component;
+use function Livewire\Volt\{state, mount, action};
 
-new class extends Component {
-    #[Locked]
-    public array $recoveryCodes = [];
+state([
+    'recoveryCodes' => [],
+]);
 
-    /**
-     * Mount the component.
-     */
-    public function mount(): void
-    {
-        $this->loadRecoveryCodes();
-    }
+$loadRecoveryCodes = function () {
+    $user = auth()->user();
 
-    /**
-     * Generate new recovery codes for the user.
-     */
-    public function regenerateRecoveryCodes(GenerateNewRecoveryCodes $generateNewRecoveryCodes): void
-    {
-        $generateNewRecoveryCodes(auth()->user());
+    if ($user->hasEnabledTwoFactorAuthentication() && $user->two_factor_recovery_codes) {
+        try {
+            $this->recoveryCodes = json_decode(decrypt($user->two_factor_recovery_codes), true);
+        } catch (Exception) {
+            $this->addError('recoveryCodes', 'Failed to load recovery codes');
 
-        $this->loadRecoveryCodes();
-    }
-
-    /**
-     * Load the recovery codes for the user.
-     */
-    private function loadRecoveryCodes(): void
-    {
-        $user = auth()->user();
-
-        if ($user->hasEnabledTwoFactorAuthentication() && $user->two_factor_recovery_codes) {
-            try {
-                $this->recoveryCodes = json_decode(decrypt($user->two_factor_recovery_codes), true);
-            } catch (Exception) {
-                $this->addError('recoveryCodes', 'Failed to load recovery codes');
-
-                $this->recoveryCodes = [];
-            }
+            $this->recoveryCodes = [];
         }
     }
-}; ?>
+};
+
+mount(function () use ($loadRecoveryCodes) {
+    $loadRecoveryCodes();
+});
+
+$regenerateRecoveryCodes = action(function (GenerateNewRecoveryCodes $generateNewRecoveryCodes) use ($loadRecoveryCodes) {
+    $generateNewRecoveryCodes(auth()->user());
+
+    $loadRecoveryCodes();
+}); ?>
 
 <div
     class="py-6 space-y-6 border shadow-sm rounded-xl border-zinc-200 dark:border-white/10"

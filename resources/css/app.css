@@ -23,16 +23,16 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    --color-accent: var(--color-orange-600);
+    --color-accent-content: var(--color-white);
     --color-accent-foreground: var(--color-white);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
+        --color-accent: var(--color-orange-500);
         --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent-foreground: var(--color-white);
     }
 }
 
@@ -58,7 +58,132 @@
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+    @apply outline-hidden ring-2 ring-orange-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-800;
+}
+
+/* Navlist default dan active states dengan orange theme */
+[data-flux-navlist-item] {
+    @apply text-gray-700 dark:text-gray-300;
+}
+
+[data-flux-navlist-item][aria-current="page"],
+[data-flux-navlist-item][data-current="true"] {
+    @apply bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-200;
+}
+
+[data-flux-navlist-item]:hover:not([aria-current="page"]):not([data-current="true"]) {
+    @apply bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-orange-300;
+}
+
+/* Navbar active states dengan orange theme */
+[data-flux-navbar-item][aria-current="page"],
+[data-flux-navbar-item][data-current="true"] {
+    @apply text-orange-600 border-b-2 border-orange-600 dark:text-orange-400 dark:border-orange-400;
+}
+
+[data-flux-navbar-item]:hover:not([aria-current="page"]):not([data-current="true"]) {
+    @apply text-orange-600 dark:text-orange-400;
+}
+
+/* Sidebar item default state */
+[data-flux-sidebar-item] {
+    @apply text-gray-700 dark:text-gray-300;
+}
+
+/* Sidebar item active states dengan orange theme - menggunakan !important untuk override Flux default */
+[data-flux-sidebar-item][aria-current="page"],
+[data-flux-sidebar-item][data-current="true"],
+[data-flux-sidebar-item][data-current],
+[data-flux-sidebar-item][current],
+button[data-flux-sidebar-item][aria-current="page"],
+a[data-flux-sidebar-item][aria-current="page"],
+button[data-flux-sidebar-item][current],
+a[data-flux-sidebar-item][current],
+[data-flux-sidebar-item].current {
+    background-color: rgb(255 237 213) !important; /* orange-100 */
+    color: rgb(194 65 12) !important; /* orange-700 */
+}
+
+.dark [data-flux-sidebar-item][aria-current="page"],
+.dark [data-flux-sidebar-item][data-current="true"],
+.dark [data-flux-sidebar-item][data-current],
+.dark [data-flux-sidebar-item][current],
+.dark button[data-flux-sidebar-item][aria-current="page"],
+.dark a[data-flux-sidebar-item][aria-current="page"],
+.dark button[data-flux-sidebar-item][current],
+.dark a[data-flux-sidebar-item][current],
+.dark [data-flux-sidebar-item].current {
+    background-color: rgb(124 45 18 / 0.5) !important; /* orange-900/50 */
+    color: rgb(254 243 199) !important; /* orange-200 */
+}
+
+/* Icon di dalam sidebar item active juga harus orange */
+[data-flux-sidebar-item][aria-current="page"] svg,
+[data-flux-sidebar-item][data-current="true"] svg,
+[data-flux-sidebar-item][data-current] svg,
+[data-flux-sidebar-item][current] svg,
+[data-flux-sidebar-item].current svg {
+    color: rgb(194 65 12) !important; /* orange-700 */
+}
+
+.dark [data-flux-sidebar-item][aria-current="page"] svg,
+.dark [data-flux-sidebar-item][data-current="true"] svg,
+.dark [data-flux-sidebar-item][data-current] svg,
+.dark [data-flux-sidebar-item][current] svg,
+.dark [data-flux-sidebar-item].current svg {
+    color: rgb(254 243 199) !important; /* orange-200 */
+}
+
+[data-flux-sidebar-item]:hover:not([aria-current="page"]):not([data-current="true"]):not([data-current]):not(.current) {
+    @apply bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-orange-300;
+}
+
+/* Navbar - Initial state untuk fade-in animation */
+[data-gsap="navbar"] {
+    opacity: 0;
+    transform: translateY(-20px);
+    will-change: opacity, transform;
+}
+
+/* Footer - Initial state untuk fade-in animation */
+[data-gsap="footer"] {
+    opacity: 0;
+    transform: translateY(20px);
+    will-change: opacity, transform;
+}
+
+/* Hero Section - Initial state untuk fade-in animation */
+/* Elemen mulai invisible dan di posisi bawah, lalu fade-in dengan animasi */
+[data-gsap="hero-title"],
+[data-gsap="hero-description"],
+[data-gsap="hero-button"],
+[data-gsap="hero-image"] {
+    opacity: 0;
+    transform: translateY(30px);
+    will-change: opacity, transform; /* Optimize for animation */
+}
+
+[data-gsap="hero-blur-1"],
+[data-gsap="hero-blur-2"] {
+    opacity: 0;
+    transform: scale(0.8);
+    will-change: opacity, transform; /* Optimize for animation */
+}
+
+/* Lazy loaded sections - hidden by default */
+[data-lazy-section] {
+    min-height: 200px; /* Prevent layout shift */
+}
+
+[data-lazy-section]:not([data-loaded]) {
+    opacity: 0;
+    visibility: hidden;
+}
+
+[data-lazy-section][data-loaded] {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease-in-out;
 }
 
 /* \[:where(&)\]:size-4 {

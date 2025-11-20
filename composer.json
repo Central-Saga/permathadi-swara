@@ -10,14 +10,19 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "barryvdh/laravel-dompdf": "^3.1",
         "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.1.1",
-        "livewire/volt": "^1.7.0"
+        "livewire/flux-pro": "^2.6",
+        "livewire/volt": "^1.7.0",
+        "maatwebsite/excel": "^3.1",
+        "spatie/laravel-permission": "^6.23"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "laravel-lang/common": "^6.7",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
@@ -26,6 +31,12 @@
         "pestphp/pest": "^4.1",
         "pestphp/pest-plugin-laravel": "^4.0"
     },
+    "repositories": [
+       {
+           "type": "artifact",
+           "url": "./packages"
+       }
+   ],
     "autoload": {
         "psr-4": {
             "App\\": "app/",
