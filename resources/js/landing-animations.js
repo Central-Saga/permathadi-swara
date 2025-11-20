@@ -8,19 +8,17 @@ gsap.registerPlugin(ScrollTrigger);
  * Initialize all landing page animations
  */
 export function initLandingAnimations() {
-    // Navbar dan footer harus langsung di-animate terlebih dahulu
-    // Lalu hero section
+    // Navbar dan hero harus dimulai bersamaan tanpa delay
     const initAllAnimations = () => {
-        // Init navbar dan footer terlebih dahulu (lebih cepat)
-        initNavbarAnimation();
-        initFooterAnimation();
-        
         // Cek apakah hero section sudah ada di DOM
         const heroSection = document.querySelector('[data-gsap="hero-title"]') || 
                            document.querySelector('[data-gsap="hero-description"]');
         if (heroSection) {
-            // Langsung init hero tanpa delay - animasi fade-in langsung dimulai
+            // Init navbar dan hero bersamaan tanpa delay
+            initNavbarAnimation();
             initHeroAnimations();
+            // Footer bisa sedikit delay
+            initFooterAnimation();
             return true;
         }
         return false;
@@ -85,7 +83,7 @@ let heroAnimated = false;
 
 /**
  * Initialize navbar animation - fade-in dari atas
- * Navbar fade-in lebih cepat dari hero section
+ * Navbar dan hero dimulai bersamaan untuk timing yang konsisten
  */
 function initNavbarAnimation() {
     const navbar = document.querySelector('[data-gsap="navbar"]');
@@ -96,12 +94,13 @@ function initNavbarAnimation() {
     navbar.setAttribute('data-animated', 'true');
 
     // Animate navbar dengan fade-in dan slide-down
+    // Timing sama dengan hero untuk konsistensi
     gsap.to(navbar, {
         opacity: 1,
         y: 0,
         duration: 0.6,
         ease: 'power2.out',
-        delay: 0
+        delay: 0 // No delay, start immediately
     });
 }
 
@@ -160,14 +159,15 @@ function initHeroAnimations() {
         delay: 0
     });
 
-    // Animate blur backgrounds first dengan fade-in
+    // Animate blur backgrounds dan title bersamaan untuk menghilangkan delay
+    // Title langsung muncul tanpa menunggu blur selesai
     if (heroBlur1) {
         heroTimeline.to(heroBlur1, {
             opacity: 1,
             scale: 1,
             duration: 1.5,
             ease: 'power2.out'
-        });
+        }, 0); // Start immediately
     }
 
     if (heroBlur2) {
@@ -176,30 +176,30 @@ function initHeroAnimations() {
             scale: 1,
             duration: 1.5,
             ease: 'power2.out'
-        }, '-=1');
+        }, 0); // Start immediately
     }
 
-    // Animate title dengan fade-in dan slide-up
+    // Animate title dengan fade-in dan slide-up - langsung dimulai bersamaan dengan blur
     if (heroTitle) {
         heroTimeline.to(heroTitle, {
             opacity: 1,
             y: 0,
             duration: 0.8,
             ease: 'power3.out'
-        }, '-=0.5');
+        }, 0); // Start immediately, no delay
     }
 
-    // Animate description dengan fade-in dan slide-up
+    // Animate description dengan fade-in dan slide-up - sedikit delay setelah title
     if (heroDescription) {
         heroTimeline.to(heroDescription, {
             opacity: 1,
             y: 0,
             duration: 0.8,
             ease: 'power3.out'
-        }, '-=0.6');
+        }, 0.1); // Start 0.1s after title
     }
 
-    // Animate buttons dengan fade-in dan slide-up (stagger)
+    // Animate buttons dengan fade-in dan slide-up (stagger) - setelah description
     if (heroButtons.length > 0) {
         heroTimeline.to(heroButtons, {
             opacity: 1,
@@ -207,29 +207,25 @@ function initHeroAnimations() {
             duration: 0.6,
             stagger: 0.1,
             ease: 'power2.out'
-        }, '-=0.4');
+        }, 0.2); // Start 0.2s after title
     }
 
-    // Animate image dengan fade-in dan slide-up
+    // Animate image dengan fade-in dan slide-up - sedikit delay
     if (heroImage) {
         heroTimeline.to(heroImage, {
             opacity: 1,
             y: 0,
             duration: 1,
             ease: 'power2.out'
-        }, '-=0.8');
+        }, 0.15); // Start 0.15s after title
     }
 
     // Mark hero section sebagai sudah ter-animate
     heroAnimated = true;
 
-    // Pastikan timeline langsung play (jika belum play)
-    if (heroTimeline.paused()) {
-        heroTimeline.play();
-    }
-
-    // Timeline akan langsung play tanpa scroll trigger
-    // Hero section langsung ter-animate saat pertama kali page diakses
+    // Timeline sudah langsung play karena paused: false
+    // Pastikan timeline benar-benar play tanpa delay
+    heroTimeline.play(0); // Force play from start (time 0)
 }
 
 /**
