@@ -23,16 +23,16 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    --color-accent: var(--color-orange-600);
+    --color-accent-content: var(--color-white);
     --color-accent-foreground: var(--color-white);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
+        --color-accent: var(--color-orange-500);
         --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent-foreground: var(--color-white);
     }
 }
 
@@ -58,7 +58,31 @@
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+    @apply outline-hidden ring-2 ring-orange-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-800;
+}
+
+/* Navlist default dan active states dengan orange theme */
+[data-flux-navlist-item] {
+    @apply text-gray-700 dark:text-gray-300;
+}
+
+[data-flux-navlist-item][aria-current="page"],
+[data-flux-navlist-item][data-current="true"] {
+    @apply bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-200;
+}
+
+[data-flux-navlist-item]:hover:not([aria-current="page"]):not([data-current="true"]) {
+    @apply bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-orange-300;
+}
+
+/* Navbar active states dengan orange theme */
+[data-flux-navbar-item][aria-current="page"],
+[data-flux-navbar-item][data-current="true"] {
+    @apply text-orange-600 border-b-2 border-orange-600 dark:text-orange-400 dark:border-orange-400;
+}
+
+[data-flux-navbar-item]:hover:not([aria-current="page"]):not([data-current="true"]) {
+    @apply text-orange-600 dark:text-orange-400;
 }
 
 /* \[:where(&)\]:size-4 {
