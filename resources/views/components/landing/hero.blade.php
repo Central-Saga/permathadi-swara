@@ -25,7 +25,8 @@
                         Sekarang</a>
                     @endif
                     @endauth
-                    <a href="#tentang" class="text-sm/6 font-semibold text-gray-900 dark:text-white">Pelajari Lebih
+                    <a href="{{ route('landing.tentang') }}"
+                        class="text-sm/6 font-semibold text-gray-900 dark:text-white">Pelajari Lebih
                         Lanjut <span aria-hidden="true">→</span></a>
                 </div>
             </div>

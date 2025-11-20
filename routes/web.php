@@ -8,6 +8,22 @@ Route::get('/', function () {
     return view('landing.welcome');
 })->name('home');
 
+Route::get('tentang', function () {
+    return view('landing.tentang');
+})->name('landing.tentang');
+
+Route::get('program', function () {
+    return view('landing.program');
+})->name('landing.program');
+
+Route::get('galeri', function () {
+    return view('landing.galeri');
+})->name('landing.galeri');
+
+Route::get('kontak', function () {
+    return view('landing.kontak');
+})->name('landing.kontak');
+
 Route::view('dashboard', 'godmode.dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');

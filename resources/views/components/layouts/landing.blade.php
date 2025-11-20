@@ -8,8 +8,6 @@
 <body class="bg-white dark:bg-gray-900">
     <x-landing.header />
 
-    <x-landing.hero />
-
     <main>
         {{ $slot }}
     </main>
