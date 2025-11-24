@@ -36,6 +36,7 @@ class LayananFactory extends Factory
             'slug' => Str::slug($name),
             'description' => $this->faker->paragraph(3),
             'price' => $this->faker->randomFloat(2, 100000, 5000000),
+            'duration' => $this->faker->randomElement([30, 60, 90, 180, 365]), // Durasi dalam hari: 1, 2, 3, 6 bulan, atau 1 tahun
             'is_active' => $this->faker->boolean(80), // 80% chance aktif
         ];
     }

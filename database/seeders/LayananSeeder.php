@@ -19,6 +19,7 @@ class LayananSeeder extends Seeder
                 'slug' => 'kelas-tari-tradisional',
                 'description' => 'Pelajari berbagai tarian tradisional Indonesia dengan instruktur berpengalaman. Program ini mencakup tari Bali, Jawa, Sunda, dan daerah lainnya.',
                 'price' => 500000,
+                'duration' => 30, // 1 bulan
                 'is_active' => true,
             ],
             [
@@ -26,6 +27,7 @@ class LayananSeeder extends Seeder
                 'slug' => 'jasa-website-development',
                 'description' => 'Layanan pembuatan website profesional untuk bisnis Anda. Mulai dari company profile hingga e-commerce dengan teknologi terbaru.',
                 'price' => 5000000,
+                'duration' => 90, // 3 bulan
                 'is_active' => true,
             ],
             [
@@ -33,6 +35,7 @@ class LayananSeeder extends Seeder
                 'slug' => 'kelas-musik-gamelan',
                 'description' => 'Belajar memainkan alat musik gamelan tradisional. Cocok untuk semua usia dan tingkat keahlian.',
                 'price' => 400000,
+                'duration' => 30, // 1 bulan
                 'is_active' => true,
             ],
             [
@@ -40,6 +43,7 @@ class LayananSeeder extends Seeder
                 'slug' => 'konsultasi-desain-grafis',
                 'description' => 'Konsultasi dan jasa desain grafis untuk kebutuhan branding, marketing, dan komunikasi visual bisnis Anda.',
                 'price' => 1500000,
+                'duration' => 60, // 2 bulan
                 'is_active' => true,
             ],
             [
@@ -47,6 +51,7 @@ class LayananSeeder extends Seeder
                 'slug' => 'workshop-fotografi',
                 'description' => 'Workshop fotografi untuk pemula hingga advanced. Pelajari teknik komposisi, lighting, dan editing foto profesional.',
                 'price' => 800000,
+                'duration' => 30, // 1 bulan
                 'is_active' => true,
             ],
             [
@@ -54,6 +59,7 @@ class LayananSeeder extends Seeder
                 'slug' => 'kelas-tari-modern',
                 'description' => 'Kelas tari modern dan kontemporer untuk mengembangkan kreativitas dan ekspresi melalui gerakan.',
                 'price' => 450000,
+                'duration' => 30, // 1 bulan
                 'is_active' => true,
             ],
             [
@@ -61,6 +67,7 @@ class LayananSeeder extends Seeder
                 'slug' => 'jasa-branding-logo',
                 'description' => 'Layanan pembuatan logo dan identitas visual brand yang profesional dan memorable untuk bisnis Anda.',
                 'price' => 3000000,
+                'duration' => 60, // 2 bulan
                 'is_active' => true,
             ],
             [
@@ -68,6 +75,7 @@ class LayananSeeder extends Seeder
                 'slug' => 'kelas-vokal',
                 'description' => 'Kelas vokal untuk mengembangkan kemampuan bernyanyi dengan teknik yang benar dan sehat.',
                 'price' => 600000,
+                'duration' => 30, // 1 bulan
                 'is_active' => true,
             ],
         ];
