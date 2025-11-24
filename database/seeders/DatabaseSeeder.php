@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             RoleAndPermissionSeeder::class,
             UserSeeder::class,
             LayananSeeder::class,
+            ContactMessageSeeder::class,
         ]);
     }
 }
