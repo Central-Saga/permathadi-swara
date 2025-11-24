@@ -200,7 +200,8 @@ $messages = computed(function () {
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ __('Pesan Kontak') }}</h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola pesan yang masuk dari form kontak') }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola pesan yang masuk dari form kontak') }}
+                </p>
             </div>
             <div class="flex items-center gap-2">
                 @can('mengekspor pesan kontak')
@@ -219,11 +220,13 @@ $messages = computed(function () {
         <flux:card>
             <div class="mb-4 flex flex-col gap-4 md:flex-row">
                 <div class="flex-1">
-                    <flux:input wire:model.live.debounce.500ms="search" name="search" type="search" icon="magnifying-glass"
+                    <flux:input wire:model.live.debounce.500ms="search" name="search" type="search"
+                        icon="magnifying-glass"
                         placeholder="{{ __('Cari nama, email, phone, subject, atau pesan...') }}" class="w-full" />
                 </div>
                 <div class="w-full md:w-48">
-                    <flux:select wire:model.live="statusFilter" name="statusFilter" placeholder="{{ __('Semua Status') }}">
+                    <flux:select wire:model.live="statusFilter" name="statusFilter"
+                        placeholder="{{ __('Semua Status') }}">
                         <flux:select.option value="">{{ __('Semua Status') }}</flux:select.option>
                         <flux:select.option value="new">{{ __('New') }}</flux:select.option>
                         <flux:select.option value="read">{{ __('Read') }}</flux:select.option>
@@ -273,24 +276,29 @@ $messages = computed(function () {
                         </flux:table.cell>
                         <flux:table.cell>
                             @can('mengubah pesan kontak')
-                            <select 
-                                wire:change="updateStatus({{ $message->id }}, $event.target.value)"
-                                value="{{ $message->status }}"
-                                class="min-w-[120px] rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:border-orange-500 focus:ring-orange-500">
-                                <option value="new" {{ $message->status === 'new' ? 'selected' : '' }}>{{ __('New') }}</option>
-                                <option value="read" {{ $message->status === 'read' ? 'selected' : '' }}>{{ __('Read') }}</option>
-                                <option value="archived" {{ $message->status === 'archived' ? 'selected' : '' }}>{{ __('Archived') }}</option>
-                            </select>
+                            <div x-data="{ currentStatus: '{{ $message->status }}' }" class="min-w-[130px]">
+                                <flux:select 
+                                    x-model="currentStatus"
+                                    x-on:change="$wire.updateStatus({{ $message->id }}, currentStatus)"
+                                    class="min-w-full">
+                                    <flux:select.option value="new">{{ __('New') }}</flux:select.option>
+                                    <flux:select.option value="read">{{ __('Read') }}</flux:select.option>
+                                    <flux:select.option value="archived">{{ __('Archived') }}</flux:select.option>
+                                </flux:select>
+                            </div>
                             @else
-                            <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $message->status_badge_color }}">
+                            <span
+                                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $message->status_badge_color }}">
                                 {{ ucfirst($message->status) }}
                             </span>
                             @endcan
                         </flux:table.cell>
                         <flux:table.cell>
-                            <div class="text-gray-600 dark:text-gray-400">{{ $message->created_at->format('d/m/Y H:i') }}</div>
+                            <div class="text-gray-600 dark:text-gray-400">{{ $message->created_at->format('d/m/Y H:i')
+                                }}</div>
                         </flux:table.cell>
-                        @if (auth()->user()->can('melihat pesan kontak') || auth()->user()->can('mengubah pesan kontak'))
+                        @if (auth()->user()->can('melihat pesan kontak') || auth()->user()->can('mengubah pesan
+                        kontak'))
                         <flux:table.cell>
                             <div class="flex items-center gap-2">
                                 @can('melihat pesan kontak')
@@ -300,8 +308,8 @@ $messages = computed(function () {
                                     title="{{ __('Detail') }}" />
                                 @endcan
                                 @can('mengubah pesan kontak')
-                                <flux:button :href="route('godmode.contact-messages.edit', $message)" variant="ghost" size="sm"
-                                    icon="pencil" wire:navigate
+                                <flux:button :href="route('godmode.contact-messages.edit', $message)" variant="ghost"
+                                    size="sm" icon="pencil" wire:navigate
                                     class="!p-2 !bg-blue-600 hover:!bg-blue-700 dark:!bg-blue-500 dark:hover:!bg-blue-600 !text-white !rounded-md"
                                     title="{{ __('Edit') }}" />
                                 @endcan
@@ -355,16 +363,19 @@ $messages = computed(function () {
                         </div>
                         <div>
                             <flux:label>{{ __('Email') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedMessage->email ?? '-' }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedMessage->email ?? '-' }}
+                            </div>
                         </div>
                         <div>
                             <flux:label>{{ __('Phone') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedMessage->phone ?? '-' }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedMessage->phone ?? '-' }}
+                            </div>
                         </div>
                         <div>
                             <flux:label>{{ __('Status') }}</flux:label>
                             <div class="mt-1">
-                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $selectedMessage->status_badge_color }}">
+                                <span
+                                    class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $selectedMessage->status_badge_color }}">
                                     {{ ucfirst($selectedMessage->status) }}
                                 </span>
                             </div>
@@ -377,20 +388,24 @@ $messages = computed(function () {
                     <div class="space-y-4">
                         <div>
                             <flux:label>{{ __('Subject') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white font-semibold">{{ $selectedMessage->subject }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white font-semibold">{{
+                                $selectedMessage->subject }}</div>
                         </div>
                         <div>
                             <flux:label>{{ __('Message') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ $selectedMessage->message }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{
+                                $selectedMessage->message }}</div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <flux:label>{{ __('Created At') }}</flux:label>
-                                <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedMessage->created_at->format('d/m/Y H:i') }}</div>
+                                <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                    $selectedMessage->created_at->format('d/m/Y H:i') }}</div>
                             </div>
                             <div>
                                 <flux:label>{{ __('Updated At') }}</flux:label>
-                                <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedMessage->updated_at->format('d/m/Y H:i') }}</div>
+                                <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                    $selectedMessage->updated_at->format('d/m/Y H:i') }}</div>
                             </div>
                         </div>
                     </div>
@@ -402,7 +417,8 @@ $messages = computed(function () {
                     {{ __('Tutup') }}
                 </flux:button>
                 @can('mengubah pesan kontak')
-                <flux:button :href="route('godmode.contact-messages.edit', $selectedMessage)" variant="primary" wire:navigate>
+                <flux:button :href="route('godmode.contact-messages.edit', $selectedMessage)" variant="primary"
+                    wire:navigate>
                     {{ __('Edit') }}
                 </flux:button>
                 @endcan
@@ -411,4 +427,3 @@ $messages = computed(function () {
     </flux:modal>
     @endif
 </div>
-
