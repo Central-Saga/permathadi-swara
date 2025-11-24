@@ -47,6 +47,12 @@
                 {{ __('Pembayaran') }}
             </flux:sidebar.item>
             @endcan
+            @can('melihat pesan kontak')
+            <flux:sidebar.item icon="envelope" :href="route('godmode.contact-messages.index')"
+                :current="request()->routeIs('godmode.contact-messages.*')" wire:navigate>
+                {{ __('Pesan Kontak') }}
+            </flux:sidebar.item>
+            @endcan
             @can('melihat role')
             <flux:sidebar.item icon="shield-check" :href="route('godmode.roles.index')"
                 :current="request()->routeIs('godmode.roles.*')" wire:navigate>

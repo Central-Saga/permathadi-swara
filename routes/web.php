@@ -68,4 +68,8 @@ Route::middleware(['auth'])->prefix('godmode')->name('godmode.')->group(function
     
     // Create payment from subscription
     Volt::route('subscriptions/{subscription}/payments/create', 'godmode.payments.create')->name('subscriptions.payments.create');
+    
+    // Contact Messages routes
+    Volt::route('contact-messages', 'godmode.contact-messages.index')->name('contact-messages.index');
+    Volt::route('contact-messages/{contactMessage}/edit', 'godmode.contact-messages.edit')->name('contact-messages.edit');
 });
