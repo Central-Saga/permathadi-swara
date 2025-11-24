@@ -47,7 +47,12 @@ $update = action(function () {
         <form wire:submit="update" class="space-y-6">
             <div>
                 <flux:label>{{ __('Status') }} <span class="text-red-500">*</span></flux:label>
-                <flux:select wire:model="status" name="status" class="mt-2" required>
+                <flux:select 
+                    variant="listbox"
+                    wire:model="status" 
+                    name="status" 
+                    class="mt-2" 
+                    required>
                     <flux:select.option value="new">{{ __('New') }}</flux:select.option>
                     <flux:select.option value="read">{{ __('Read') }}</flux:select.option>
                     <flux:select.option value="archived">{{ __('Archived') }}</flux:select.option>

@@ -277,9 +277,7 @@ $messages = computed(function () {
                         <flux:table.cell>
                             @can('mengubah pesan kontak')
                             <div x-data="{ currentStatus: '{{ $message->status }}' }" class="min-w-[130px]">
-                                <flux:select 
-                                    variant="listbox"
-                                    x-model="currentStatus"
+                                <flux:select variant="listbox" x-model="currentStatus"
                                     x-on:change="$wire.updateStatus({{ $message->id }}, currentStatus)"
                                     class="min-w-full">
                                     <flux:select.option value="new">{{ __('New') }}</flux:select.option>
