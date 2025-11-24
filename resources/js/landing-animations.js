@@ -13,10 +13,20 @@ export function initLandingAnimations() {
         // Cek apakah hero section sudah ada di DOM
         const heroSection = document.querySelector('[data-gsap="hero-title"]') || 
                            document.querySelector('[data-gsap="hero-description"]');
+        const aboutHeroSection = document.querySelector('[data-gsap="about-hero-title"]') || 
+                                 document.querySelector('[data-gsap="about-hero-description"]');
+        
         if (heroSection) {
             // Init navbar dan hero bersamaan tanpa delay
             initNavbarAnimation();
             initHeroAnimations();
+            // Footer bisa sedikit delay
+            initFooterAnimation();
+            return true;
+        } else if (aboutHeroSection) {
+            // Init navbar dan about hero bersamaan tanpa delay
+            initNavbarAnimation();
+            initAboutHeroAnimations();
             // Footer bisa sedikit delay
             initFooterAnimation();
             return true;
@@ -68,10 +78,12 @@ export function initLandingAnimations() {
         window.Livewire.hook('morph.updated', () => {
             // Reset hero animated flag untuk halaman baru
             heroAnimated = false;
+            aboutHeroAnimated = false;
             // Re-init semua animasi
             initNavbarAnimation();
             initFooterAnimation();
             initHeroAnimations();
+            initAboutHeroAnimations();
             // Re-init lazy loading
             initLazyLoading();
         });
@@ -80,6 +92,7 @@ export function initLandingAnimations() {
 
 // Track if hero section has been animated
 let heroAnimated = false;
+let aboutHeroAnimated = false;
 
 /**
  * Initialize navbar animation - fade-in dari atas
@@ -255,6 +268,16 @@ function initLazyLoading() {
                     initFeaturesAnimations();
                 } else if (sectionType === 'testimonials') {
                     initTestimonialsAnimations();
+                } else if (sectionType === 'about-profile') {
+                    initAboutProfileAnimations();
+                } else if (sectionType === 'about-vision') {
+                    initAboutVisionAnimations();
+                } else if (sectionType === 'about-services') {
+                    initAboutServicesAnimations();
+                } else if (sectionType === 'about-advantages') {
+                    initAboutAdvantagesAnimations();
+                } else if (sectionType === 'about-contact') {
+                    initAboutContactAnimations();
                 }
                 
                 // Stop observing setelah di-load
@@ -484,6 +507,403 @@ function initTestimonialsAnimations() {
             duration: 0.6,
             ease: 'power2.out'
         }, '-=0.4');
+    }
+}
+
+/**
+ * Initialize About Hero section animations (NO SCROLL TRIGGER)
+ * About Hero section langsung di-animate saat pertama kali page diakses
+ */
+function initAboutHeroAnimations() {
+    const aboutHeroTitle = document.querySelector('[data-gsap="about-hero-title"]');
+    const aboutHeroDescription = document.querySelector('[data-gsap="about-hero-description"]');
+    const aboutHeroBlur1 = document.querySelector('[data-gsap="about-hero-blur-1"]');
+    const aboutHeroBlur2 = document.querySelector('[data-gsap="about-hero-blur-2"]');
+
+    // Check if about hero elements exist
+    if (!aboutHeroTitle && !aboutHeroDescription) {
+        return; // Exit if no about hero elements found
+    }
+
+    // Check if about hero section sudah ter-animate (untuk mencegah re-animation)
+    if (aboutHeroAnimated) {
+        return; // Skip jika sudah ter-animate
+    }
+
+    // Set initial states
+    if (aboutHeroBlur1) {
+        gsap.set(aboutHeroBlur1, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (aboutHeroBlur2) {
+        gsap.set(aboutHeroBlur2, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (aboutHeroTitle) {
+        gsap.set(aboutHeroTitle, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    if (aboutHeroDescription) {
+        gsap.set(aboutHeroDescription, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    // Create timeline for about hero animations - NO SCROLL TRIGGER
+    const aboutHeroTimeline = gsap.timeline({
+        paused: false,
+        delay: 0
+    });
+
+    // Animate blur backgrounds dan title bersamaan
+    if (aboutHeroBlur1) {
+        aboutHeroTimeline.to(aboutHeroBlur1, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    if (aboutHeroBlur2) {
+        aboutHeroTimeline.to(aboutHeroBlur2, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    // Animate title dengan fade-in dan slide-up
+    if (aboutHeroTitle) {
+        aboutHeroTimeline.to(aboutHeroTitle, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        }, 0);
+    }
+
+    // Animate description dengan fade-in dan slide-up
+    if (aboutHeroDescription) {
+        aboutHeroTimeline.to(aboutHeroDescription, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        }, 0.1);
+    }
+
+    // Mark about hero section sebagai sudah ter-animate
+    aboutHeroAnimated = true;
+
+    // Force play timeline
+    aboutHeroTimeline.play(0);
+}
+
+/**
+ * About Profile Section: Fade in on scroll
+ */
+function initAboutProfileAnimations() {
+    const profileSection = document.querySelector('[data-gsap="about-profile-section"]');
+    const profileContent = document.querySelector('[data-gsap="about-profile-content"]');
+    const profileVisual = document.querySelector('[data-gsap="about-profile-visual"]');
+
+    if (!profileSection) return;
+    
+    // Skip jika sudah di-animate
+    if (profileSection.hasAttribute('data-animated')) return;
+    profileSection.setAttribute('data-animated', 'true');
+
+    // Set initial states
+    const profileElements = [profileContent, profileVisual].filter(Boolean);
+    if (profileElements.length === 0) return;
+    
+    gsap.set(profileElements, {
+        opacity: 0,
+        y: 40
+    });
+
+    // Animate with stagger
+    gsap.to(profileElements, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.2,
+        ease: 'power3.out',
+        scrollTrigger: {
+            trigger: profileSection,
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+        }
+    });
+}
+
+/**
+ * About Vision Section: Fade in and scale on scroll
+ */
+function initAboutVisionAnimations() {
+    const visionSection = document.querySelector('[data-gsap="about-vision-section"]');
+    const visionCard = document.querySelector('[data-gsap="about-vision-card"]');
+    const visionItems = document.querySelectorAll('[data-gsap="about-vision-item"]');
+
+    if (!visionSection) return;
+    
+    // Skip jika sudah di-animate
+    if (visionSection.hasAttribute('data-animated')) return;
+    visionSection.setAttribute('data-animated', 'true');
+
+    // Set initial states
+    if (visionCard) {
+        gsap.set(visionCard, {
+            opacity: 0,
+            scale: 0.95
+        });
+    }
+
+    if (visionItems.length > 0) {
+        gsap.set(visionItems, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    // Animate card
+    if (visionCard) {
+        gsap.to(visionCard, {
+            opacity: 1,
+            scale: 1,
+            duration: 0.8,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: visionSection,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            }
+        });
+    }
+
+    // Animate items with stagger
+    if (visionItems.length > 0) {
+        gsap.to(visionItems, {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            stagger: 0.15,
+            ease: 'power2.out',
+            scrollTrigger: {
+                trigger: visionSection,
+                start: 'top 75%',
+                toggleActions: 'play none none none'
+            }
+        });
+    }
+}
+
+/**
+ * About Services Section: Stagger animation for service cards
+ */
+function initAboutServicesAnimations() {
+    const servicesSection = document.querySelector('[data-gsap="about-services-section"]');
+    const servicesHeading = document.querySelector('[data-gsap="about-services-heading"]');
+    const serviceCards = document.querySelectorAll('[data-gsap="about-service-card"]');
+    const serviceIcons = document.querySelectorAll('[data-gsap="about-service-icon"]');
+
+    if (!servicesSection) return;
+    
+    // Skip jika sudah di-animate
+    if (servicesSection.hasAttribute('data-animated')) return;
+    servicesSection.setAttribute('data-animated', 'true');
+
+    // Set initial states
+    if (servicesHeading) {
+        gsap.set(servicesHeading, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    if (serviceCards.length > 0) {
+        gsap.set(serviceCards, {
+            opacity: 0,
+            y: 40
+        });
+    }
+
+    if (serviceIcons.length > 0) {
+        gsap.set(serviceIcons, {
+            opacity: 0,
+            scale: 0
+        });
+    }
+
+    // Animate heading
+    gsap.to(servicesHeading, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: 'power3.out',
+        scrollTrigger: {
+            trigger: servicesSection,
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+        }
+    });
+
+    // Animate icons first
+    gsap.to(serviceIcons, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.6,
+        stagger: 0.15,
+        ease: 'back.out(1.7)',
+        scrollTrigger: {
+            trigger: servicesSection,
+            start: 'top 75%',
+            toggleActions: 'play none none none'
+        }
+    });
+
+    // Animate cards with stagger
+    gsap.to(serviceCards, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.2,
+        ease: 'power3.out',
+        scrollTrigger: {
+            trigger: servicesSection,
+            start: 'top 70%',
+            toggleActions: 'play none none none'
+        }
+    });
+}
+
+/**
+ * About Advantages Section: Stagger animation for advantage cards
+ */
+function initAboutAdvantagesAnimations() {
+    const advantagesSection = document.querySelector('[data-gsap="about-advantages-section"]');
+    const advantagesHeading = document.querySelector('[data-gsap="about-advantages-heading"]');
+    const advantageCards = document.querySelectorAll('[data-gsap="about-advantage-card"]');
+
+    if (!advantagesSection) return;
+    
+    // Skip jika sudah di-animate
+    if (advantagesSection.hasAttribute('data-animated')) return;
+    advantagesSection.setAttribute('data-animated', 'true');
+
+    // Set initial states
+    if (advantagesHeading) {
+        gsap.set(advantagesHeading, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    if (advantageCards.length > 0) {
+        gsap.set(advantageCards, {
+            opacity: 0,
+            y: 40
+        });
+    }
+
+    // Animate heading
+    gsap.to(advantagesHeading, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: 'power3.out',
+        scrollTrigger: {
+            trigger: advantagesSection,
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+        }
+    });
+
+    // Animate cards with stagger
+    gsap.to(advantageCards, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.2,
+        ease: 'power3.out',
+        scrollTrigger: {
+            trigger: advantagesSection,
+            start: 'top 75%',
+            toggleActions: 'play none none none'
+        }
+    });
+}
+
+/**
+ * About Contact Section: Fade in on scroll
+ */
+function initAboutContactAnimations() {
+    const contactSection = document.querySelector('[data-gsap="about-contact-section"]');
+    const contactHeading = document.querySelector('[data-gsap="about-contact-heading"]');
+    const contactItems = document.querySelectorAll('[data-gsap="about-contact-item"]');
+
+    if (!contactSection) return;
+    
+    // Skip jika sudah di-animate
+    if (contactSection.hasAttribute('data-animated')) return;
+    contactSection.setAttribute('data-animated', 'true');
+
+    // Set initial states
+    if (contactHeading) {
+        gsap.set(contactHeading, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    if (contactItems.length > 0) {
+        gsap.set(contactItems, {
+            opacity: 0,
+            y: 40
+        });
+    }
+
+    // Animate heading
+    if (contactHeading) {
+        gsap.to(contactHeading, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: contactSection,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            }
+        });
+    }
+
+    // Animate items with stagger
+    if (contactItems.length > 0) {
+        gsap.to(contactItems, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: contactSection,
+                start: 'top 75%',
+                toggleActions: 'play none none none'
+            }
+        });
     }
 }
 
