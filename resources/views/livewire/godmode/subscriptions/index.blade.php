@@ -51,7 +51,7 @@ $sortIconStartDate = computed(function () {
 });
 
 $showDetail = action(function ($subscriptionId) {
-    $this->selectedSubscription = Subscription::with(['anggota.user', 'layanan'])->findOrFail($subscriptionId);
+    $this->selectedSubscription = Subscription::with(['anggota.user', 'layanan', 'payments'])->findOrFail($subscriptionId);
     $this->showDetailModal = true;
 });
 
@@ -162,7 +162,7 @@ $exportPdf = action(function () {
 });
 
 $subscriptions = computed(function () {
-    $query = Subscription::with(['anggota.user', 'layanan']);
+    $query = Subscription::with(['anggota.user', 'layanan', 'payments']);
 
     // Search
     if (!empty($this->search)) {
@@ -237,6 +237,7 @@ $subscriptions = computed(function () {
                     </flux:table.column>
                     <flux:table.column>{{ __('Tanggal Berakhir') }}</flux:table.column>
                     <flux:table.column>{{ __('Status') }}</flux:table.column>
+                    <flux:table.column>{{ __('Payments') }}</flux:table.column>
                     <flux:table.column>{{ __('Aksi') }}</flux:table.column>
                 </flux:table.columns>
                 <flux:table.rows>
@@ -261,6 +262,11 @@ $subscriptions = computed(function () {
                             </span>
                         </flux:table.cell>
                         <flux:table.cell>
+                            <div class="text-gray-600 dark:text-gray-400">
+                                <span class="font-semibold">{{ $subscription->payments->count() }}</span> {{ __('pembayaran') }}
+                            </div>
+                        </flux:table.cell>
+                        <flux:table.cell>
                             <div class="flex items-center gap-2">
                                 <flux:button wire:click="showDetail({{ $subscription->id }})" variant="ghost" size="sm"
                                     icon="eye"
@@ -279,7 +285,7 @@ $subscriptions = computed(function () {
                     </flux:table.row>
                     @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="6" class="text-center text-gray-500 dark:text-gray-400">
+                        <flux:table.cell colspan="7" class="text-center text-gray-500 dark:text-gray-400">
                             {{ __('Tidak ada langganan') }}
                         </flux:table.cell>
                     </flux:table.row>
@@ -357,6 +363,43 @@ $subscriptions = computed(function () {
                         </div>
                         @endif
                     </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">{{ __('Pembayaran') }}</h3>
+                    <div class="space-y-2">
+                        @forelse ($selectedSubscription->payments as $payment)
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ $payment->formatted_amount }} - {{ ucfirst($payment->method) }}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ ucfirst($payment->status) }}
+                                    @if ($payment->paid_at)
+                                        - {{ $payment->paid_at->format('d/m/Y H:i') }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div>
+                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $payment->status_badge_color }}">
+                                    {{ ucfirst($payment->status) }}
+                                </span>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="text-sm text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            {{ __('Belum ada pembayaran') }}
+                        </div>
+                        @endforelse
+                    </div>
+                    @can('membuat payment')
+                    <div class="mt-3">
+                        <flux:button :href="route('godmode.subscriptions.payments.create', $selectedSubscription)" variant="primary" size="sm" wire:navigate>
+                            {{ __('Tambah Pembayaran') }}
+                        </flux:button>
+                    </div>
+                    @endcan
                 </div>
             </div>
 
