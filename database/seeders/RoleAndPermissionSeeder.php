@@ -93,6 +93,7 @@ class RoleAndPermissionSeeder extends Seeder
 
             // Contact Message permissions
             'melihat pesan kontak',
+            'mengubah pesan kontak',
             'menghapus pesan kontak',
             'mengekspor pesan kontak',
         ]);

@@ -273,14 +273,14 @@ $messages = computed(function () {
                         </flux:table.cell>
                         <flux:table.cell>
                             @can('mengubah pesan kontak')
-                            <flux:select 
+                            <select 
                                 wire:change="updateStatus({{ $message->id }}, $event.target.value)"
                                 value="{{ $message->status }}"
-                                class="!min-w-[120px]">
-                                <flux:select.option value="new">{{ __('New') }}</flux:select.option>
-                                <flux:select.option value="read">{{ __('Read') }}</flux:select.option>
-                                <flux:select.option value="archived">{{ __('Archived') }}</flux:select.option>
-                            </flux:select>
+                                class="min-w-[120px] rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:border-orange-500 focus:ring-orange-500">
+                                <option value="new" {{ $message->status === 'new' ? 'selected' : '' }}>{{ __('New') }}</option>
+                                <option value="read" {{ $message->status === 'read' ? 'selected' : '' }}>{{ __('Read') }}</option>
+                                <option value="archived" {{ $message->status === 'archived' ? 'selected' : '' }}>{{ __('Archived') }}</option>
+                            </select>
                             @else
                             <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $message->status_badge_color }}">
                                 {{ ucfirst($message->status) }}
@@ -321,14 +321,14 @@ $messages = computed(function () {
                 </flux:table.rows>
             </flux:table>
 
-            <div class="mt-4 flex items-center justify-between">
+            <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="text-sm text-gray-600 dark:text-gray-400">
                     {{ __('Menampilkan') }} {{ $this->messages->firstItem() ?? 0 }} {{ __('sampai') }} {{
                     $this->messages->lastItem() ?? 0 }}
                     {{ __('dari') }} {{ $this->messages->total() }} {{ __('hasil') }}
                 </div>
                 @if ($this->messages->hasPages())
-                <div>
+                <div class="flex justify-center sm:justify-end">
                     {{ $this->messages->links() }}
                 </div>
                 @endif
