@@ -37,6 +37,10 @@
                 :current="request()->routeIs('godmode.layanan.*')" wire:navigate>
                 {{ __('Layanan') }}
             </flux:sidebar.item>
+            <flux:sidebar.item icon="document-text" :href="route('godmode.subscriptions.index')"
+                :current="request()->routeIs('godmode.subscriptions.*')" wire:navigate>
+                {{ __('Langganan') }}
+            </flux:sidebar.item>
             @can('melihat role')
             <flux:sidebar.item icon="shield-check" :href="route('godmode.roles.index')"
                 :current="request()->routeIs('godmode.roles.*')" wire:navigate>

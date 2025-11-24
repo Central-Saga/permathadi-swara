@@ -16,6 +16,7 @@ state([
     'slug' => '',
     'description' => '',
     'price' => '',
+    'duration' => 30,
     'is_active' => 1,
     'cover_image' => null,
     'originalName' => '',
@@ -28,6 +29,7 @@ mount(function (Layanan $layanan) {
     $this->slug = $layanan->slug ?? '';
     $this->description = $layanan->description ?? '';
     $this->price = $layanan->price ?? '';
+    $this->duration = $layanan->duration ?? 30;
     $this->is_active = $layanan->is_active ? 1 : 0;
     $this->originalName = $layanan->name;
 });
@@ -76,6 +78,7 @@ $update = action(function () {
         'slug' => ['nullable', 'string', 'max:120', 'unique:layanan,slug,' . $this->layanan->id],
         'description' => ['nullable', 'string'],
         'price' => ['nullable', 'numeric', 'min:0'],
+        'duration' => ['required', 'integer', 'min:1'],
         'is_active' => ['required', 'in:0,1'],
         'cover_image' => ['nullable', 'image', 'max:5120'], // 5MB max
     ];
@@ -101,6 +104,7 @@ $update = action(function () {
         'slug' => $validated['slug'] ?? null,
         'description' => $validated['description'] ?? null,
         'price' => $validated['price'] ?? null,
+        'duration' => $validated['duration'],
         'is_active' => (bool) $validated['is_active'],
     ]);
 
@@ -153,6 +157,12 @@ $update = action(function () {
 
                 <flux:input wire:model="price" name="price" :label="__('Harga Langganan')" type="number" step="0.01"
                     min="0" placeholder="{{ __('Contoh: 500000') }}" />
+
+                <flux:input wire:model="duration" name="duration" :label="__('Durasi (Hari)')" type="number"
+                    min="1" required placeholder="{{ __('Contoh: 30 (untuk 1 bulan)') }}" />
+                <p class="text-xs text-gray-500 dark:text-gray-400 -mt-2">
+                    {{ __('Durasi layanan dalam hari. Contoh: 30 hari = 1 bulan, 90 hari = 3 bulan, 365 hari = 1 tahun') }}
+                </p>
 
                 <flux:radio.group wire:model="is_active" name="is_active" :label="__('Status Aktif')" variant="segmented" size="sm">
                     <flux:radio value="1" :label="__('Aktif')" />

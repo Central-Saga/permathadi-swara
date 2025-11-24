@@ -20,6 +20,7 @@ class Layanan extends Model implements HasMedia
         'slug',
         'description',
         'price',
+        'duration',
         'is_active',
     ];
 
