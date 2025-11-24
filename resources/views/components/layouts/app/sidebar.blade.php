@@ -41,6 +41,12 @@
                 :current="request()->routeIs('godmode.subscriptions.*')" wire:navigate>
                 {{ __('Langganan') }}
             </flux:sidebar.item>
+            @can('melihat payment')
+            <flux:sidebar.item icon="banknotes" :href="route('godmode.payments.index')"
+                :current="request()->routeIs('godmode.payments.*')" wire:navigate>
+                {{ __('Pembayaran') }}
+            </flux:sidebar.item>
+            @endcan
             @can('melihat role')
             <flux:sidebar.item icon="shield-check" :href="route('godmode.roles.index')"
                 :current="request()->routeIs('godmode.roles.*')" wire:navigate>

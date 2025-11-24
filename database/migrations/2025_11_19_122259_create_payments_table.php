@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('subscription_id')->constrained('subscriptions')->onDelete('cascade');
+            $table->decimal('amount', 10, 2);
+            $table->enum('method', ['cash', 'transfer', 'qris', 'other'])->default('transfer');
+            $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
+            $table->datetime('paid_at')->nullable();
+            $table->string('proof_url', 255)->nullable();
             $table->timestamps();
         });
     }

@@ -60,4 +60,12 @@ Route::middleware(['auth'])->prefix('godmode')->name('godmode.')->group(function
     Volt::route('subscriptions', 'godmode.subscriptions.index')->name('subscriptions.index');
     Volt::route('subscriptions/create', 'godmode.subscriptions.create')->name('subscriptions.create');
     Volt::route('subscriptions/{subscription}/edit', 'godmode.subscriptions.edit')->name('subscriptions.edit');
+    
+    // Payments routes
+    Volt::route('payments', 'godmode.payments.index')->name('payments.index');
+    Volt::route('payments/create', 'godmode.payments.create')->name('payments.create');
+    Volt::route('payments/{payment}/edit', 'godmode.payments.edit')->name('payments.edit');
+    
+    // Create payment from subscription
+    Volt::route('subscriptions/{subscription}/payments/create', 'godmode.payments.create')->name('subscriptions.payments.create');
 });
