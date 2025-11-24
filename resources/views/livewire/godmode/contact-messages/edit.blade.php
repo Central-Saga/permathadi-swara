@@ -47,12 +47,7 @@ $update = action(function () {
         <form wire:submit="update" class="space-y-6">
             <div>
                 <flux:label>{{ __('Status') }} <span class="text-red-500">*</span></flux:label>
-                <flux:select 
-                    variant="listbox"
-                    wire:model="status" 
-                    name="status" 
-                    class="mt-2" 
-                    required>
+                <flux:select variant="listbox" wire:model="status" name="status" class="mt-2" required>
                     <flux:select.option value="new">{{ __('New') }}</flux:select.option>
                     <flux:select.option value="read">{{ __('Read') }}</flux:select.option>
                     <flux:select.option value="archived">{{ __('Archived') }}</flux:select.option>
@@ -98,7 +93,8 @@ $update = action(function () {
                         <div>
                             <flux:label>{{ __('Status Saat Ini') }}</flux:label>
                             <div class="mt-1">
-                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $message->status_badge_color }}">
+                                <span
+                                    class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $message->status_badge_color }}">
                                     {{ ucfirst($message->status) }}
                                 </span>
                             </div>
@@ -111,20 +107,25 @@ $update = action(function () {
                     <div class="space-y-4">
                         <div>
                             <flux:label>{{ __('Subject') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white font-semibold">{{ $message->subject }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white font-semibold">{{ $message->subject
+                                }}</div>
                         </div>
                         <div>
                             <flux:label>{{ __('Message') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">{{ $message->message }}</div>
+                            <div
+                                class="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                                {{ $message->message }}</div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <flux:label>{{ __('Created At') }}</flux:label>
-                                <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $message->created_at->format('d/m/Y H:i') }}</div>
+                                <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                    $message->created_at->format('d/m/Y H:i') }}</div>
                             </div>
                             <div>
                                 <flux:label>{{ __('Updated At') }}</flux:label>
-                                <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $message->updated_at->format('d/m/Y H:i') }}</div>
+                                <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                    $message->updated_at->format('d/m/Y H:i') }}</div>
                             </div>
                         </div>
                     </div>
@@ -133,4 +134,3 @@ $update = action(function () {
         </div>
     </flux:card>
 </div>
-
