@@ -80,18 +80,32 @@ class LayananSeeder extends Seeder
             ],
         ];
 
-        foreach ($layananData as $data) {
+        // Array gambar dummy yang tersedia
+        $dummyImages = [
+            'ABD07813.jpg',
+            'ABD07889.jpg',
+            'ABD07970.jpg',
+            'ABD08518.jpg',
+        ];
+
+        foreach ($layananData as $index => $data) {
             $layanan = Layanan::create($data);
 
-            // Attach placeholder image via Spatie Media Library
+            // Attach gambar dummy via Spatie Media Library dengan distribusi round-robin
             try {
-                // Menggunakan placeholder image dari placeholder.com
-                $imageUrl = 'https://via.placeholder.com/800x600/FF6B35/FFFFFF?text=' . urlencode($data['name']);
+                // Pilih gambar secara round-robin
+                $imageIndex = $index % count($dummyImages);
+                $imageFileName = $dummyImages[$imageIndex];
+                $imagePath = public_path('images/dummy/' . $imageFileName);
                 
-                $layanan->addMediaFromUrl($imageUrl)
-                    ->toMediaCollection('layanan_cover');
+                if (file_exists($imagePath)) {
+                    $layanan->addMediaFromPath($imagePath)
+                        ->toMediaCollection('layanan_cover');
+                } else {
+                    \Log::warning("Image file not found for layanan: {$data['name']} - {$imagePath}");
+                }
             } catch (\Exception $e) {
-                // Jika gagal download, skip attachment
+                // Jika gagal, skip attachment
                 \Log::warning("Failed to attach image for layanan: {$data['name']} - {$e->getMessage()}");
             }
         }
