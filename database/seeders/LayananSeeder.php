@@ -99,7 +99,9 @@ class LayananSeeder extends Seeder
                 $imagePath = public_path('images/dummy/' . $imageFileName);
                 
                 if (file_exists($imagePath)) {
-                    $layanan->addMediaFromPath($imagePath)
+                    $layanan->addMedia($imagePath)
+                        ->usingName($data['name'])
+                        ->usingFileName($imageFileName)
                         ->toMediaCollection('layanan_cover');
                 } else {
                     \Log::warning("Image file not found for layanan: {$data['name']} - {$imagePath}");
