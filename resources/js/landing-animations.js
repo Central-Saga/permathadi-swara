@@ -41,14 +41,35 @@ export function initLandingAnimations() {
             // Footer bisa sedikit delay
             initFooterAnimation();
             return true;
-        } else if (programDetailHeroSection) {
+        } else if (programDetailHeroSection || document.querySelector('[data-gsap="program-detail-info"]')) {
             // Init navbar dan program detail hero bersamaan tanpa delay
             initNavbarAnimation();
             initProgramDetailHeroAnimations();
-            // Init detail section animations
-            initProgramDetailAnimations();
             // Footer bisa sedikit delay
             initFooterAnimation();
+            return true;
+        } else if (document.querySelector('[data-gsap="unauthorized-title"]')) {
+            // Init navbar dan unauthorized page bersamaan tanpa delay
+            initNavbarAnimation();
+            initUnauthorizedAnimations();
+            // Footer bisa sedikit delay
+            initFooterAnimation();
+            return true;
+        } else if (document.querySelector('[data-gsap="error-403-title"]')) {
+            // Init error 403 page
+            initError403Animations();
+            return true;
+        } else if (document.querySelector('[data-gsap="error-404-title"]')) {
+            // Init error 404 page
+            initError404Animations();
+            return true;
+        } else if (document.querySelector('[data-gsap="error-500-title"]')) {
+            // Init error 500 page
+            initError500Animations();
+            return true;
+        } else if (document.querySelector('[data-gsap="error-503-title"]')) {
+            // Init error 503 page
+            initError503Animations();
             return true;
         }
         
@@ -1350,156 +1371,337 @@ function initProgramCardsAnimations() {
  * Program Detail Hero section langsung di-animate saat pertama kali page diakses
  */
 function initProgramDetailHeroAnimations() {
+    // Check for new split layout elements
+    const programDetailInfo = document.querySelector('[data-gsap="program-detail-info"]');
+    const programDetailTitle = document.querySelector('[data-gsap="program-detail-title"]');
+    const programDetailPrice = document.querySelector('[data-gsap="program-detail-price"]');
+    const programDetailDescription = document.querySelector('[data-gsap="program-detail-description"]');
+    const programDetailStatus = document.querySelector('[data-gsap="program-detail-status"]');
+    const programDetailImage = document.querySelector('[data-gsap="program-detail-image"]');
+    const programDetailActions = document.querySelector('[data-gsap="program-detail-actions"]');
+    
+    // Check for old hero layout elements (for backward compatibility)
     const programDetailHeroTitle = document.querySelector('[data-gsap="program-detail-hero-title"]');
     const programDetailHeroDescription = document.querySelector('[data-gsap="program-detail-hero-description"]');
     const programDetailHeroImage = document.querySelector('[data-gsap="program-detail-hero-image"]');
     const programDetailHeroBlur1 = document.querySelector('[data-gsap="program-detail-hero-blur-1"]');
     const programDetailHeroBlur2 = document.querySelector('[data-gsap="program-detail-hero-blur-2"]');
 
-    // Check if program detail hero elements exist
-    if (!programDetailHeroTitle && !programDetailHeroDescription) {
-        return; // Exit if no program detail hero elements found
+    // Check if program detail elements exist (new or old layout)
+    if (!programDetailInfo && !programDetailHeroTitle && !programDetailHeroDescription) {
+        return; // Exit if no program detail elements found
     }
 
-    // Check if program detail hero section sudah ter-animate
+    // Check if program detail section sudah ter-animate
     if (programDetailHeroAnimated) {
         return; // Skip jika sudah ter-animate
     }
 
-    // Wait for image to load if it exists
-    const startAnimation = () => {
-        // Set initial states
-        if (programDetailHeroBlur1) {
-            gsap.set(programDetailHeroBlur1, {
-                opacity: 0,
-                scale: 0.8
+    // New split layout animations
+    if (programDetailInfo) {
+        const startAnimation = () => {
+            // Set initial states for new layout
+            if (programDetailImage) {
+                gsap.set(programDetailImage, {
+                    opacity: 0,
+                    scale: 0.9,
+                    x: 50,
+                    force3D: true
+                });
+            }
+
+            if (programDetailInfo) {
+                gsap.set(programDetailInfo, {
+                    opacity: 0,
+                    x: -30,
+                    force3D: true
+                });
+            }
+
+            if (programDetailTitle) {
+                gsap.set(programDetailTitle, {
+                    opacity: 0,
+                    y: 20,
+                    force3D: true
+                });
+            }
+
+            if (programDetailPrice) {
+                gsap.set(programDetailPrice, {
+                    opacity: 0,
+                    y: 20,
+                    force3D: true
+                });
+            }
+
+            if (programDetailDescription) {
+                gsap.set(programDetailDescription, {
+                    opacity: 0,
+                    y: 20,
+                    force3D: true
+                });
+            }
+
+            if (programDetailStatus) {
+                gsap.set(programDetailStatus, {
+                    opacity: 0,
+                    y: 20,
+                    force3D: true
+                });
+            }
+
+            if (programDetailActions) {
+                gsap.set(programDetailActions, {
+                    opacity: 0,
+                    y: 20,
+                    force3D: true
+                });
+            }
+
+            // Create timeline for split layout animations
+            const timeline = gsap.timeline({
+                paused: false,
+                delay: 0.2
             });
-        }
 
-        if (programDetailHeroBlur2) {
-            gsap.set(programDetailHeroBlur2, {
-                opacity: 0,
-                scale: 0.8
-            });
-        }
+            // Animate image and info container simultaneously
+            if (programDetailImage) {
+                timeline.to(programDetailImage, {
+                    opacity: 1,
+                    scale: 1,
+                    x: 0,
+                    duration: 1,
+                    ease: 'power3.out',
+                    force3D: true
+                }, 0);
+            }
 
-        if (programDetailHeroImage) {
-            gsap.set(programDetailHeroImage, {
-                opacity: 0,
-                y: 30,
-                scale: 0.95,
-                force3D: true
-            });
-        }
+            if (programDetailInfo) {
+                timeline.to(programDetailInfo, {
+                    opacity: 1,
+                    x: 0,
+                    duration: 1,
+                    ease: 'power3.out',
+                    force3D: true
+                }, 0);
+            }
 
-        if (programDetailHeroTitle) {
-            gsap.set(programDetailHeroTitle, {
-                opacity: 0,
-                y: 30,
-                force3D: true
-            });
-        }
+            // Animate title
+            if (programDetailTitle) {
+                timeline.to(programDetailTitle, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.8,
+                    ease: 'power3.out',
+                    force3D: true
+                }, 0.2);
+            }
 
-        if (programDetailHeroDescription) {
-            gsap.set(programDetailHeroDescription, {
-                opacity: 0,
-                y: 30,
-                force3D: true
-            });
-        }
+            // Animate price
+            if (programDetailPrice) {
+                timeline.to(programDetailPrice, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.8,
+                    ease: 'power3.out',
+                    force3D: true
+                }, 0.3);
+            }
 
-        // Create timeline for program detail hero animations - NO SCROLL TRIGGER
-        const programDetailHeroTimeline = gsap.timeline({
-            paused: false,
-            delay: 0
-        });
+            // Animate description
+            if (programDetailDescription) {
+                timeline.to(programDetailDescription, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.8,
+                    ease: 'power3.out',
+                    force3D: true
+                }, 0.4);
+            }
 
-        // Animate blur backgrounds bersamaan
-        if (programDetailHeroBlur1) {
-            programDetailHeroTimeline.to(programDetailHeroBlur1, {
-                opacity: 1,
-                scale: 1,
-                duration: 1.5,
-                ease: 'power2.out'
-            }, 0);
-        }
+            // Animate status
+            if (programDetailStatus) {
+                timeline.to(programDetailStatus, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.6,
+                    ease: 'power3.out',
+                    force3D: true
+                }, 0.5);
+            }
 
-        if (programDetailHeroBlur2) {
-            programDetailHeroTimeline.to(programDetailHeroBlur2, {
-                opacity: 1,
-                scale: 1,
-                duration: 1.5,
-                ease: 'power2.out'
-            }, 0);
-        }
+            // Animate actions
+            if (programDetailActions) {
+                timeline.to(programDetailActions, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.8,
+                    ease: 'power3.out',
+                    force3D: true
+                }, 0.6);
+            }
 
-        // Animate image first (jika ada)
-        if (programDetailHeroImage) {
-            programDetailHeroTimeline.to(programDetailHeroImage, {
-                opacity: 1,
-                y: 0,
-                scale: 1,
-                duration: 1,
-                ease: 'power3.out',
-                force3D: true
-            }, 0.2);
-        }
+            // Mark as animated
+            programDetailHeroAnimated = true;
+            timeline.play(0);
+        };
 
-        // Animate title dengan fade-in dan slide-up
-        if (programDetailHeroTitle) {
-            programDetailHeroTimeline.to(programDetailHeroTitle, {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                ease: 'power3.out',
-                force3D: true
-            }, programDetailHeroImage ? 0.4 : 0);
-        }
-
-        // Animate description dengan fade-in dan slide-up
-        if (programDetailHeroDescription) {
-            programDetailHeroTimeline.to(programDetailHeroDescription, {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                ease: 'power3.out',
-                force3D: true
-            }, programDetailHeroImage ? 0.5 : 0.1);
-        }
-
-        // Mark program detail hero section sebagai sudah ter-animate
-        programDetailHeroAnimated = true;
-
-        // Force play timeline
-        programDetailHeroTimeline.play(0);
-    };
-
-    // Check if image exists and wait for it to load
-    if (programDetailHeroImage) {
-        const img = programDetailHeroImage.querySelector('img');
-        if (img) {
-            if (img.complete) {
-                startAnimation();
+        // Wait for image to load if it exists
+        if (programDetailImage) {
+            const img = programDetailImage.querySelector('img');
+            if (img) {
+                if (img.complete) {
+                    startAnimation();
+                } else {
+                    img.addEventListener('load', startAnimation, { once: true });
+                    img.addEventListener('error', startAnimation, { once: true });
+                }
             } else {
-                img.addEventListener('load', startAnimation, { once: true });
-                img.addEventListener('error', startAnimation, { once: true });
+                startAnimation();
             }
         } else {
             startAnimation();
         }
-    } else {
-        startAnimation();
+        return;
+    }
+
+    // Old hero layout animations (backward compatibility)
+    if (programDetailHeroTitle || programDetailHeroDescription) {
+        const startAnimation = () => {
+            // Set initial states
+            if (programDetailHeroBlur1) {
+                gsap.set(programDetailHeroBlur1, {
+                    opacity: 0,
+                    scale: 0.8
+                });
+            }
+
+            if (programDetailHeroBlur2) {
+                gsap.set(programDetailHeroBlur2, {
+                    opacity: 0,
+                    scale: 0.8
+                });
+            }
+
+            if (programDetailHeroImage) {
+                gsap.set(programDetailHeroImage, {
+                    opacity: 0,
+                    y: 30,
+                    scale: 0.95,
+                    force3D: true
+                });
+            }
+
+            if (programDetailHeroTitle) {
+                gsap.set(programDetailHeroTitle, {
+                    opacity: 0,
+                    y: 30,
+                    force3D: true
+                });
+            }
+
+            if (programDetailHeroDescription) {
+                gsap.set(programDetailHeroDescription, {
+                    opacity: 0,
+                    y: 30,
+                    force3D: true
+                });
+            }
+
+            // Create timeline for program detail hero animations - NO SCROLL TRIGGER
+            const programDetailHeroTimeline = gsap.timeline({
+                paused: false,
+                delay: 0
+            });
+
+            // Animate blur backgrounds bersamaan
+            if (programDetailHeroBlur1) {
+                programDetailHeroTimeline.to(programDetailHeroBlur1, {
+                    opacity: 1,
+                    scale: 1,
+                    duration: 1.5,
+                    ease: 'power2.out'
+                }, 0);
+            }
+
+            if (programDetailHeroBlur2) {
+                programDetailHeroTimeline.to(programDetailHeroBlur2, {
+                    opacity: 1,
+                    scale: 1,
+                    duration: 1.5,
+                    ease: 'power2.out'
+                }, 0);
+            }
+
+            // Animate image first (jika ada)
+            if (programDetailHeroImage) {
+                programDetailHeroTimeline.to(programDetailHeroImage, {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    duration: 1,
+                    ease: 'power3.out',
+                    force3D: true
+                }, 0.2);
+            }
+
+            // Animate title dengan fade-in dan slide-up
+            if (programDetailHeroTitle) {
+                programDetailHeroTimeline.to(programDetailHeroTitle, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.8,
+                    ease: 'power3.out',
+                    force3D: true
+                }, programDetailHeroImage ? 0.4 : 0);
+            }
+
+            // Animate description dengan fade-in dan slide-up
+            if (programDetailHeroDescription) {
+                programDetailHeroTimeline.to(programDetailHeroDescription, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.8,
+                    ease: 'power3.out',
+                    force3D: true
+                }, programDetailHeroImage ? 0.5 : 0.1);
+            }
+
+            // Mark program detail hero section sebagai sudah ter-animate
+            programDetailHeroAnimated = true;
+
+            // Force play timeline
+            programDetailHeroTimeline.play(0);
+        };
+
+        // Check if image exists and wait for it to load
+        if (programDetailHeroImage) {
+            const img = programDetailHeroImage.querySelector('img');
+            if (img) {
+                if (img.complete) {
+                    startAnimation();
+                } else {
+                    img.addEventListener('load', startAnimation, { once: true });
+                    img.addEventListener('error', startAnimation, { once: true });
+                }
+            } else {
+                startAnimation();
+            }
+        } else {
+            startAnimation();
+        }
     }
 }
 
 /**
  * Initialize Program Detail Section Animations
- * Content sections fade-in on scroll
+ * Content sections fade-in on scroll (for old layout compatibility)
  */
 function initProgramDetailAnimations() {
     const programDetailSection = document.querySelector('[data-gsap="program-detail-section"]');
     const programDetailCard = document.querySelector('[data-gsap="program-detail-card"]');
 
+    // Only run if old layout exists
     if (!programDetailSection) return;
     
     // Skip jika sudah di-animate
@@ -1536,6 +1738,363 @@ function initProgramDetailAnimations() {
     }
 }
 
+/**
+ * Initialize Unauthorized Page Animations
+ */
+function initUnauthorizedAnimations() {
+    const unauthorizedIcon = document.querySelector('[data-gsap="unauthorized-icon"]');
+    const unauthorizedTitle = document.querySelector('[data-gsap="unauthorized-title"]');
+    const unauthorizedSubtitle = document.querySelector('[data-gsap="unauthorized-subtitle"]');
+    const unauthorizedDescription = document.querySelector('[data-gsap="unauthorized-description"]');
+    const unauthorizedActions = document.querySelector('[data-gsap="unauthorized-actions"]');
+    const unauthorizedBlur1 = document.querySelector('[data-gsap="unauthorized-blur-1"]');
+    const unauthorizedBlur2 = document.querySelector('[data-gsap="unauthorized-blur-2"]');
+
+    if (!unauthorizedTitle && !unauthorizedSubtitle) {
+        return;
+    }
+
+    // Set initial states
+    if (unauthorizedBlur1) {
+        gsap.set(unauthorizedBlur1, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (unauthorizedBlur2) {
+        gsap.set(unauthorizedBlur2, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (unauthorizedIcon) {
+        gsap.set(unauthorizedIcon, {
+            opacity: 0,
+            scale: 0.5,
+            y: -20,
+            force3D: true
+        });
+    }
+
+    if (unauthorizedTitle) {
+        gsap.set(unauthorizedTitle, {
+            opacity: 0,
+            y: 30,
+            force3D: true
+        });
+    }
+
+    if (unauthorizedSubtitle) {
+        gsap.set(unauthorizedSubtitle, {
+            opacity: 0,
+            y: 20,
+            force3D: true
+        });
+    }
+
+    if (unauthorizedDescription) {
+        gsap.set(unauthorizedDescription, {
+            opacity: 0,
+            y: 20,
+            force3D: true
+        });
+    }
+
+    if (unauthorizedActions) {
+        gsap.set(unauthorizedActions, {
+            opacity: 0,
+            y: 20,
+            force3D: true
+        });
+    }
+
+    // Create timeline
+    const timeline = gsap.timeline({
+        paused: false,
+        delay: 0.2
+    });
+
+    // Animate blur backgrounds
+    if (unauthorizedBlur1) {
+        timeline.to(unauthorizedBlur1, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    if (unauthorizedBlur2) {
+        timeline.to(unauthorizedBlur2, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    // Animate icon with bounce
+    if (unauthorizedIcon) {
+        timeline.to(unauthorizedIcon, {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'back.out(1.7)',
+            force3D: true
+        }, 0.3);
+    }
+
+    // Animate title
+    if (unauthorizedTitle) {
+        timeline.to(unauthorizedTitle, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out',
+            force3D: true
+        }, 0.4);
+    }
+
+    // Animate subtitle
+    if (unauthorizedSubtitle) {
+        timeline.to(unauthorizedSubtitle, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out',
+            force3D: true
+        }, 0.5);
+    }
+
+    // Animate description
+    if (unauthorizedDescription) {
+        timeline.to(unauthorizedDescription, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out',
+            force3D: true
+        }, 0.6);
+    }
+
+    // Animate actions
+    if (unauthorizedActions) {
+        timeline.to(unauthorizedActions, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out',
+            force3D: true
+        }, 0.7);
+    }
+}
+
 // Auto-initialize when script loads
 initLandingAnimations();
+
+// Initialize unauthorized animations if on unauthorized page
+if (document.querySelector('[data-gsap="unauthorized-title"]')) {
+    initUnauthorizedAnimations();
+}
+
+/**
+ * Initialize Error 403 Page Animations
+ */
+function initError403Animations() {
+    const icon = document.querySelector('[data-gsap="error-403-icon"]');
+    const title = document.querySelector('[data-gsap="error-403-title"]');
+    const subtitle = document.querySelector('[data-gsap="error-403-subtitle"]');
+    const description = document.querySelector('[data-gsap="error-403-description"]');
+    const actions = document.querySelector('[data-gsap="error-403-actions"]');
+    const blur1 = document.querySelector('[data-gsap="error-403-blur-1"]');
+    const blur2 = document.querySelector('[data-gsap="error-403-blur-2"]');
+
+    if (!title) return;
+
+    // Set initial states
+    if (blur1) gsap.set(blur1, { opacity: 0, scale: 0.8 });
+    if (blur2) gsap.set(blur2, { opacity: 0, scale: 0.8 });
+    if (icon) gsap.set(icon, { opacity: 0, scale: 0.5, y: -20, force3D: true });
+    if (title) gsap.set(title, { opacity: 0, y: 30, force3D: true });
+    if (subtitle) gsap.set(subtitle, { opacity: 0, y: 20, force3D: true });
+    if (description) gsap.set(description, { opacity: 0, y: 20, force3D: true });
+    if (actions) gsap.set(actions, { opacity: 0, y: 20, force3D: true });
+
+    // Create timeline
+    const timeline = gsap.timeline({ paused: false, delay: 0.2 });
+
+    // Animate blur backgrounds
+    if (blur1) timeline.to(blur1, { opacity: 1, scale: 1, duration: 1.5, ease: 'power2.out' }, 0);
+    if (blur2) timeline.to(blur2, { opacity: 1, scale: 1, duration: 1.5, ease: 'power2.out' }, 0);
+
+    // Animate icon with bounce
+    if (icon) timeline.to(icon, { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: 'back.out(1.7)', force3D: true }, 0.3);
+
+    // Animate title
+    if (title) timeline.to(title, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.4);
+
+    // Animate subtitle
+    if (subtitle) timeline.to(subtitle, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.5);
+
+    // Animate description
+    if (description) timeline.to(description, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.6);
+
+    // Animate actions
+    if (actions) timeline.to(actions, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.7);
+}
+
+/**
+ * Initialize Error 404 Page Animations
+ */
+function initError404Animations() {
+    const icon = document.querySelector('[data-gsap="error-404-icon"]');
+    const title = document.querySelector('[data-gsap="error-404-title"]');
+    const subtitle = document.querySelector('[data-gsap="error-404-subtitle"]');
+    const description = document.querySelector('[data-gsap="error-404-description"]');
+    const actions = document.querySelector('[data-gsap="error-404-actions"]');
+    const blur1 = document.querySelector('[data-gsap="error-404-blur-1"]');
+    const blur2 = document.querySelector('[data-gsap="error-404-blur-2"]');
+
+    if (!title) return;
+
+    // Set initial states
+    if (blur1) gsap.set(blur1, { opacity: 0, scale: 0.8 });
+    if (blur2) gsap.set(blur2, { opacity: 0, scale: 0.8 });
+    if (icon) gsap.set(icon, { opacity: 0, scale: 0.5, y: -20, force3D: true });
+    if (title) gsap.set(title, { opacity: 0, y: 30, force3D: true });
+    if (subtitle) gsap.set(subtitle, { opacity: 0, y: 20, force3D: true });
+    if (description) gsap.set(description, { opacity: 0, y: 20, force3D: true });
+    if (actions) gsap.set(actions, { opacity: 0, y: 20, force3D: true });
+
+    // Create timeline
+    const timeline = gsap.timeline({ paused: false, delay: 0.2 });
+
+    // Animate blur backgrounds
+    if (blur1) timeline.to(blur1, { opacity: 1, scale: 1, duration: 1.5, ease: 'power2.out' }, 0);
+    if (blur2) timeline.to(blur2, { opacity: 1, scale: 1, duration: 1.5, ease: 'power2.out' }, 0);
+
+    // Animate icon with bounce
+    if (icon) timeline.to(icon, { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: 'back.out(1.7)', force3D: true }, 0.3);
+
+    // Animate title
+    if (title) timeline.to(title, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.4);
+
+    // Animate subtitle
+    if (subtitle) timeline.to(subtitle, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.5);
+
+    // Animate description
+    if (description) timeline.to(description, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.6);
+
+    // Animate actions
+    if (actions) timeline.to(actions, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.7);
+}
+
+/**
+ * Initialize Error 500 Page Animations
+ */
+function initError500Animations() {
+    const icon = document.querySelector('[data-gsap="error-500-icon"]');
+    const title = document.querySelector('[data-gsap="error-500-title"]');
+    const subtitle = document.querySelector('[data-gsap="error-500-subtitle"]');
+    const description = document.querySelector('[data-gsap="error-500-description"]');
+    const actions = document.querySelector('[data-gsap="error-500-actions"]');
+    const blur1 = document.querySelector('[data-gsap="error-500-blur-1"]');
+    const blur2 = document.querySelector('[data-gsap="error-500-blur-2"]');
+
+    if (!title) return;
+
+    // Set initial states
+    if (blur1) gsap.set(blur1, { opacity: 0, scale: 0.8 });
+    if (blur2) gsap.set(blur2, { opacity: 0, scale: 0.8 });
+    if (icon) gsap.set(icon, { opacity: 0, scale: 0.5, y: -20, force3D: true });
+    if (title) gsap.set(title, { opacity: 0, y: 30, force3D: true });
+    if (subtitle) gsap.set(subtitle, { opacity: 0, y: 20, force3D: true });
+    if (description) gsap.set(description, { opacity: 0, y: 20, force3D: true });
+    if (actions) gsap.set(actions, { opacity: 0, y: 20, force3D: true });
+
+    // Create timeline
+    const timeline = gsap.timeline({ paused: false, delay: 0.2 });
+
+    // Animate blur backgrounds
+    if (blur1) timeline.to(blur1, { opacity: 1, scale: 1, duration: 1.5, ease: 'power2.out' }, 0);
+    if (blur2) timeline.to(blur2, { opacity: 1, scale: 1, duration: 1.5, ease: 'power2.out' }, 0);
+
+    // Animate icon with bounce
+    if (icon) timeline.to(icon, { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: 'back.out(1.7)', force3D: true }, 0.3);
+
+    // Animate title
+    if (title) timeline.to(title, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.4);
+
+    // Animate subtitle
+    if (subtitle) timeline.to(subtitle, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.5);
+
+    // Animate description
+    if (description) timeline.to(description, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.6);
+
+    // Animate actions
+    if (actions) timeline.to(actions, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.7);
+}
+
+/**
+ * Initialize Error 503 Page Animations
+ */
+function initError503Animations() {
+    const icon = document.querySelector('[data-gsap="error-503-icon"]');
+    const title = document.querySelector('[data-gsap="error-503-title"]');
+    const subtitle = document.querySelector('[data-gsap="error-503-subtitle"]');
+    const description = document.querySelector('[data-gsap="error-503-description"]');
+    const actions = document.querySelector('[data-gsap="error-503-actions"]');
+    const blur1 = document.querySelector('[data-gsap="error-503-blur-1"]');
+    const blur2 = document.querySelector('[data-gsap="error-503-blur-2"]');
+
+    if (!title) return;
+
+    // Set initial states
+    if (blur1) gsap.set(blur1, { opacity: 0, scale: 0.8 });
+    if (blur2) gsap.set(blur2, { opacity: 0, scale: 0.8 });
+    if (icon) gsap.set(icon, { opacity: 0, scale: 0.5, y: -20, force3D: true });
+    if (title) gsap.set(title, { opacity: 0, y: 30, force3D: true });
+    if (subtitle) gsap.set(subtitle, { opacity: 0, y: 20, force3D: true });
+    if (description) gsap.set(description, { opacity: 0, y: 20, force3D: true });
+    if (actions) gsap.set(actions, { opacity: 0, y: 20, force3D: true });
+
+    // Create timeline
+    const timeline = gsap.timeline({ paused: false, delay: 0.2 });
+
+    // Animate blur backgrounds
+    if (blur1) timeline.to(blur1, { opacity: 1, scale: 1, duration: 1.5, ease: 'power2.out' }, 0);
+    if (blur2) timeline.to(blur2, { opacity: 1, scale: 1, duration: 1.5, ease: 'power2.out' }, 0);
+
+    // Animate icon with bounce
+    if (icon) timeline.to(icon, { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: 'back.out(1.7)', force3D: true }, 0.3);
+
+    // Animate title
+    if (title) timeline.to(title, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.4);
+
+    // Animate subtitle
+    if (subtitle) timeline.to(subtitle, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.5);
+
+    // Animate description
+    if (description) timeline.to(description, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.6);
+
+    // Animate actions
+    if (actions) timeline.to(actions, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.7);
+}
+
+// Initialize error page animations if on error pages
+if (document.querySelector('[data-gsap="error-403-title"]')) {
+    initError403Animations();
+}
+if (document.querySelector('[data-gsap="error-404-title"]')) {
+    initError404Animations();
+}
+if (document.querySelector('[data-gsap="error-500-title"]')) {
+    initError500Animations();
+}
+if (document.querySelector('[data-gsap="error-503-title"]')) {
+    initError503Animations();
+}
 
