@@ -97,7 +97,7 @@ class LayananSeeder extends Seeder
                 $imageIndex = $index % count($dummyImages);
                 $imageFileName = $dummyImages[$imageIndex];
                 $imagePath = public_path('images/dummy/' . $imageFileName);
-                
+
                 if (file_exists($imagePath)) {
                     $layanan->addMedia($imagePath)
                         ->usingName($data['name'])

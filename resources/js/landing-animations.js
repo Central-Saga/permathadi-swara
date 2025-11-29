@@ -15,6 +15,8 @@ export function initLandingAnimations() {
                            document.querySelector('[data-gsap="hero-description"]');
         const aboutHeroSection = document.querySelector('[data-gsap="about-hero-title"]') || 
                                  document.querySelector('[data-gsap="about-hero-description"]');
+        const programHeroSection = document.querySelector('[data-gsap="program-hero-title"]') || 
+                                  document.querySelector('[data-gsap="program-hero-description"]');
         
         if (heroSection) {
             // Init navbar dan hero bersamaan tanpa delay
@@ -27,6 +29,13 @@ export function initLandingAnimations() {
             // Init navbar dan about hero bersamaan tanpa delay
             initNavbarAnimation();
             initAboutHeroAnimations();
+            // Footer bisa sedikit delay
+            initFooterAnimation();
+            return true;
+        } else if (programHeroSection) {
+            // Init navbar dan program hero bersamaan tanpa delay
+            initNavbarAnimation();
+            initProgramHeroAnimations();
             // Footer bisa sedikit delay
             initFooterAnimation();
             return true;
@@ -79,11 +88,13 @@ export function initLandingAnimations() {
             // Reset hero animated flag untuk halaman baru
             heroAnimated = false;
             aboutHeroAnimated = false;
+            programHeroAnimated = false;
             // Re-init semua animasi
             initNavbarAnimation();
             initFooterAnimation();
             initHeroAnimations();
             initAboutHeroAnimations();
+            initProgramHeroAnimations();
             // Re-init lazy loading
             initLazyLoading();
         });
@@ -93,6 +104,7 @@ export function initLandingAnimations() {
 // Track if hero section has been animated
 let heroAnimated = false;
 let aboutHeroAnimated = false;
+let programHeroAnimated = false;
 
 /**
  * Initialize navbar animation - fade-in dari atas
@@ -609,6 +621,107 @@ function initAboutHeroAnimations() {
 
     // Force play timeline
     aboutHeroTimeline.play(0);
+}
+
+/**
+ * Initialize Program Hero section animations (NO SCROLL TRIGGER)
+ * Program Hero section langsung di-animate saat pertama kali page diakses
+ */
+function initProgramHeroAnimations() {
+    const programHeroTitle = document.querySelector('[data-gsap="program-hero-title"]');
+    const programHeroDescription = document.querySelector('[data-gsap="program-hero-description"]');
+    const programHeroBlur1 = document.querySelector('[data-gsap="program-hero-blur-1"]');
+    const programHeroBlur2 = document.querySelector('[data-gsap="program-hero-blur-2"]');
+
+    // Check if program hero elements exist
+    if (!programHeroTitle && !programHeroDescription) {
+        return; // Exit if no program hero elements found
+    }
+
+    // Check if program hero section sudah ter-animate (untuk mencegah re-animation)
+    if (programHeroAnimated) {
+        return; // Skip jika sudah ter-animate
+    }
+
+    // Set initial states
+    if (programHeroBlur1) {
+        gsap.set(programHeroBlur1, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (programHeroBlur2) {
+        gsap.set(programHeroBlur2, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (programHeroTitle) {
+        gsap.set(programHeroTitle, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    if (programHeroDescription) {
+        gsap.set(programHeroDescription, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    // Create timeline for program hero animations - NO SCROLL TRIGGER
+    const programHeroTimeline = gsap.timeline({
+        paused: false,
+        delay: 0
+    });
+
+    // Animate blur backgrounds dan title bersamaan
+    if (programHeroBlur1) {
+        programHeroTimeline.to(programHeroBlur1, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    if (programHeroBlur2) {
+        programHeroTimeline.to(programHeroBlur2, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    // Animate title dengan fade-in dan slide-up
+    if (programHeroTitle) {
+        programHeroTimeline.to(programHeroTitle, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        }, 0);
+    }
+
+    // Animate description dengan fade-in dan slide-up
+    if (programHeroDescription) {
+        programHeroTimeline.to(programHeroDescription, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        }, 0.1);
+    }
+
+    // Mark program hero section sebagai sudah ter-animate
+    programHeroAnimated = true;
+
+    // Force play timeline
+    programHeroTimeline.play(0);
 }
 
 /**

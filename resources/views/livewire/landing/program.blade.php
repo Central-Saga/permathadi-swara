@@ -14,6 +14,7 @@ $layanans = computed(function () {
 ?>
 
 <div>
+    <x-landing.program-hero />
+
     <x-landing.program :layanans="$this->layanans" />
 </div>
-
