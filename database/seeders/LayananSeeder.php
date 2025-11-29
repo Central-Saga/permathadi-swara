@@ -80,16 +80,24 @@ class LayananSeeder extends Seeder
             ],
         ];
 
-        // Array gambar dummy yang tersedia
+        // Array gambar dummy yang tersedia (hanya file yang benar-benar ada)
         $dummyImages = [
             'ABD07813.jpg',
-            'ABD07889.jpg',
             'ABD07970.jpg',
             'ABD08518.jpg',
         ];
 
         foreach ($layananData as $index => $data) {
-            $layanan = Layanan::create($data);
+            // Cek apakah layanan sudah ada, jika ada update, jika tidak create
+            $layanan = Layanan::updateOrCreate(
+                ['slug' => $data['slug']],
+                $data
+            );
+
+            // Hapus media lama jika ada (untuk re-seed dengan gambar baru)
+            if ($layanan->hasMedia('layanan_cover')) {
+                $layanan->clearMediaCollection('layanan_cover');
+            }
 
             // Attach gambar dummy via Spatie Media Library dengan distribusi round-robin
             try {
@@ -99,16 +107,25 @@ class LayananSeeder extends Seeder
                 $imagePath = public_path('images/dummy/' . $imageFileName);
 
                 if (file_exists($imagePath)) {
-                    $layanan->addMedia($imagePath)
+                    $media = $layanan->addMedia($imagePath)
                         ->usingName($data['name'])
                         ->usingFileName($imageFileName)
                         ->toMediaCollection('layanan_cover');
+
+                    // Verifikasi media sudah ter-attach
+                    if ($media) {
+                        \Log::info("Successfully attached image for layanan: {$data['name']} - {$imageFileName}");
+                    } else {
+                        \Log::warning("Failed to attach image for layanan: {$data['name']} - Media object is null");
+                    }
                 } else {
                     \Log::warning("Image file not found for layanan: {$data['name']} - {$imagePath}");
                 }
             } catch (\Exception $e) {
                 // Jika gagal, skip attachment
-                \Log::warning("Failed to attach image for layanan: {$data['name']} - {$e->getMessage()}");
+                \Log::error("Failed to attach image for layanan: {$data['name']} - {$e->getMessage()}", [
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         }
     }

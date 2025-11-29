@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import '../../vendor/livewire/flux/dist/flux.css';
+@import "tailwindcss";
+@import "../../vendor/livewire/flux/dist/flux.css";
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -9,7 +9,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+        "Noto Color Emoji";
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -37,7 +39,6 @@
 }
 
 @layer base {
-
     *,
     ::after,
     ::before,
@@ -52,7 +53,7 @@
 }
 
 [data-flux-label] {
-    @apply  !mb-0 !leading-tight;
+    @apply !mb-0 !leading-tight;
 }
 
 input:focus[data-flux-control],
@@ -71,7 +72,9 @@ select:focus[data-flux-control] {
     @apply bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-200;
 }
 
-[data-flux-navlist-item]:hover:not([aria-current="page"]):not([data-current="true"]) {
+[data-flux-navlist-item]:hover:not([aria-current="page"]):not(
+        [data-current="true"]
+    ) {
     @apply bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-orange-300;
 }
 
@@ -81,7 +84,9 @@ select:focus[data-flux-control] {
     @apply text-orange-600 border-b-2 border-orange-600 dark:text-orange-400 dark:border-orange-400;
 }
 
-[data-flux-navbar-item]:hover:not([aria-current="page"]):not([data-current="true"]) {
+[data-flux-navbar-item]:hover:not([aria-current="page"]):not(
+        [data-current="true"]
+    ) {
     @apply text-orange-600 dark:text-orange-400;
 }
 
@@ -134,7 +139,9 @@ a[data-flux-sidebar-item][current],
     color: rgb(254 243 199) !important; /* orange-200 */
 }
 
-[data-flux-sidebar-item]:hover:not([aria-current="page"]):not([data-current="true"]):not([data-current]):not(.current) {
+[data-flux-sidebar-item]:hover:not([aria-current="page"]):not(
+        [data-current="true"]
+    ):not([data-current]):not(.current) {
     @apply bg-orange-50 text-orange-600 dark:bg-orange-950/20 dark:text-orange-300;
 }
 
@@ -145,11 +152,35 @@ a[data-flux-sidebar-item][current],
     will-change: opacity, transform;
 }
 
+/* Navbar fallback - jika JavaScript tidak berjalan, tetap terlihat */
+[data-gsap="navbar"]:not([data-animated]) {
+    animation: fadeInNavbar 0.6s ease-out forwards;
+}
+
+@keyframes fadeInNavbar {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Footer - Initial state untuk fade-in animation */
 [data-gsap="footer"] {
     opacity: 0;
     transform: translateY(20px);
     will-change: opacity, transform;
+}
+
+/* Footer fallback - jika JavaScript tidak berjalan, tetap terlihat */
+[data-gsap="footer"]:not([data-animated]) {
+    animation: fadeInFooter 0.8s ease-out 0.3s forwards;
+}
+
+@keyframes fadeInFooter {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Hero Section - Initial state untuk fade-in animation */

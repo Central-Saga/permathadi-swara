@@ -40,6 +40,17 @@ export function initLandingAnimations() {
             initFooterAnimation();
             return true;
         }
+        
+        // Fallback: Jika tidak ada hero section yang ditemukan, tetap init navbar dan footer
+        // Ini memastikan navbar dan footer selalu muncul
+        const navbar = document.querySelector('[data-gsap="navbar"]');
+        const footer = document.querySelector('[data-gsap="footer"]');
+        if (navbar || footer) {
+            if (navbar) initNavbarAnimation();
+            if (footer) initFooterAnimation();
+            return true;
+        }
+        
         return false;
     };
 
@@ -59,7 +70,11 @@ export function initLandingAnimations() {
                 initWithRetry(maxRetries - 1, delay);
             });
         } else {
-            // Jika sudah habis retry, tetap init lazy loading
+            // Jika sudah habis retry, tetap init navbar dan footer sebagai fallback
+            // Ini memastikan navbar dan footer selalu muncul
+            initNavbarAnimation();
+            initFooterAnimation();
+            // Tetap init lazy loading
             initLazyLoading();
         }
     };
