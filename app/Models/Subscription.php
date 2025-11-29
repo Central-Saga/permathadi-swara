@@ -73,7 +73,21 @@ class Subscription extends Model
             return false;
         }
         
-        return $this->end_date->diffInDays(now(), false) <= 30;
+        // Check if end_date is in the future and within 30 days
+        $daysUntilExpiry = now()->diffInDays($this->end_date, false);
+        return $daysUntilExpiry >= 0 && $daysUntilExpiry <= 30;
+    }
+
+    /**
+     * Get days until expiry (positive if future, negative if past)
+     */
+    public function getDaysUntilExpiryAttribute(): int
+    {
+        if (!$this->end_date) {
+            return 0;
+        }
+        
+        return now()->diffInDays($this->end_date, false);
     }
 
     public function getStatusBadgeColorAttribute(): string

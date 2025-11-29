@@ -233,11 +233,15 @@ $uploadProof = action(function () {
                                         <div>
                                             @if ($subscription->isExpiringSoon() && $subscription->status === 'active')
                                             <p class="text-sm text-orange-600 dark:text-orange-400 font-medium">
-                                                Langganan akan berakhir dalam {{ $subscription->end_date->diffInDays(now()) }} hari
+                                                Langganan akan berakhir dalam {{ $subscription->days_until_expiry }} hari
                                             </p>
                                             @elseif ($subscription->status === 'expired')
                                             <p class="text-sm text-red-600 dark:text-red-400 font-medium">
-                                                Langganan telah berakhir
+                                                Langganan telah berakhir {{ abs($subscription->days_until_expiry) }} hari yang lalu
+                                            </p>
+                                            @elseif ($subscription->status === 'active' && $subscription->end_date && $subscription->days_until_expiry > 30)
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                Langganan aktif hingga {{ $subscription->end_date->format('d/m/Y') }}
                                             </p>
                                             @endif
                                         </div>
