@@ -17,6 +17,8 @@ export function initLandingAnimations() {
                                  document.querySelector('[data-gsap="about-hero-description"]');
         const programHeroSection = document.querySelector('[data-gsap="program-hero-title"]') || 
                                   document.querySelector('[data-gsap="program-hero-description"]');
+        const programDetailHeroSection = document.querySelector('[data-gsap="program-detail-hero-title"]') || 
+                                         document.querySelector('[data-gsap="program-detail-hero-description"]');
         
         if (heroSection) {
             // Init navbar dan hero bersamaan tanpa delay
@@ -36,6 +38,15 @@ export function initLandingAnimations() {
             // Init navbar dan program hero bersamaan tanpa delay
             initNavbarAnimation();
             initProgramHeroAnimations();
+            // Footer bisa sedikit delay
+            initFooterAnimation();
+            return true;
+        } else if (programDetailHeroSection) {
+            // Init navbar dan program detail hero bersamaan tanpa delay
+            initNavbarAnimation();
+            initProgramDetailHeroAnimations();
+            // Init detail section animations
+            initProgramDetailAnimations();
             // Footer bisa sedikit delay
             initFooterAnimation();
             return true;
@@ -104,12 +115,15 @@ export function initLandingAnimations() {
             heroAnimated = false;
             aboutHeroAnimated = false;
             programHeroAnimated = false;
+            programDetailHeroAnimated = false;
             // Re-init semua animasi
             initNavbarAnimation();
             initFooterAnimation();
             initHeroAnimations();
             initAboutHeroAnimations();
             initProgramHeroAnimations();
+            initProgramDetailHeroAnimations();
+            initProgramDetailAnimations();
             // Re-init lazy loading
             initLazyLoading();
         });
@@ -120,6 +134,7 @@ export function initLandingAnimations() {
 let heroAnimated = false;
 let aboutHeroAnimated = false;
 let programHeroAnimated = false;
+let programDetailHeroAnimated = false;
 
 /**
  * Initialize navbar animation - fade-in dari atas
@@ -305,6 +320,8 @@ function initLazyLoading() {
                     initAboutAdvantagesAnimations();
                 } else if (sectionType === 'about-contact') {
                     initAboutContactAnimations();
+                } else if (sectionType === 'program') {
+                    initProgramCardsAnimations();
                 }
                 
                 // Stop observing setelah di-load
@@ -1029,6 +1046,270 @@ function initAboutContactAnimations() {
             scrollTrigger: {
                 trigger: contactSection,
                 start: 'top 75%',
+                toggleActions: 'play none none none'
+            }
+        });
+    }
+}
+
+/**
+ * Initialize Program Cards Animations
+ * Stagger animation untuk card program dengan hover effects
+ */
+function initProgramCardsAnimations() {
+    const programSection = document.querySelector('[data-gsap="program-section"]');
+    const programCards = document.querySelectorAll('[data-gsap="program-card"]');
+    const programHeading = document.querySelector('[data-gsap="program-heading"]');
+
+    if (!programSection) return;
+    
+    // Skip jika sudah di-animate
+    if (programSection.hasAttribute('data-animated')) return;
+    programSection.setAttribute('data-animated', 'true');
+
+    // Set initial states
+    if (programHeading) {
+        gsap.set(programHeading, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    if (programCards.length > 0) {
+        gsap.set(programCards, {
+            opacity: 0,
+            y: 50,
+            scale: 0.95
+        });
+    }
+
+    // Animate heading first
+    if (programHeading) {
+        gsap.to(programHeading, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: programSection,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            }
+        });
+    }
+
+    // Animate cards with stagger effect
+    if (programCards.length > 0) {
+        gsap.to(programCards, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: programSection,
+                start: 'top 75%',
+                toggleActions: 'play none none none'
+            }
+        });
+
+        // Add hover effects dengan GSAP untuk smooth animation
+        programCards.forEach((card) => {
+            const arrow = card.querySelector('.program-card-arrow');
+            
+            // Hover in animation
+            card.addEventListener('mouseenter', () => {
+                gsap.to(card, {
+                    scale: 1.02,
+                    y: -5,
+                    duration: 0.3,
+                    ease: 'power2.out'
+                });
+                
+                if (arrow) {
+                    gsap.to(arrow, {
+                        x: 5,
+                        duration: 0.3,
+                        ease: 'power2.out'
+                    });
+                }
+            });
+
+            // Hover out animation
+            card.addEventListener('mouseleave', () => {
+                gsap.to(card, {
+                    scale: 1,
+                    y: 0,
+                    duration: 0.3,
+                    ease: 'power2.out'
+                });
+                
+                if (arrow) {
+                    gsap.to(arrow, {
+                        x: 0,
+                        duration: 0.3,
+                        ease: 'power2.out'
+                    });
+                }
+            });
+        });
+    }
+}
+
+/**
+ * Initialize Program Detail Hero Animations (NO SCROLL TRIGGER)
+ * Program Detail Hero section langsung di-animate saat pertama kali page diakses
+ */
+function initProgramDetailHeroAnimations() {
+    const programDetailHeroTitle = document.querySelector('[data-gsap="program-detail-hero-title"]');
+    const programDetailHeroDescription = document.querySelector('[data-gsap="program-detail-hero-description"]');
+    const programDetailHeroImage = document.querySelector('[data-gsap="program-detail-hero-image"]');
+    const programDetailHeroBlur1 = document.querySelector('[data-gsap="program-detail-hero-blur-1"]');
+    const programDetailHeroBlur2 = document.querySelector('[data-gsap="program-detail-hero-blur-2"]');
+
+    // Check if program detail hero elements exist
+    if (!programDetailHeroTitle && !programDetailHeroDescription) {
+        return; // Exit if no program detail hero elements found
+    }
+
+    // Check if program detail hero section sudah ter-animate
+    if (programDetailHeroAnimated) {
+        return; // Skip jika sudah ter-animate
+    }
+
+    // Set initial states
+    if (programDetailHeroBlur1) {
+        gsap.set(programDetailHeroBlur1, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (programDetailHeroBlur2) {
+        gsap.set(programDetailHeroBlur2, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (programDetailHeroImage) {
+        gsap.set(programDetailHeroImage, {
+            opacity: 0,
+            y: 30,
+            scale: 0.95
+        });
+    }
+
+    if (programDetailHeroTitle) {
+        gsap.set(programDetailHeroTitle, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    if (programDetailHeroDescription) {
+        gsap.set(programDetailHeroDescription, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    // Create timeline for program detail hero animations - NO SCROLL TRIGGER
+    const programDetailHeroTimeline = gsap.timeline({
+        paused: false,
+        delay: 0
+    });
+
+    // Animate blur backgrounds bersamaan
+    if (programDetailHeroBlur1) {
+        programDetailHeroTimeline.to(programDetailHeroBlur1, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    if (programDetailHeroBlur2) {
+        programDetailHeroTimeline.to(programDetailHeroBlur2, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    // Animate image first (jika ada)
+    if (programDetailHeroImage) {
+        programDetailHeroTimeline.to(programDetailHeroImage, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 1,
+            ease: 'power3.out'
+        }, 0.2);
+    }
+
+    // Animate title dengan fade-in dan slide-up
+    if (programDetailHeroTitle) {
+        programDetailHeroTimeline.to(programDetailHeroTitle, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        }, programDetailHeroImage ? 0.4 : 0);
+    }
+
+    // Animate description dengan fade-in dan slide-up
+    if (programDetailHeroDescription) {
+        programDetailHeroTimeline.to(programDetailHeroDescription, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        }, programDetailHeroImage ? 0.5 : 0.1);
+    }
+
+    // Mark program detail hero section sebagai sudah ter-animate
+    programDetailHeroAnimated = true;
+
+    // Force play timeline
+    programDetailHeroTimeline.play(0);
+}
+
+/**
+ * Initialize Program Detail Section Animations
+ * Content sections fade-in on scroll
+ */
+function initProgramDetailAnimations() {
+    const programDetailSection = document.querySelector('[data-gsap="program-detail-section"]');
+    const programDetailCard = document.querySelector('[data-gsap="program-detail-card"]');
+
+    if (!programDetailSection) return;
+    
+    // Skip jika sudah di-animate
+    if (programDetailSection.hasAttribute('data-animated')) return;
+    programDetailSection.setAttribute('data-animated', 'true');
+
+    // Set initial states
+    if (programDetailCard) {
+        gsap.set(programDetailCard, {
+            opacity: 0,
+            y: 40,
+            scale: 0.95
+        });
+
+        // Animate card on scroll
+        gsap.to(programDetailCard, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: programDetailSection,
+                start: 'top 80%',
                 toggleActions: 'play none none none'
             }
         });

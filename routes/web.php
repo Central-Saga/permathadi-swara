@@ -8,6 +8,7 @@ use Spatie\Permission\Models\Role;
 Volt::route('/', 'landing.welcome')->name('home');
 Volt::route('tentang', 'landing.tentang')->name('landing.tentang');
 Volt::route('program', 'landing.program')->name('landing.program');
+Volt::route('program/{layanan:slug}', 'landing.program-detail')->name('landing.program-detail');
 Volt::route('galeri', 'landing.galeri')->name('landing.galeri');
 Volt::route('kontak', 'landing.kontak')->name('landing.kontak');
 

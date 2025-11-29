@@ -46,4 +46,12 @@ class Layanan extends Model implements HasMedia
             ->sharpen(10)
             ->performOnCollections('layanan_cover');
     }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 }

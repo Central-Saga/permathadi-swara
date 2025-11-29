@@ -16,12 +16,12 @@
         <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
             <div class="grid max-w-xl grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
                 @forelse ($layanans as $index => $layanan)
-                <div class="flex flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-900/5 transition-all hover:shadow-md dark:bg-white/5 dark:ring-white/10"
+                <div class="group flex flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-900/5 transition-all hover:shadow-xl dark:bg-white/5 dark:ring-white/10"
                     data-gsap="program-card">
                     @if ($layanan->getFirstMediaUrl('layanan_cover'))
                     <div class="aspect-[16/9] w-full overflow-hidden">
                         <img src="{{ $layanan->getFirstMediaUrl('layanan_cover') }}" alt="{{ $layanan->name }}"
-                            class="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />
+                            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
                     </div>
                     @else
                     <div
@@ -67,7 +67,7 @@
                                     @endif
                                 </div>
                             </div>
-                            <div class="flex items-center text-orange-600 dark:text-orange-400">
+                            <div class="flex items-center text-orange-600 dark:text-orange-400 program-card-arrow">
                                 <svg viewBox="0 0 20 20" fill="currentColor" class="size-5">
                                     <path fill-rule="evenodd"
                                         d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
@@ -75,6 +75,15 @@
                                 </svg>
                             </div>
                         </div>
+
+                        @if ($layanan->slug)
+                        <div class="mt-4">
+                            <a href="{{ route('landing.program-detail', $layanan->slug) }}"
+                                class="block w-full rounded-lg bg-orange-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors">
+                                Lihat Detail
+                            </a>
+                        </div>
+                        @endif
                     </div>
                 </div>
                 @empty
