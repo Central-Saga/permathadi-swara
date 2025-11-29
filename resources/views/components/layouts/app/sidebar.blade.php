@@ -53,6 +53,10 @@
                 {{ __('Pesan Kontak') }}
             </flux:sidebar.item>
             @endcan
+            <flux:sidebar.item icon="photo" :href="route('godmode.galeri.index')"
+                :current="request()->routeIs('godmode.galeri.*')" wire:navigate>
+                {{ __('Galeri') }}
+            </flux:sidebar.item>
             @can('melihat role')
             <flux:sidebar.item icon="shield-check" :href="route('godmode.roles.index')"
                 :current="request()->routeIs('godmode.roles.*')" wire:navigate>

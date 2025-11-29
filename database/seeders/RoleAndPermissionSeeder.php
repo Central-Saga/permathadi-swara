@@ -27,6 +27,7 @@ class RoleAndPermissionSeeder extends Seeder
             'subscription',
             'payment',
             'pesan kontak',
+            'galeri',
         ];
 
         // Define actions
@@ -104,6 +105,13 @@ class RoleAndPermissionSeeder extends Seeder
             'mengubah pesan kontak',
             'menghapus pesan kontak',
             'mengekspor pesan kontak',
+
+            // Galeri permissions
+            'membuat galeri',
+            'melihat galeri',
+            'mengubah galeri',
+            'menghapus galeri',
+            'mengekspor galeri',
         ]);
 
         // Create Anggota (Pelanggan) role and assign limited permissions

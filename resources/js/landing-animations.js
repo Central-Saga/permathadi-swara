@@ -19,6 +19,8 @@ export function initLandingAnimations() {
                                   document.querySelector('[data-gsap="program-hero-description"]');
         const programDetailHeroSection = document.querySelector('[data-gsap="program-detail-hero-title"]') || 
                                          document.querySelector('[data-gsap="program-detail-hero-description"]');
+        const galeriHeroSection = document.querySelector('[data-gsap="galeri-hero-title"]') || 
+                                  document.querySelector('[data-gsap="galeri-hero-description"]');
         
         if (heroSection) {
             // Init navbar dan hero bersamaan tanpa delay
@@ -45,6 +47,13 @@ export function initLandingAnimations() {
             // Init navbar dan program detail hero bersamaan tanpa delay
             initNavbarAnimation();
             initProgramDetailHeroAnimations();
+            // Footer bisa sedikit delay
+            initFooterAnimation();
+            return true;
+        } else if (galeriHeroSection) {
+            // Init navbar dan galeri hero bersamaan tanpa delay
+            initNavbarAnimation();
+            initGaleriHeroAnimations();
             // Footer bisa sedikit delay
             initFooterAnimation();
             return true;
@@ -137,6 +146,7 @@ export function initLandingAnimations() {
             aboutHeroAnimated = false;
             programHeroAnimated = false;
             programDetailHeroAnimated = false;
+            galeriHeroAnimated = false;
             
             // Kill semua ScrollTrigger yang ada untuk mencegah memory leak
             ScrollTrigger.getAll().forEach(trigger => trigger.kill());
@@ -149,6 +159,8 @@ export function initLandingAnimations() {
             initProgramHeroAnimations();
             initProgramDetailHeroAnimations();
             initProgramDetailAnimations();
+            initGaleriHeroAnimations();
+            initGaleriGridAnimations();
             // Re-init lazy loading
             initLazyLoading();
             
@@ -165,6 +177,7 @@ let heroAnimated = false;
 let aboutHeroAnimated = false;
 let programHeroAnimated = false;
 let programDetailHeroAnimated = false;
+let galeriHeroAnimated = false;
 
 /**
  * Initialize navbar animation - fade-in dari atas
@@ -352,6 +365,8 @@ function initLazyLoading() {
                     initAboutContactAnimations();
                 } else if (sectionType === 'program') {
                     initProgramCardsAnimations();
+                } else if (sectionType === 'galeri-grid') {
+                    initGaleriGridAnimations();
                 }
                 
                 // Stop observing setelah di-load
@@ -2082,6 +2097,169 @@ function initError503Animations() {
 
     // Animate actions
     if (actions) timeline.to(actions, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', force3D: true }, 0.7);
+}
+
+/**
+ * Initialize Galeri Hero section animations (NO SCROLL TRIGGER)
+ * Galeri Hero section langsung di-animate saat pertama kali page diakses
+ */
+function initGaleriHeroAnimations() {
+    const galeriHeroTitle = document.querySelector('[data-gsap="galeri-hero-title"]');
+    const galeriHeroDescription = document.querySelector('[data-gsap="galeri-hero-description"]');
+    const galeriHeroBlur1 = document.querySelector('[data-gsap="galeri-hero-blur-1"]');
+    const galeriHeroBlur2 = document.querySelector('[data-gsap="galeri-hero-blur-2"]');
+
+    // Check if galeri hero elements exist
+    if (!galeriHeroTitle && !galeriHeroDescription) {
+        return; // Exit if no galeri hero elements found
+    }
+
+    // Check if galeri hero section sudah ter-animate (untuk mencegah re-animation)
+    if (galeriHeroAnimated) {
+        return; // Skip jika sudah ter-animate
+    }
+
+    // Set initial states
+    if (galeriHeroBlur1) {
+        gsap.set(galeriHeroBlur1, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (galeriHeroBlur2) {
+        gsap.set(galeriHeroBlur2, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (galeriHeroTitle) {
+        gsap.set(galeriHeroTitle, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    if (galeriHeroDescription) {
+        gsap.set(galeriHeroDescription, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    // Create timeline for galeri hero animations - NO SCROLL TRIGGER
+    const galeriHeroTimeline = gsap.timeline({
+        paused: false,
+        delay: 0
+    });
+
+    // Animate blur backgrounds dan title bersamaan
+    if (galeriHeroBlur1) {
+        galeriHeroTimeline.to(galeriHeroBlur1, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    if (galeriHeroBlur2) {
+        galeriHeroTimeline.to(galeriHeroBlur2, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    // Animate title dengan fade-in dan slide-up
+    if (galeriHeroTitle) {
+        galeriHeroTimeline.to(galeriHeroTitle, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        }, 0);
+    }
+
+    // Animate description dengan fade-in dan slide-up
+    if (galeriHeroDescription) {
+        galeriHeroTimeline.to(galeriHeroDescription, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        }, 0.1);
+    }
+
+    // Mark galeri hero section sebagai sudah ter-animate
+    galeriHeroAnimated = true;
+
+    // Force play timeline
+    galeriHeroTimeline.play(0);
+}
+
+/**
+ * Galeri Grid Section: Stagger animation for gallery items and images
+ */
+function initGaleriGridAnimations() {
+    const galeriGridSection = document.querySelector('[data-gsap="galeri-grid-section"]');
+    const galeriItems = document.querySelectorAll('[data-gsap="galeri-item"]');
+    const galeriImages = document.querySelectorAll('[data-gsap="galeri-image"]');
+
+    if (!galeriGridSection) return;
+    
+    // Skip jika sudah di-animate
+    if (galeriGridSection.hasAttribute('data-animated')) return;
+    galeriGridSection.setAttribute('data-animated', 'true');
+
+    // Set initial states
+    if (galeriItems.length > 0) {
+        gsap.set(galeriItems, {
+            opacity: 0,
+            y: 40
+        });
+    }
+
+    if (galeriImages.length > 0) {
+        gsap.set(galeriImages, {
+            opacity: 0,
+            scale: 0.9
+        });
+    }
+
+    // Animate items with stagger
+    if (galeriItems.length > 0) {
+        gsap.to(galeriItems, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: galeriGridSection,
+                start: 'top 80%',
+                toggleActions: 'play none none none'
+            }
+        });
+    }
+
+    // Animate images with stagger (inside each item)
+    if (galeriImages.length > 0) {
+        gsap.to(galeriImages, {
+            opacity: 1,
+            scale: 1,
+            duration: 0.6,
+            stagger: 0.1,
+            ease: 'power2.out',
+            scrollTrigger: {
+                trigger: galeriGridSection,
+                start: 'top 75%',
+                toggleActions: 'play none none none'
+            }
+        });
+    }
 }
 
 // Initialize error page animations if on error pages

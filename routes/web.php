@@ -83,4 +83,9 @@ Route::middleware(['auth', 'permission:akses godmode'])->prefix('godmode')->name
     // Contact Messages routes
     Volt::route('contact-messages', 'godmode.contact-messages.index')->name('contact-messages.index');
     Volt::route('contact-messages/{contactMessage}/edit', 'godmode.contact-messages.edit')->name('contact-messages.edit');
+
+    // Galeri routes
+    Volt::route('galeri', 'godmode.galeri.index')->name('galeri.index');
+    Volt::route('galeri/create', 'godmode.galeri.create')->name('galeri.create');
+    Volt::route('galeri/{galeri}/edit', 'godmode.galeri.edit')->name('galeri.edit');
 });
