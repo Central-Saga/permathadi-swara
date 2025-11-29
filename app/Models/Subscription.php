@@ -19,6 +19,7 @@ class Subscription extends Model
         'start_date',
         'end_date',
         'notes',
+        'renewed_from_id',
     ];
 
     protected function casts(): array
@@ -45,6 +46,36 @@ class Subscription extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function renewedFrom(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class, 'renewed_from_id');
+    }
+
+    public function renewals(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'renewed_from_id');
+    }
+
+    /**
+     * Check if subscription can be renewed
+     */
+    public function canBeRenewed(): bool
+    {
+        return in_array($this->status, ['active', 'expired']);
+    }
+
+    /**
+     * Check if subscription is expiring soon (within 30 days)
+     */
+    public function isExpiringSoon(): bool
+    {
+        if (!$this->end_date || $this->status !== 'active') {
+            return false;
+        }
+        
+        return $this->end_date->diffInDays(now(), false) <= 30;
+    }
+
     public function getStatusBadgeColorAttribute(): string
     {
         return match($this->status) {
@@ -54,5 +85,29 @@ class Subscription extends Model
             'canceled' => 'bg-red-50 text-red-700 ring-red-700/10 dark:bg-red-900/50 dark:text-red-200',
             default => 'bg-gray-50 text-gray-700 ring-gray-700/10 dark:bg-gray-900/50 dark:text-gray-200',
         };
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Auto-expire subscription jika end_date sudah lewat saat save
+        static::saving(function ($subscription) {
+            if ($subscription->end_date && $subscription->status === 'active') {
+                if ($subscription->end_date->isPast()) {
+                    $subscription->status = 'expired';
+                }
+            }
+        });
+    }
+
+    /**
+     * Scope untuk mendapatkan subscription yang perlu di-expire
+     */
+    public function scopeShouldExpire($query)
+    {
+        return $query->where('status', 'active')
+            ->whereNotNull('end_date')
+            ->where('end_date', '<', now());
     }
 }

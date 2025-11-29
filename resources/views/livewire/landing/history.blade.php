@@ -1,10 +1,23 @@
 <?php
 
+use App\Models\Payment;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
-use function Livewire\Volt\{layout, computed};
+use Livewire\Features\SupportFileUploads\WithFileUploads;
+use function Livewire\Volt\{layout, state, action, computed, uses};
+
+uses(WithFileUploads::class);
 
 layout('components.layouts.landing');
+
+state([
+    'showUploadModal' => false,
+    'selectedPayment' => null,
+    'proof_file' => null,
+    'bank_name' => '',
+    'account_number' => '',
+    'account_holder' => '',
+]);
 
 $subscriptions = computed(function () {
     $user = Auth::user();
@@ -18,6 +31,90 @@ $subscriptions = computed(function () {
         ->with(['layanan', 'payments'])
         ->orderBy('created_at', 'desc')
         ->get();
+});
+
+$openUploadModal = action(function ($paymentId) {
+    $user = Auth::user();
+    $anggota = $user->anggota;
+    
+    $payment = Payment::with(['subscription.anggota'])->findOrFail($paymentId);
+    
+    // Validasi payment harus milik user yang login
+    if ($payment->subscription->anggota_id !== $anggota->id) {
+        $this->dispatch('toast', message: 'Anda tidak memiliki akses ke pembayaran ini.', variant: 'error');
+        return;
+    }
+    
+    // Validasi payment harus failed
+    if ($payment->status !== 'failed') {
+        $this->dispatch('toast', message: 'Hanya pembayaran dengan status Failed yang dapat diupload ulang.', variant: 'warning');
+        return;
+    }
+    
+    $this->selectedPayment = $payment;
+    $this->bank_name = $payment->bank_name ?? '';
+    $this->account_number = $payment->account_number ?? '';
+    $this->account_holder = $payment->account_holder ?? '';
+    $this->showUploadModal = true;
+});
+
+$closeUploadModal = action(function () {
+    $this->showUploadModal = false;
+    $this->selectedPayment = null;
+    $this->proof_file = null;
+    $this->bank_name = '';
+    $this->account_number = '';
+    $this->account_holder = '';
+});
+
+$uploadProof = action(function () {
+    if (!$this->selectedPayment) {
+        return;
+    }
+    
+    $user = Auth::user();
+    $anggota = $user->anggota;
+    
+    // Validasi payment harus milik user yang login
+    if ($this->selectedPayment->subscription->anggota_id !== $anggota->id) {
+        $this->addError('general', 'Anda tidak memiliki akses ke pembayaran ini.');
+        return;
+    }
+    
+    // Validasi payment harus failed
+    if ($this->selectedPayment->status !== 'failed') {
+        $this->addError('general', 'Hanya pembayaran dengan status Failed yang dapat diupload ulang.');
+        return;
+    }
+    
+    $validated = $this->validate([
+        'proof_file' => ['required', 'image', 'max:5120'], // 5MB max
+        'bank_name' => ['required_if:selectedPayment.method,transfer', 'string', 'max:255'],
+    ], [
+        'proof_file.required' => 'Bukti pembayaran wajib diisi.',
+        'proof_file.image' => 'Bukti pembayaran harus berupa gambar.',
+        'proof_file.max' => 'Ukuran bukti pembayaran maksimal 5MB.',
+        'bank_name.required_if' => 'Bank tujuan harus dipilih untuk transfer.',
+    ]);
+    
+    // Update payment - reset status ke pending dan update bukti
+    $this->selectedPayment->update([
+        'status' => 'pending',
+        'paid_at' => null,
+        'bank_name' => $this->selectedPayment->method === 'transfer' ? ($this->bank_name ?? null) : null,
+        'account_number' => $this->selectedPayment->method === 'transfer' ? ($this->account_number ?? null) : null,
+        'account_holder' => $this->selectedPayment->method === 'transfer' ? ($this->account_holder ?? null) : null,
+    ]);
+    
+    // Replace proof file
+    $this->selectedPayment->clearMediaCollection('payment_proof');
+    $this->selectedPayment->addMedia($this->proof_file->getRealPath())
+        ->usingName('Payment Proof - ' . $this->selectedPayment->id)
+        ->usingFileName($this->proof_file->getClientOriginalName())
+        ->toMediaCollection('payment_proof');
+    
+    $this->dispatch('toast', message: 'Bukti pembayaran berhasil diupload. Status pembayaran diubah menjadi Pending.', variant: 'success');
+    $this->closeUploadModal();
 });
 
 ?>
@@ -130,6 +227,31 @@ $subscriptions = computed(function () {
                                 </div>
                                 @endif
 
+                                @if ($subscription->canBeRenewed() || $subscription->isExpiringSoon())
+                                <div class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            @if ($subscription->isExpiringSoon() && $subscription->status === 'active')
+                                            <p class="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                                                Langganan akan berakhir dalam {{ $subscription->end_date->diffInDays(now()) }} hari
+                                            </p>
+                                            @elseif ($subscription->status === 'expired')
+                                            <p class="text-sm text-red-600 dark:text-red-400 font-medium">
+                                                Langganan telah berakhir
+                                            </p>
+                                            @endif
+                                        </div>
+                                        <a href="{{ route('landing.renew', $subscription) }}"
+                                            class="inline-flex items-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            Perpanjang Langganan
+                                        </a>
+                                    </div>
+                                </div>
+                                @endif
+
                                 @if ($subscription->payments->count() > 0)
                                 <div class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
                                     <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
@@ -160,8 +282,8 @@ $subscriptions = computed(function () {
                                                         @endif
                                                     </div>
                                                 </div>
-                                                @if ($payment->getFirstMediaUrl('payment_proof'))
-                                                <div class="ml-4">
+                                                <div class="ml-4 flex items-center gap-2">
+                                                    @if ($payment->getFirstMediaUrl('payment_proof'))
                                                     <a href="{{ $payment->getFirstMediaUrl('payment_proof') }}" target="_blank"
                                                         class="inline-flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300">
                                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -170,8 +292,18 @@ $subscriptions = computed(function () {
                                                         </svg>
                                                         Lihat Bukti
                                                     </a>
+                                                    @endif
+                                                    @if ($payment->status === 'failed' && $payment->method === 'transfer')
+                                                    <button wire:click="openUploadModal({{ $payment->id }})"
+                                                        class="inline-flex items-center gap-1 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium">
+                                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                                        </svg>
+                                                        Upload Ulang Bukti
+                                                    </button>
+                                                    @endif
                                                 </div>
-                                                @endif
                                             </div>
                                         </div>
                                         @endforeach
@@ -193,4 +325,109 @@ $subscriptions = computed(function () {
             @endif
         </div>
     </div>
+
+    <!-- Modal Upload Ulang Bukti -->
+    @if ($showUploadModal && $selectedPayment)
+    <flux:modal name="upload-proof-modal" :show="$showUploadModal" wire:model="showUploadModal">
+        <form wire:submit.prevent="uploadProof" class="space-y-6">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    Upload Ulang Bukti Pembayaran
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Upload bukti pembayaran baru untuk pembayaran yang gagal.
+                </p>
+            </div>
+
+            @error('general')
+            <div class="rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+                <p class="text-sm font-medium text-red-800 dark:text-red-200">{{ $message }}</p>
+            </div>
+            @enderror
+
+            <div>
+                <flux:label>{{ __('Jumlah Pembayaran') }}</flux:label>
+                <flux:input :value="$selectedPayment->formatted_amount" disabled class="mt-2" />
+            </div>
+
+            @if ($selectedPayment->method === 'transfer')
+            <div>
+                <flux:label>{{ __('Pilih Bank Tujuan') }} <span class="text-red-500">*</span></flux:label>
+                <div class="mt-2 space-y-3">
+                    @php
+                    $banks = [
+                    ['name' => 'BCA', 'account' => '1234567890', 'holder' => 'Permathadi Swara'],
+                    ['name' => 'Mandiri', 'account' => '9876543210', 'holder' => 'Permathadi Swara'],
+                    ['name' => 'BNI', 'account' => '1122334455', 'holder' => 'Permathadi Swara'],
+                    ['name' => 'BRI', 'account' => '5566778899', 'holder' => 'Permathadi Swara'],
+                    ['name' => 'CIMB Niaga', 'account' => '9988776655', 'holder' => 'Permathadi Swara'],
+                    ];
+                    @endphp
+                    @foreach($banks as $bank)
+                    <label
+                        class="flex items-start gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors {{ $this->bank_name === $bank['name'] ? 'ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-900/20' : '' }}">
+                        <input type="radio" wire:model.live="bank_name" name="bank_name"
+                            value="{{ $bank['name'] }}"
+                            x-on:change="$wire.account_number = '{{ $bank['account'] }}'; $wire.account_holder = '{{ $bank['holder'] }}';"
+                            class="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 dark:border-gray-600">
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-900 dark:text-white">{{ $bank['name'] }}</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium">No. Rekening:</span>
+                                    <span class="font-mono font-semibold text-gray-900 dark:text-white">{{ $bank['account'] }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium">Atas Nama:</span>
+                                    <span class="text-gray-900 dark:text-white">{{ $bank['holder'] }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    @endforeach
+                </div>
+                @error('bank_name')
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+            @endif
+
+            <div>
+                <flux:label>
+                    {{ __('Bukti Pembayaran') }} <span class="text-red-500">*</span>
+                </flux:label>
+                <div class="mt-2">
+                    @if ($proof_file)
+                    <div class="mb-4">
+                        <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {{ __('Preview Gambar') }}
+                        </p>
+                        <img src="{{ $proof_file->temporaryUrl() }}" alt="Preview"
+                            class="h-48 w-full rounded-lg object-cover border border-gray-300 dark:border-gray-600" />
+                    </div>
+                    @endif
+                    <flux:file-upload wire:model="proof_file" label="{{ __('Upload Bukti Pembayaran') }}">
+                        <flux:file-upload.dropzone heading="{{ __('Drop file atau klik untuk memilih') }}"
+                            text="JPG, PNG, GIF up to 5MB" with-progress inline />
+                    </flux:file-upload>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        {{ __('Format: JPG, PNG, GIF. Maksimal 5MB.') }}
+                    </p>
+                </div>
+                @error('proof_file')
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <flux:button type="button" wire:click="closeUploadModal" variant="ghost">
+                    Batal
+                </flux:button>
+                <flux:button type="submit" variant="primary">
+                    Upload Bukti
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
+    @endif
 </div>

@@ -1,97 +1,48 @@
 <?php
 
-use App\Models\Anggota;
-use App\Models\Layanan;
 use App\Models\Subscription;
-use function Livewire\Volt\{layout, title, state, mount, action, computed};
+use function Livewire\Volt\{layout, title, state, mount, action};
 
 layout('components.layouts.admin');
 title(fn () => __('Edit Langganan'));
 
 state([
     'subscription' => null,
-    'anggota_id' => '',
-    'layanan_id' => '',
     'status' => 'pending',
-    'start_date' => '',
-    'end_date' => '',
-    'notes' => '',
 ]);
 
 mount(function (Subscription $subscription) {
     $this->subscription = $subscription;
-    $this->subscription->load(['anggota.user', 'layanan']);
-    
-    $this->anggota_id = $subscription->anggota_id;
-    $this->layanan_id = $subscription->layanan_id;
+    $this->subscription->load(['anggota.user', 'layanan', 'payments']);
     $this->status = $subscription->status;
-    $this->start_date = $subscription->start_date->format('Y-m-d');
-    $this->end_date = $subscription->end_date ? $subscription->end_date->format('Y-m-d') : '';
-    $this->notes = $subscription->notes ?? '';
-});
-
-$getAnggotas = computed(function () {
-    return Anggota::with('user')->get()->map(function ($anggota) {
-        return [
-            'id' => $anggota->id,
-            'name' => $anggota->user->name ?? 'Anggota #' . $anggota->id,
-            'email' => $anggota->user->email ?? '',
-        ];
-    });
-});
-
-$getLayanans = computed(function () {
-    return Layanan::orderBy('name')->get();
-});
-
-$calculateEndDate = action(function () {
-    if ($this->layanan_id && $this->start_date) {
-        $layanan = Layanan::find($this->layanan_id);
-        if ($layanan && $layanan->duration) {
-            $startDate = \Carbon\Carbon::parse($this->start_date);
-            $endDate = $startDate->copy()->addDays($layanan->duration);
-            $this->end_date = $endDate->format('Y-m-d');
-        }
-    } else {
-        $this->end_date = '';
-    }
-});
-
-$formattedEndDate = computed(function () {
-    if ($this->end_date) {
-        try {
-            return \Carbon\Carbon::parse($this->end_date)->format('d/m/Y');
-        } catch (\Exception $e) {
-            return $this->end_date;
-        }
-    }
-    return '';
 });
 
 $update = action(function () {
-    $rules = [
-        'anggota_id' => ['required', 'exists:anggota,id'],
-        'layanan_id' => ['required', 'exists:layanan,id'],
+    $validated = $this->validate([
         'status' => ['required', 'in:pending,active,expired,canceled'],
-        'start_date' => ['required', 'date', 'after_or_equal:today'],
-        'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-        'notes' => ['nullable', 'string'],
-    ];
+    ], [
+        'status.required' => 'Status langganan harus dipilih.',
+        'status.in' => 'Status langganan tidak valid.',
+    ]);
 
-    $validated = $this->validate($rules);
-
-    // Auto-calculate end_date if not set
-    if (empty($validated['end_date']) && !empty($validated['layanan_id']) && !empty($validated['start_date'])) {
-        $layanan = Layanan::find($validated['layanan_id']);
-        if ($layanan && $layanan->duration) {
-            $startDate = \Carbon\Carbon::parse($validated['start_date']);
-            $validated['end_date'] = $startDate->copy()->addDays($layanan->duration)->format('Y-m-d');
+    // Validasi: subscription hanya bisa diaktifkan jika ada payment dengan status 'paid'
+    if ($validated['status'] === 'active') {
+        $hasPaidPayment = $this->subscription->payments()
+            ->where('status', 'paid')
+            ->exists();
+        
+        if (!$hasPaidPayment) {
+            $this->addError('status', 'Langganan tidak dapat diaktifkan karena belum ada pembayaran yang berstatus Paid. Silakan update status pembayaran terlebih dahulu.');
+            return;
         }
     }
 
-    $this->subscription->update($validated);
+    // Update subscription - hanya status
+    $this->subscription->update([
+        'status' => $validated['status'],
+    ]);
 
-    $this->dispatch('toast', message: __('Langganan berhasil diupdate.'), variant: 'success');
+    $this->dispatch('toast', message: __('Status langganan berhasil diupdate.'), variant: 'success');
     $this->redirect(route('godmode.subscriptions.index'), navigate: true);
 }); ?>
 
@@ -108,66 +59,107 @@ $update = action(function () {
 
     <flux:card>
         <form wire:submit="update" class="space-y-6">
-            <div>
-                <flux:label>{{ __('Anggota') }} <span class="text-red-500">*</span></flux:label>
-                <flux:select wire:model="anggota_id" name="anggota_id" variant="listbox" searchable placeholder="{{ __('Pilih anggota...') }}" class="mt-2" required>
-                    @forelse ($this->getAnggotas as $anggota)
-                    <flux:select.option value="{{ $anggota['id'] }}">
-                        {{ $anggota['name'] }} ({{ $anggota['email'] }})
-                    </flux:select.option>
-                    @empty
-                    <flux:select.option disabled>{{ __('Tidak ada anggota tersedia') }}</flux:select.option>
-                    @endforelse
-                </flux:select>
+            <!-- Informasi Langganan (Readonly) -->
+            <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-4 space-y-4">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ __('Informasi Langganan') }}</h3>
+                
+                <div>
+                    <flux:label>{{ __('Anggota') }}</flux:label>
+                    <flux:input 
+                        :value="($subscription->anggota->user->name ?? 'Anggota #' . $subscription->anggota_id) . ' (' . ($subscription->anggota->user->email ?? '') . ')'" 
+                        disabled 
+                        class="mt-2" />
+                </div>
+
+                <div>
+                    <flux:label>{{ __('Layanan') }}</flux:label>
+                    <flux:input :value="$subscription->layanan->name ?? 'Layanan #' . $subscription->layanan_id" disabled class="mt-2" />
+                </div>
+
+                <div>
+                    <flux:label>{{ __('Tanggal Mulai') }}</flux:label>
+                    <flux:input :value="$subscription->start_date->format('d/m/Y')" disabled class="mt-2" />
+                </div>
+
+                <div>
+                    <flux:label>{{ __('Tanggal Berakhir') }}</flux:label>
+                    <flux:input :value="$subscription->end_date ? $subscription->end_date->format('d/m/Y') : '-'" disabled class="mt-2" />
+                </div>
+
+                @if ($subscription->notes)
+                <div>
+                    <flux:label>{{ __('Catatan') }}</flux:label>
+                    <flux:textarea :value="$subscription->notes" disabled rows="3" class="mt-2" />
+                </div>
+                @endif
+
+                <div>
+                    <flux:label>{{ __('Pembayaran') }}</flux:label>
+                    <div class="mt-2 space-y-2">
+                        @forelse ($subscription->payments as $payment)
+                        <div class="flex items-center justify-between rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ $payment->formatted_amount }}
+                                </span>
+                                <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset {{ $payment->status_badge_color }}">
+                                    {{ ucfirst($payment->status) }}
+                                </span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                                    {{ $payment->method }}
+                                </span>
+                            </div>
+                            @if ($payment->status === 'paid')
+                            <span class="text-xs text-green-600 dark:text-green-400 font-medium">✓ Paid</span>
+                            @endif
+                        </div>
+                        @empty
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada pembayaran</p>
+                        @endforelse
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <flux:label>{{ __('Layanan') }} <span class="text-red-500">*</span></flux:label>
-                <flux:select wire:model.live="layanan_id" name="layanan_id" variant="listbox" searchable placeholder="{{ __('Pilih layanan...') }}" class="mt-2" required
-                    x-on:change="$wire.calculateEndDate()">
-                    @forelse ($this->getLayanans as $layanan)
-                    <flux:select.option value="{{ $layanan->id }}">
-                        {{ $layanan->name }} ({{ $layanan->duration ?? 30 }} hari)
-                    </flux:select.option>
-                    @empty
-                    <flux:select.option disabled>{{ __('Tidak ada layanan tersedia') }}</flux:select.option>
-                    @endforelse
-                </flux:select>
-            </div>
-
-            <div>
-                <flux:label>{{ __('Tanggal Mulai') }} <span class="text-red-500">*</span></flux:label>
-                <flux:date-picker wire:model.live="start_date" name="start_date" min="{{ now()->format('Y-m-d') }}" required
-                    x-on:change="$wire.calculateEndDate()">
-                    <x-slot name="trigger">
-                        <flux:date-picker.input />
-                    </x-slot>
-                </flux:date-picker>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {{ __('Tidak bisa memilih tanggal sebelum hari ini') }}
-                </p>
-            </div>
-
-            <div>
-                <flux:label>{{ __('Tanggal Berakhir') }}</flux:label>
-                <flux:input value="{{ $this->formattedEndDate }}" name="end_date_display" type="text" readonly
-                    placeholder="{{ __('Akan dihitung otomatis') }}" />
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {{ __('Tanggal berakhir dihitung otomatis dari tanggal mulai + durasi layanan') }}
-                </p>
-            </div>
-
+            <!-- Status (Editable) -->
             <div>
                 <flux:label>{{ __('Status') }} <span class="text-red-500">*</span></flux:label>
-                <flux:select wire:model="status" name="status" class="mt-2" required>
-                    <flux:select.option value="pending">{{ __('Pending') }}</flux:select.option>
-                    <flux:select.option value="active">{{ __('Active') }}</flux:select.option>
-                    <flux:select.option value="expired">{{ __('Expired') }}</flux:select.option>
-                    <flux:select.option value="canceled">{{ __('Canceled') }}</flux:select.option>
-                </flux:select>
+                <flux:radio.group wire:model="status" name="status" variant="cards" class="mt-2 max-sm:flex-col" required>
+                    <flux:radio value="pending">
+                        <flux:radio.indicator />
+                        <div class="flex-1">
+                            <flux:heading class="leading-4">{{ __('Pending') }}</flux:heading>
+                            <flux:text size="sm" class="mt-2">{{ __('Menunggu pembayaran atau verifikasi') }}</flux:text>
+                        </div>
+                    </flux:radio>
+                    <flux:radio value="active">
+                        <flux:radio.indicator />
+                        <div class="flex-1">
+                            <flux:heading class="leading-4">{{ __('Active') }}</flux:heading>
+                            <flux:text size="sm" class="mt-2">{{ __('Langganan aktif dan dapat digunakan') }}</flux:text>
+                        </div>
+                    </flux:radio>
+                    <flux:radio value="expired">
+                        <flux:radio.indicator />
+                        <div class="flex-1">
+                            <flux:heading class="leading-4">{{ __('Expired') }}</flux:heading>
+                            <flux:text size="sm" class="mt-2">{{ __('Langganan telah berakhir') }}</flux:text>
+                        </div>
+                    </flux:radio>
+                    <flux:radio value="canceled">
+                        <flux:radio.indicator />
+                        <div class="flex-1">
+                            <flux:heading class="leading-4">{{ __('Canceled') }}</flux:heading>
+                            <flux:text size="sm" class="mt-2">{{ __('Langganan dibatalkan') }}</flux:text>
+                        </div>
+                    </flux:radio>
+                </flux:radio.group>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {{ __('Hanya status yang dapat diubah. Untuk mengaktifkan langganan, pastikan ada pembayaran dengan status Paid terlebih dahulu.') }}
+                </p>
+                @error('status')
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
             </div>
-
-            <flux:textarea wire:model="notes" name="notes" :label="__('Catatan')" rows="3" />
 
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary">

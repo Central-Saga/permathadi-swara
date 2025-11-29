@@ -30,6 +30,9 @@ Route::middleware(['auth'])->group(function () {
     // Subscribe route for anggota
     Volt::route('subscribe/{layanan:slug}', 'landing.subscribe')->name('landing.subscribe');
 
+    // Renew subscription route for anggota
+    Volt::route('renew/{subscription}', 'landing.renew')->name('landing.renew');
+
     // Two-factor authentication disabled
     // Volt::route('settings/two-factor', 'settings.two-factor')
     //     ->middleware(

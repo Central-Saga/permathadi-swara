@@ -1,121 +1,37 @@
 <?php
 
 use App\Models\Payment;
-use App\Models\Subscription;
-use Livewire\Features\SupportFileUploads\WithFileUploads;
-use function Livewire\Volt\{layout, title, state, mount, action, computed, uses};
-
-uses(WithFileUploads::class);
+use function Livewire\Volt\{layout, title, state, mount, action};
 
 layout('components.layouts.admin');
 title(fn () => __('Edit Pembayaran'));
 
 state([
     'payment' => null,
-    'subscription_id' => '',
-    'amount' => '',
-    'method' => 'transfer',
     'status' => 'pending',
-    'proof_file' => null,
 ]);
 
 mount(function (Payment $payment) {
     $this->payment = $payment;
     $this->payment->load(['subscription.anggota.user', 'subscription.layanan']);
-    
-    $this->subscription_id = $payment->subscription_id;
-    $this->amount = number_format($payment->amount, 0, '', '');
-    $this->method = $payment->method;
     $this->status = $payment->status;
 });
 
-$getSubscriptions = computed(function () {
-    return Subscription::with(['anggota.user', 'layanan'])
-        ->orderBy('created_at', 'desc')
-        ->get()
-        ->map(function ($subscription) {
-            return [
-                'id' => $subscription->id,
-                'label' => ($subscription->anggota->user->name ?? 'Anggota #' . $subscription->anggota_id) . 
-                          ' - ' . ($subscription->layanan->name ?? 'Layanan #' . $subscription->layanan_id) .
-                          ($subscription->layanan->price ? ' (Rp ' . number_format($subscription->layanan->price, 0, ',', '.') . ')' : ''),
-                'price' => $subscription->layanan->price ?? 0,
-            ];
-        });
-});
-
-$updateAmount = action(function () {
-    if ($this->subscription_id) {
-        $subscription = Subscription::with('layanan')->find($this->subscription_id);
-        if ($subscription && $subscription->layanan && $subscription->layanan->price) {
-            $this->amount = number_format($subscription->layanan->price, 0, '', '');
-        }
-    }
-});
-
 $update = action(function () {
-    $subscription = Subscription::with('layanan')->findOrFail($this->subscription_id);
-    $expectedAmount = $subscription->layanan->price ?? 0;
-    
-    // Convert amount to number (remove formatting)
-    $amountValue = str_replace(['.', ','], '', $this->amount);
-    $amountValue = (float) $amountValue;
-
     $validated = $this->validate([
-        'subscription_id' => ['required', 'exists:subscriptions,id'],
-        'amount' => ['required', 'numeric', 'min:0'],
-        'method' => ['required', 'in:cash,transfer,qris,other'],
         'status' => ['required', 'in:pending,paid,failed'],
-        'proof_file' => ['nullable', 'image', 'max:5120'], // 5MB max
     ], [
-        'subscription_id.required' => 'Langganan harus dipilih.',
-        'subscription_id.exists' => 'Langganan yang dipilih tidak valid.',
-        'amount.required' => 'Amount harus diisi.',
-        'amount.numeric' => 'Amount harus berupa angka.',
-        'amount.min' => 'Amount harus lebih besar dari 0.',
-        'method.required' => 'Method pembayaran harus dipilih.',
-        'method.in' => 'Method pembayaran tidak valid.',
         'status.required' => 'Status pembayaran harus dipilih.',
         'status.in' => 'Status pembayaran tidak valid.',
-        'proof_file.image' => 'Bukti pembayaran harus berupa gambar.',
-        'proof_file.max' => 'Ukuran bukti pembayaran maksimal 5MB.',
     ]);
 
-    // Validasi amount harus sesuai dengan harga layanan
-    if (abs($amountValue - $expectedAmount) > 0.01) {
-        $this->addError('amount', 'Amount harus sesuai dengan harga layanan (Rp ' . number_format($expectedAmount, 0, ',', '.') . ').');
-        return;
-    }
-
-    // Validasi proof_file required jika status = 'paid' dan belum ada bukti sebelumnya
-    $hasExistingProof = $this->payment->getFirstMediaUrl('payment_proof');
-    if ($validated['status'] === 'paid' && !$this->proof_file && !$hasExistingProof) {
-        $this->addError('proof_file', 'Bukti pembayaran wajib diisi jika status adalah Paid.');
-        return;
-    }
-
-    // Update payment
+    // Update payment - hanya status
     $this->payment->update([
-        'subscription_id' => $validated['subscription_id'],
-        'amount' => $amountValue,
-        'method' => $validated['method'],
         'status' => $validated['status'],
         'paid_at' => $validated['status'] === 'paid' ? ($this->payment->paid_at ?? now()) : null,
     ]);
 
-    // Replace proof file if new file uploaded
-    if ($this->proof_file) {
-        // Delete old file
-        $this->payment->clearMediaCollection('payment_proof');
-        
-        // Add new file
-        $this->payment->addMedia($this->proof_file->getRealPath())
-            ->usingName('Payment Proof - ' . $this->payment->id)
-            ->usingFileName($this->proof_file->getClientOriginalName())
-            ->toMediaCollection('payment_proof');
-    }
-
-    $this->dispatch('toast', message: __('Pembayaran berhasil diupdate.'), variant: 'success');
+    $this->dispatch('toast', message: __('Status pembayaran berhasil diupdate.'), variant: 'success');
     $this->redirect(route('godmode.payments.index'), navigate: true);
 }); ?>
 
@@ -132,88 +48,96 @@ $update = action(function () {
 
     <flux:card>
         <form wire:submit="update" class="space-y-6">
-            <div>
-                <flux:label>{{ __('Langganan') }} <span class="text-red-500">*</span></flux:label>
-                <flux:select wire:model.live="subscription_id" name="subscription_id" variant="listbox" searchable
-                    placeholder="{{ __('Pilih langganan...') }}" class="mt-2" required
-                    x-on:change="$wire.updateAmount()">
-                    @forelse ($this->getSubscriptions as $sub)
-                    <flux:select.option value="{{ $sub['id'] }}">
-                        {{ $sub['label'] }}
-                    </flux:select.option>
-                    @empty
-                    <flux:select.option disabled>{{ __('Tidak ada langganan tersedia') }}</flux:select.option>
-                    @endforelse
-                </flux:select>
-                @error('subscription_id')
-                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
+            <!-- Informasi Pembayaran (Readonly) -->
+            <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-4 space-y-4">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ __('Informasi Pembayaran') }}</h3>
+                
+                <div>
+                    <flux:label>{{ __('Langganan') }}</flux:label>
+                    <flux:input 
+                        :value="($payment->subscription->anggota->user->name ?? 'Anggota #' . $payment->subscription->anggota_id) . ' - ' . ($payment->subscription->layanan->name ?? 'Layanan #' . $payment->subscription->layanan_id)" 
+                        disabled 
+                        class="mt-2" />
+                </div>
+
+                <div>
+                    <flux:label>{{ __('Amount') }}</flux:label>
+                    <flux:input :value="'Rp ' . number_format($payment->amount, 0, ',', '.')" disabled class="mt-2" />
+                </div>
+
+                <div>
+                    <flux:label>{{ __('Method Pembayaran') }}</flux:label>
+                    <flux:input :value="ucfirst($payment->method)" disabled class="mt-2" />
+                </div>
+
+                @if ($payment->bank_name)
+                <div>
+                    <flux:label>{{ __('Bank Tujuan') }}</flux:label>
+                    <flux:input :value="$payment->bank_name" disabled class="mt-2" />
+                </div>
+                @endif
+
+                @if ($payment->account_number)
+                <div>
+                    <flux:label>{{ __('Nomor Rekening') }}</flux:label>
+                    <flux:input :value="$payment->account_number" disabled class="mt-2" />
+                </div>
+                @endif
+
+                @if ($payment->account_holder)
+                <div>
+                    <flux:label>{{ __('Atas Nama') }}</flux:label>
+                    <flux:input :value="$payment->account_holder" disabled class="mt-2" />
+                </div>
+                @endif
+
+                @if ($payment->getFirstMediaUrl('payment_proof'))
+                <div>
+                    <flux:label>{{ __('Bukti Pembayaran') }}</flux:label>
+                    <div class="mt-2">
+                        <a href="{{ $payment->getFirstMediaUrl('payment_proof') }}" target="_blank"
+                            class="inline-flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Lihat Bukti Pembayaran
+                        </a>
+                    </div>
+                </div>
+                @endif
             </div>
 
-            <div>
-                <flux:label>{{ __('Amount') }} <span class="text-red-500">*</span></flux:label>
-                <flux:input wire:model="amount" name="amount" type="text" required class="mt-2" />
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {{ __('Amount harus sesuai dengan harga layanan dari langganan yang dipilih') }}
-                </p>
-                @error('amount')
-                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <flux:label>{{ __('Method Pembayaran') }} <span class="text-red-500">*</span></flux:label>
-                <flux:select wire:model="method" name="method" class="mt-2" required>
-                    <flux:select.option value="cash">{{ __('Cash') }}</flux:select.option>
-                    <flux:select.option value="transfer">{{ __('Transfer') }}</flux:select.option>
-                    <flux:select.option value="qris">{{ __('QRIS') }}</flux:select.option>
-                    <flux:select.option value="other">{{ __('Lainnya') }}</flux:select.option>
-                </flux:select>
-                @error('method')
-                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
-
+            <!-- Status (Editable) -->
             <div>
                 <flux:label>{{ __('Status') }} <span class="text-red-500">*</span></flux:label>
-                <flux:select wire:model="status" name="status" class="mt-2" required>
-                    <flux:select.option value="pending">{{ __('Pending') }}</flux:select.option>
-                    <flux:select.option value="paid">{{ __('Paid') }}</flux:select.option>
-                    <flux:select.option value="failed">{{ __('Failed') }}</flux:select.option>
-                </flux:select>
+                <flux:radio.group wire:model="status" name="status" variant="cards" class="mt-2 max-sm:flex-col" required>
+                    <flux:radio value="pending">
+                        <flux:radio.indicator />
+                        <div class="flex-1">
+                            <flux:heading class="leading-4">{{ __('Pending') }}</flux:heading>
+                            <flux:text size="sm" class="mt-2">{{ __('Menunggu verifikasi pembayaran') }}</flux:text>
+                        </div>
+                    </flux:radio>
+                    <flux:radio value="paid">
+                        <flux:radio.indicator />
+                        <div class="flex-1">
+                            <flux:heading class="leading-4">{{ __('Paid') }}</flux:heading>
+                            <flux:text size="sm" class="mt-2">{{ __('Pembayaran telah dikonfirmasi') }}</flux:text>
+                        </div>
+                    </flux:radio>
+                    <flux:radio value="failed">
+                        <flux:radio.indicator />
+                        <div class="flex-1">
+                            <flux:heading class="leading-4">{{ __('Failed') }}</flux:heading>
+                            <flux:text size="sm" class="mt-2">{{ __('Pembayaran gagal atau ditolak') }}</flux:text>
+                        </div>
+                    </flux:radio>
+                </flux:radio.group>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {{ __('Jika status adalah Paid, bukti pembayaran wajib diisi (jika belum ada)') }}
+                    {{ __('Hanya status yang dapat diubah. Field lain tidak dapat diedit.') }}
                 </p>
                 @error('status')
-                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <flux:label>{{ __('Bukti Pembayaran') }} @if($status === 'paid' && !$payment->getFirstMediaUrl('payment_proof')) <span class="text-red-500">*</span> @endif</flux:label>
-                <div class="mt-2">
-                    @if ($proof_file)
-                    <div class="mb-4">
-                        <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Preview Gambar Baru') }}</p>
-                        <img src="{{ $proof_file->temporaryUrl() }}" alt="Preview"
-                            class="h-48 w-full rounded-lg object-cover border border-gray-300 dark:border-gray-600" />
-                    </div>
-                    @elseif ($payment->getFirstMediaUrl('payment_proof'))
-                    <div class="mb-4">
-                        <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Bukti Pembayaran Saat Ini') }}</p>
-                        <img src="{{ $payment->getFirstMediaUrl('payment_proof') }}" alt="Bukti Pembayaran"
-                            class="h-48 w-full rounded-lg object-cover border border-gray-300 dark:border-gray-600" />
-                    </div>
-                    @endif
-                    <flux:file-upload wire:model="proof_file" label="{{ __('Upload Bukti Pembayaran') }}">
-                        <flux:file-upload.dropzone heading="{{ __('Drop file atau klik untuk memilih') }}"
-                            text="JPG, PNG, GIF up to 5MB" with-progress inline />
-                    </flux:file-upload>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        {{ __('Format: JPG, PNG, GIF. Maksimal 5MB. Upload gambar baru untuk mengganti bukti pembayaran lama.') }}
-                    </p>
-                </div>
-                @error('proof_file')
                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
             </div>

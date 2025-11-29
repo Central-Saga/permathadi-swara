@@ -21,6 +21,9 @@ class Payment extends Model implements HasMedia
         'status',
         'paid_at',
         'proof_url',
+        'bank_name',
+        'account_number',
+        'account_holder',
     ];
 
     protected function casts(): array
