@@ -12,6 +12,7 @@ Volt::route('program/{layanan:slug}', 'landing.program-detail')->name('landing.p
 Volt::route('galeri', 'landing.galeri')->name('landing.galeri');
 Volt::route('kontak', 'landing.kontak')->name('landing.kontak');
 
+
 Volt::route('dashboard', 'godmode.dashboard')
     ->middleware(['auth', 'verified', 'permission:akses godmode'])
     ->name('dashboard');
@@ -25,6 +26,9 @@ Route::middleware(['auth'])->group(function () {
 
     // History route for anggota
     Volt::route('history', 'landing.history')->name('landing.history');
+
+    // Subscribe route for anggota
+    Volt::route('subscribe/{layanan:slug}', 'landing.subscribe')->name('landing.subscribe');
 
     // Two-factor authentication disabled
     // Volt::route('settings/two-factor', 'settings.two-factor')

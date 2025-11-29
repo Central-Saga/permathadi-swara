@@ -45,13 +45,19 @@
             });
             
             // Also prevent on dropdown interactions
+            // Jangan gunakan capture phase untuk menghindari konflik dengan navigasi
             document.addEventListener('click', function(e) {
+                // Skip jika target adalah link atau button yang melakukan navigasi
+                if (e.target.closest('a[href]') || e.target.closest('button[type="submit"]')) {
+                    return;
+                }
+                
                 if (e.target.closest('[data-flux-dropdown]') || e.target.closest('button[type="button"]')) {
                     setTimeout(ensureScrollable, 10);
                     setTimeout(ensureScrollable, 50);
                     setTimeout(ensureScrollable, 100);
                 }
-            }, true);
+            }, false);
             
             // Periodic check to ensure scrollability (as fallback)
             setInterval(ensureScrollable, 200);

@@ -1,8 +1,6 @@
 <?php
 
-use App\Models\Anggota;
 use App\Models\Layanan;
-use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
 use function Livewire\Volt\{layout, state, mount, action};
 
@@ -22,61 +20,15 @@ mount(function (Layanan $layanan) {
     $this->layanan = $layanan;
 });
 
-$subscribe = action(function () {
-    if (!Auth::check()) {
-        $this->showLoginModal = true;
-        return;
-    }
-
-    $user = Auth::user();
-
-    // Check if user has anggota record
-    $anggota = $user->anggota;
-
-    if (!$anggota) {
-        // Create anggota record if doesn't exist
-        $anggota = Anggota::create([
-            'user_id' => $user->id,
-            'telepon' => '', // Will be filled later
-            'alamat' => '',
-            'tanggal_registrasi' => now(),
-            'status' => 'Aktif',
-        ]);
-    }
-
-    // Check if already subscribed
-    $existingSubscription = Subscription::where('anggota_id', $anggota->id)
-        ->where('layanan_id', $this->layanan->id)
-        ->whereIn('status', ['pending', 'active'])
-        ->first();
-
-    if ($existingSubscription) {
-        $this->dispatch('toast', message: 'Anda sudah berlangganan program ini.', variant: 'warning');
-        return;
-    }
-
-    // Create subscription
-    $startDate = now();
-    $endDate = $startDate->copy()->addDays($this->layanan->duration);
-
-    Subscription::create([
-        'anggota_id' => $anggota->id,
-        'layanan_id' => $this->layanan->id,
-        'status' => 'pending',
-        'start_date' => $startDate,
-        'end_date' => $endDate,
-    ]);
-
-    $this->dispatch('toast', message: 'Berhasil mendaftar program! Silakan lengkapi data anggota Anda.', variant: 'success');
-    $this->redirect(route('home'), navigate: true);
-});
 
 $handleSubscribeClick = action(function () {
     if (!Auth::check()) {
         $this->showLoginModal = true;
-    } else {
-        $this->subscribe();
+        return;
     }
+
+    // Redirect to subscribe page using slug explicitly
+    return redirect()->route('landing.subscribe', ['layanan' => $this->layanan->slug]);
 });
 
 $closeLoginModal = action(function () {
@@ -176,10 +128,27 @@ $closeLoginModal = action(function () {
                 <h2 id="options-heading" class="sr-only">Aksi Program</h2>
 
                 <div class="mt-10">
-                    <button wire:click="handleSubscribeClick"
-                        class="flex w-full items-center justify-center rounded-md border border-transparent bg-orange-600 px-8 py-3 text-base font-medium text-white hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-50 focus:outline-hidden dark:focus:ring-offset-gray-900 transition-colors">
-                        Berlangganan Sekarang
+                    @auth
+                    <a href="{{ route('landing.subscribe', $this->layanan->slug) }}"
+                        class="flex w-full items-center justify-center gap-2 rounded-md border border-transparent bg-orange-600 px-8 py-3 text-base font-medium text-white hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-50 focus:outline-hidden dark:focus:ring-offset-gray-900 transition-colors">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                            aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Berlangganan Sekarang</span>
+                    </a>
+                    @else
+                    <button type="button" wire:click="handleSubscribeClick"
+                        class="flex w-full items-center justify-center gap-2 rounded-md border border-transparent bg-orange-600 px-8 py-3 text-base font-medium text-white hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-50 focus:outline-hidden dark:focus:ring-offset-gray-900 transition-colors">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                            aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Berlangganan Sekarang</span>
                     </button>
+                    @endauth
                 </div>
                 <div class="mt-4">
                     <a href="{{ route('landing.program') }}"
