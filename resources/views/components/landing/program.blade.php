@@ -16,9 +16,16 @@
         <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
             <div class="grid max-w-xl grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
                 @forelse ($layanans as $index => $layanan)
+                @if ($layanan->slug)
+                <a href="{{ route('landing.program-detail', $layanan->slug) }}"
+                    class="group flex flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-900/5 transition-all hover:shadow-xl dark:bg-white/5 dark:ring-white/10"
+                    data-gsap="program-card"
+                    style="will-change: transform; transform: translateZ(0); backface-visibility: hidden;">
+                @else
                 <div class="group flex flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-900/5 dark:bg-white/5 dark:ring-white/10"
                     data-gsap="program-card"
                     style="will-change: transform; transform: translateZ(0); backface-visibility: hidden;">
+                @endif
                     @if ($layanan->getFirstMedia('layanan_cover'))
                     <div class="aspect-[16/9] w-full overflow-hidden" style="transform: translateZ(0); backface-visibility: hidden;">
                         <x-optimized-image 
@@ -83,17 +90,12 @@
                                 </svg>
                             </div>
                         </div>
-
-                        @if ($layanan->slug)
-                        <div class="mt-4">
-                            <a href="{{ route('landing.program-detail', $layanan->slug) }}"
-                                class="block w-full rounded-lg bg-orange-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors">
-                                Lihat Detail
-                            </a>
-                        </div>
-                        @endif
                     </div>
+                @if ($layanan->slug)
+                </a>
+                @else
                 </div>
+                @endif
                 @empty
                 <div class="col-span-full text-center py-12">
                     <svg viewBox="0 0 20 20" fill="currentColor" class="mx-auto size-12 text-gray-400">
