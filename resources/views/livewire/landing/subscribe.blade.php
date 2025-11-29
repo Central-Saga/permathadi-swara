@@ -7,7 +7,7 @@ use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\WithFileUploads;
-use function Livewire\Volt\{layout, state, mount, action, uses};
+use function Livewire\Volt\{layout, state, mount, action, computed, uses};
 
 uses(WithFileUploads::class);
 
@@ -23,7 +23,7 @@ state([
     // Step 2: Payment
     'payment_option' => 'later', // 'now' or 'later'
     'method' => 'transfer',
-    'status' => 'pending',
+    'bank_name' => '',
     'proof_file' => null,
 ]);
 
@@ -103,6 +103,31 @@ $previousStep = action(function () {
     }
 });
 
+$calculateEndDate = action(function () {
+    if ($this->start_date && $this->layanan && $this->layanan->duration) {
+        try {
+            $startDate = \Carbon\Carbon::parse($this->start_date);
+            $endDate = $startDate->copy()->addDays($this->layanan->duration);
+            $this->end_date = $endDate->format('Y-m-d');
+        } catch (\Exception $e) {
+            $this->end_date = '';
+        }
+    } else {
+        $this->end_date = '';
+    }
+});
+
+$formattedEndDate = computed(function () {
+    if ($this->end_date) {
+        try {
+            return \Carbon\Carbon::parse($this->end_date)->format('d/m/Y');
+        } catch (\Exception $e) {
+            return $this->end_date;
+        }
+    }
+    return '';
+});
+
 $submit = action(function () {
     $user = Auth::user();
     $anggota = $user->anggota;
@@ -139,39 +164,42 @@ $submit = action(function () {
     // Create payment if user chose to pay now
     if ($this->payment_option === 'now') {
         // Validate payment fields
-        $paymentValidated = $this->validate([
-            'method' => ['required', 'in:cash,transfer,qris'],
-            'status' => ['required', 'in:pending,paid'],
-            'proof_file' => ['nullable', 'image', 'max:5120'], // 5MB max
-        ], [
+        $paymentRules = [
+            'method' => ['required', 'in:cash,transfer'],
+        ];
+
+        $paymentMessages = [
             'method.required' => 'Metode pembayaran harus dipilih.',
             'method.in' => 'Metode pembayaran tidak valid.',
-            'status.required' => 'Status pembayaran harus dipilih.',
-            'status.in' => 'Status pembayaran tidak valid.',
-            'proof_file.image' => 'Bukti pembayaran harus berupa gambar.',
-            'proof_file.max' => 'Ukuran bukti pembayaran maksimal 5MB.',
-        ]);
+        ];
 
-        // Validasi proof_file required jika status = 'paid'
-        if ($paymentValidated['status'] === 'paid' && !$this->proof_file) {
-            $this->addError('proof_file', 'Bukti pembayaran wajib diisi jika status adalah Lunas.');
-            return;
+        // Jika transfer, wajib bank_name dan proof_file
+        if ($this->method === 'transfer') {
+            $paymentRules['bank_name'] = ['required', 'string', 'max:255'];
+            $paymentRules['proof_file'] = ['required', 'image', 'max:5120']; // 5MB max
+            $paymentMessages['bank_name.required'] = 'Bank tujuan harus dipilih.';
+            $paymentMessages['proof_file.required'] = 'Bukti pembayaran wajib diisi untuk transfer.';
+            $paymentMessages['proof_file.image'] = 'Bukti pembayaran harus berupa gambar.';
+            $paymentMessages['proof_file.max'] = 'Ukuran bukti pembayaran maksimal 5MB.';
         }
 
-        // Create payment
+        $paymentValidated = $this->validate($paymentRules, $paymentMessages);
+
+        // Create payment - status selalu pending
         $payment = Payment::create([
             'subscription_id' => $subscription->id,
             'amount' => $this->layanan->price,
             'method' => $paymentValidated['method'],
-            'status' => $paymentValidated['status'],
-            'paid_at' => $paymentValidated['status'] === 'paid' ? now() : null,
+            'status' => 'pending', // Selalu pending
+            'paid_at' => null,
         ]);
 
-        // Upload proof file if provided
-        if ($this->proof_file) {
-            $payment->addMedia($this->proof_file->getRealPath())
+        // Upload proof file jika transfer
+        if ($this->method === 'transfer' && $this->proof_file) {
+            $media = $payment->addMedia($this->proof_file->getRealPath())
                 ->usingName('Payment Proof - ' . $payment->id)
                 ->usingFileName($this->proof_file->getClientOriginalName())
+                ->withCustomProperties(['bank_name' => $paymentValidated['bank_name'] ?? ''])
                 ->toMediaCollection('payment_proof');
         }
     }
@@ -274,7 +302,7 @@ $submit = action(function () {
 
         <!-- Wizard Form -->
         <flux:card data-gsap="subscribe-form">
-            <form wire:submit="submit" class="space-y-6">
+            <form wire:submit.prevent="submit" class="space-y-6">
                 @error('general')
                 <div class="rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
                     <div class="flex">
@@ -302,11 +330,33 @@ $submit = action(function () {
                         </h3>
                     </div>
 
-                    <flux:input wire:model="start_date" name="start_date" type="date" :label="__('Tanggal Mulai')"
-                        required />
+                    <div>
+                        <flux:label>{{ __('Tanggal Mulai') }} <span class="text-red-500">*</span></flux:label>
+                        <flux:date-picker wire:model.live="start_date" name="start_date"
+                            min="{{ now()->format('Y-m-d') }}" required x-on:change="$wire.calculateEndDate()">
+                            <x-slot name="trigger">
+                                <flux:date-picker.input />
+                            </x-slot>
+                        </flux:date-picker>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {{ __('Tidak bisa memilih tanggal sebelum hari ini') }}
+                        </p>
+                        @error('start_date')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                    <flux:input wire:model="end_date" name="end_date" type="date" :label="__('Tanggal Berakhir')"
-                        required />
+                    <div>
+                        <flux:label>{{ __('Tanggal Berakhir') }}</flux:label>
+                        <flux:input value="{{ $this->formattedEndDate }}" name="end_date_display" type="text" readonly
+                            placeholder="{{ __('Akan dihitung otomatis') }}" />
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {{ __('Tanggal berakhir dihitung otomatis dari tanggal mulai + durasi layanan') }}
+                        </p>
+                        @error('end_date')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
 
                     <flux:textarea wire:model="notes" name="notes" :label="__('Catatan (Opsional)')" rows="4"
                         :placeholder="__('Tambahkan catatan jika diperlukan')" />
@@ -334,7 +384,7 @@ $submit = action(function () {
 
                     <div>
                         <flux:label>{{ __('Pilih Opsi Pembayaran') }}</flux:label>
-                        <flux:radio.group wire:model="payment_option" name="payment_option" variant="segmented"
+                        <flux:radio.group wire:model.live="payment_option" name="payment_option" variant="segmented"
                             size="sm" class="mt-2">
                             <flux:radio value="later" :label="__('Bayar Nanti')" />
                             <flux:radio value="now" :label="__('Bayar Sekarang')" />
@@ -349,25 +399,57 @@ $submit = action(function () {
                                 class="mt-2" />
                         </div>
 
-                        <flux:radio.group wire:model="method" name="method" :label="__('Metode Pembayaran')"
+                        <flux:radio.group wire:model.live="method" name="method" :label="__('Metode Pembayaran')"
                             variant="segmented" size="sm">
                             <flux:radio value="cash" :label="__('Cash')" />
                             <flux:radio value="transfer" :label="__('Transfer')" />
-                            <flux:radio value="qris" :label="__('QRIS')" />
                         </flux:radio.group>
 
-                        <flux:radio.group wire:model="status" name="status" :label="__('Status Pembayaran')"
-                            variant="segmented" size="sm">
-                            <flux:radio value="pending" :label="__('Pending')" />
-                            <flux:radio value="paid" :label="__('Lunas')" />
-                        </flux:radio.group>
+                        @if ($this->method === 'transfer')
+                        <div>
+                            <flux:label>{{ __('Pilih Bank Tujuan') }} <span class="text-red-500">*</span></flux:label>
+                            <div class="mt-2 space-y-3">
+                                @php
+                                $banks = [
+                                ['name' => 'BCA', 'account' => '1234567890', 'holder' => 'Permathadi Swara'],
+                                ['name' => 'Mandiri', 'account' => '9876543210', 'holder' => 'Permathadi Swara'],
+                                ['name' => 'BNI', 'account' => '1122334455', 'holder' => 'Permathadi Swara'],
+                                ['name' => 'BRI', 'account' => '5566778899', 'holder' => 'Permathadi Swara'],
+                                ['name' => 'CIMB Niaga', 'account' => '9988776655', 'holder' => 'Permathadi Swara'],
+                                ];
+                                @endphp
+                                @foreach($banks as $bank)
+                                <label
+                                    class="flex items-start gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors {{ $this->bank_name === $bank['name'] ? 'ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-900/20' : '' }}">
+                                    <input type="radio" wire:model.live="bank_name" name="bank_name"
+                                        value="{{ $bank['name'] }}"
+                                        class="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 dark:border-gray-600">
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-gray-900 dark:text-white">{{ $bank['name'] }}
+                                        </div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium">No. Rekening:</span>
+                                                <span class="font-mono font-semibold text-gray-900 dark:text-white">{{
+                                                    $bank['account'] }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium">Atas Nama:</span>
+                                                <span class="text-gray-900 dark:text-white">{{ $bank['holder'] }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                                @endforeach
+                            </div>
+                            @error('bank_name')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
 
                         <div>
                             <flux:label>
-                                {{ __('Bukti Pembayaran') }}
-                                @if($status === 'paid')
-                                <span class="text-red-500">*</span>
-                                @endif
+                                {{ __('Bukti Pembayaran') }} <span class="text-red-500">*</span>
                             </flux:label>
                             <div class="mt-2">
                                 @if ($proof_file)
@@ -384,14 +466,14 @@ $submit = action(function () {
                                         text="JPG, PNG, GIF up to 5MB" with-progress inline />
                                 </flux:file-upload>
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    {{ __('Format: JPG, PNG, GIF. Maksimal 5MB. Wajib diisi jika status adalah Lunas.')
-                                    }}
+                                    {{ __('Format: JPG, PNG, GIF. Maksimal 5MB.') }}
                                 </p>
                             </div>
                             @error('proof_file')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
+                        @endif
                     </div>
                     @endif
 
