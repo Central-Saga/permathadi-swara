@@ -116,6 +116,10 @@ export function initLandingAnimations() {
             aboutHeroAnimated = false;
             programHeroAnimated = false;
             programDetailHeroAnimated = false;
+            
+            // Kill semua ScrollTrigger yang ada untuk mencegah memory leak
+            ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+            
             // Re-init semua animasi
             initNavbarAnimation();
             initFooterAnimation();
@@ -126,6 +130,11 @@ export function initLandingAnimations() {
             initProgramDetailAnimations();
             // Re-init lazy loading
             initLazyLoading();
+            
+            // Refresh ScrollTrigger setelah semua inisialisasi
+            setTimeout(() => {
+                ScrollTrigger.refresh();
+            }, 100);
         });
     }
 }
@@ -1067,93 +1076,272 @@ function initProgramCardsAnimations() {
     if (programSection.hasAttribute('data-animated')) return;
     programSection.setAttribute('data-animated', 'true');
 
-    // Set initial states
-    if (programHeading) {
-        gsap.set(programHeading, {
-            opacity: 0,
-            y: 30
-        });
-    }
+    // Wait for images to load before animating
+    const images = programSection.querySelectorAll('img');
+    let imagesLoaded = 0;
+    const totalImages = images.length;
 
-    if (programCards.length > 0) {
-        gsap.set(programCards, {
-            opacity: 0,
-            y: 50,
-            scale: 0.95
-        });
-    }
+    const checkImagesAndAnimate = () => {
+        imagesLoaded++;
+        if (imagesLoaded >= totalImages || totalImages === 0) {
+            startAnimations();
+        }
+    };
 
-    // Animate heading first
-    if (programHeading) {
-        gsap.to(programHeading, {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: 'power3.out',
-            scrollTrigger: {
-                trigger: programSection,
-                start: 'top 80%',
-                toggleActions: 'play none none none'
+    // If no images, start immediately
+    if (totalImages === 0) {
+        startAnimations();
+    } else {
+        // Wait for all images to load
+        images.forEach((img) => {
+            if (img.complete) {
+                checkImagesAndAnimate();
+            } else {
+                img.addEventListener('load', checkImagesAndAnimate, { once: true });
+                img.addEventListener('error', checkImagesAndAnimate, { once: true });
             }
         });
     }
 
-    // Animate cards with stagger effect
-    if (programCards.length > 0) {
-        gsap.to(programCards, {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: 'power3.out',
-            scrollTrigger: {
-                trigger: programSection,
-                start: 'top 75%',
-                toggleActions: 'play none none none'
-            }
-        });
+    function startAnimations() {
+        // Set initial states
+        if (programHeading) {
+            gsap.set(programHeading, {
+                opacity: 0,
+                y: 30
+            });
+        }
 
-        // Add hover effects dengan GSAP untuk smooth animation
-        programCards.forEach((card) => {
-            const arrow = card.querySelector('.program-card-arrow');
-            
-            // Hover in animation
-            card.addEventListener('mouseenter', () => {
-                gsap.to(card, {
+        if (programCards.length > 0) {
+            gsap.set(programCards, {
+                opacity: 0,
+                y: 50,
+                scale: 0.95,
+                force3D: true // Enable hardware acceleration
+            });
+        }
+
+        // Animate heading first
+        if (programHeading) {
+            gsap.to(programHeading, {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                ease: 'power3.out',
+                scrollTrigger: {
+                    trigger: programSection,
+                    start: 'top 80%',
+                    toggleActions: 'play none none none',
+                    refreshPriority: -1
+                }
+            });
+        }
+
+        // Animate cards with stagger effect
+        if (programCards.length > 0) {
+            const cardTimeline = gsap.to(programCards, {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.8,
+                stagger: 0.15,
+                ease: 'power3.out',
+                force3D: true, // Enable hardware acceleration
+                scrollTrigger: {
+                    trigger: programSection,
+                    start: 'top 75%',
+                    toggleActions: 'play none none none',
+                    refreshPriority: -1,
+                    onEnter: () => {
+                        // Refresh ScrollTrigger after animation starts
+                        ScrollTrigger.refresh();
+                    }
+                }
+            });
+
+            // Add hover effects dengan GSAP untuk smooth animation
+            programCards.forEach((card, index) => {
+                const arrow = card.querySelector('.program-card-arrow');
+                const cardImage = card.querySelector('img');
+                let imageReady = false;
+                let hoverEnabled = false;
+                
+                // Wait for image to be fully loaded and decoded
+                if (cardImage) {
+                    const checkImageReady = () => {
+                        if (cardImage.complete && cardImage.naturalHeight > 0) {
+                            // Force browser to decode image
+                            cardImage.decode().then(() => {
+                                imageReady = true;
+                                enableHover();
+                            }).catch(() => {
+                                // If decode fails, still enable after a delay
+                                setTimeout(() => {
+                                    imageReady = true;
+                                    enableHover();
+                                }, 100);
+                            });
+                        } else {
+                            cardImage.addEventListener('load', checkImageReady, { once: true });
+                            cardImage.addEventListener('error', () => {
+                                imageReady = true;
+                                enableHover();
+                            }, { once: true });
+                        }
+                    };
+                    
+                    checkImageReady();
+                } else {
+                    // No image, enable immediately
+                    imageReady = true;
+                    setTimeout(() => enableHover(), 50);
+                }
+
+                // Pre-create hover animations for better performance
+                const hoverIn = gsap.to(card, {
                     scale: 1.02,
                     y: -5,
-                    duration: 0.3,
-                    ease: 'power2.out'
+                    duration: 0.4,
+                    ease: 'power2.out',
+                    force3D: true,
+                    paused: true,
+                    immediateRender: false
                 });
-                
-                if (arrow) {
-                    gsap.to(arrow, {
-                        x: 5,
-                        duration: 0.3,
-                        ease: 'power2.out'
-                    });
-                }
-            });
 
-            // Hover out animation
-            card.addEventListener('mouseleave', () => {
-                gsap.to(card, {
+                const hoverOut = gsap.to(card, {
                     scale: 1,
                     y: 0,
-                    duration: 0.3,
-                    ease: 'power2.out'
+                    duration: 0.4,
+                    ease: 'power2.out',
+                    force3D: true,
+                    paused: true,
+                    immediateRender: false
                 });
-                
-                if (arrow) {
-                    gsap.to(arrow, {
-                        x: 0,
-                        duration: 0.3,
-                        ease: 'power2.out'
+
+                const arrowIn = arrow ? gsap.to(arrow, {
+                    x: 5,
+                    duration: 0.4,
+                    ease: 'power2.out',
+                    paused: true,
+                    immediateRender: false
+                }) : null;
+
+                const arrowOut = arrow ? gsap.to(arrow, {
+                    x: 0,
+                    duration: 0.4,
+                    ease: 'power2.out',
+                    paused: true,
+                    immediateRender: false
+                }) : null;
+
+                const imageIn = cardImage ? gsap.to(cardImage, {
+                    scale: 1.1,
+                    duration: 0.4,
+                    ease: 'power2.out',
+                    force3D: true,
+                    paused: true,
+                    immediateRender: false
+                }) : null;
+
+                const imageOut = cardImage ? gsap.to(cardImage, {
+                    scale: 1,
+                    duration: 0.4,
+                    ease: 'power2.out',
+                    force3D: true,
+                    paused: true,
+                    immediateRender: false
+                }) : null;
+
+                // Pre-warm animations dengan micro-animation saat card pertama kali terlihat
+                const preWarmAnimation = () => {
+                    if (!hoverEnabled) return;
+                    
+                    // Use requestAnimationFrame untuk timing yang lebih baik
+                    requestAnimationFrame(() => {
+                        // Micro animation untuk pre-warm browser rendering
+                        // Force browser to create compositor layer
+                        gsap.set(card, {
+                            scale: 1.0001,
+                            force3D: true
+                        });
+                        
+                        requestAnimationFrame(() => {
+                            gsap.to(card, {
+                                scale: 1,
+                                duration: 0.001,
+                                ease: 'none',
+                                force3D: true,
+                                onComplete: () => {
+                                    // Force browser to optimize for hover
+                                    if (cardImage) {
+                                        gsap.set(cardImage, {
+                                            scale: 1.0001,
+                                            force3D: true
+                                        });
+                                        requestAnimationFrame(() => {
+                                            gsap.set(cardImage, {
+                                                scale: 1,
+                                                force3D: true
+                                            });
+                                        });
+                                    }
+                                }
+                            });
+                        });
+                    });
+                };
+
+                function enableHover() {
+                    if (hoverEnabled) return;
+                    
+                    // Ensure card is fully rendered
+                    const cardRect = card.getBoundingClientRect();
+                    if (cardRect.width === 0 || cardRect.height === 0) {
+                        // Card belum fully rendered, coba lagi
+                        requestAnimationFrame(() => {
+                            enableHover();
+                        });
+                        return;
+                    }
+                    
+                    hoverEnabled = true;
+                    
+                    // Pre-warm setelah delay kecil dengan requestAnimationFrame
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            preWarmAnimation();
+                        }, 100 + (index * 30));
                     });
                 }
+
+                // Hover in animation dengan requestAnimationFrame untuk smooth
+                card.addEventListener('mouseenter', (e) => {
+                    if (!hoverEnabled) return;
+                    
+                    requestAnimationFrame(() => {
+                        hoverIn.restart();
+                        if (arrowIn) arrowIn.restart();
+                        if (imageIn) imageIn.restart();
+                    });
+                }, { passive: true });
+
+                // Hover out animation dengan requestAnimationFrame untuk smooth
+                card.addEventListener('mouseleave', (e) => {
+                    if (!hoverEnabled) return;
+                    
+                    requestAnimationFrame(() => {
+                        hoverOut.restart();
+                        if (arrowOut) arrowOut.restart();
+                        if (imageOut) imageOut.restart();
+                    });
+                }, { passive: true });
             });
-        });
+        }
+
+        // Refresh ScrollTrigger after a short delay to ensure layout is stable
+        setTimeout(() => {
+            ScrollTrigger.refresh();
+        }, 100);
     }
 }
 
@@ -1178,104 +1366,130 @@ function initProgramDetailHeroAnimations() {
         return; // Skip jika sudah ter-animate
     }
 
-    // Set initial states
-    if (programDetailHeroBlur1) {
-        gsap.set(programDetailHeroBlur1, {
-            opacity: 0,
-            scale: 0.8
-        });
-    }
+    // Wait for image to load if it exists
+    const startAnimation = () => {
+        // Set initial states
+        if (programDetailHeroBlur1) {
+            gsap.set(programDetailHeroBlur1, {
+                opacity: 0,
+                scale: 0.8
+            });
+        }
 
-    if (programDetailHeroBlur2) {
-        gsap.set(programDetailHeroBlur2, {
-            opacity: 0,
-            scale: 0.8
-        });
-    }
+        if (programDetailHeroBlur2) {
+            gsap.set(programDetailHeroBlur2, {
+                opacity: 0,
+                scale: 0.8
+            });
+        }
 
+        if (programDetailHeroImage) {
+            gsap.set(programDetailHeroImage, {
+                opacity: 0,
+                y: 30,
+                scale: 0.95,
+                force3D: true
+            });
+        }
+
+        if (programDetailHeroTitle) {
+            gsap.set(programDetailHeroTitle, {
+                opacity: 0,
+                y: 30,
+                force3D: true
+            });
+        }
+
+        if (programDetailHeroDescription) {
+            gsap.set(programDetailHeroDescription, {
+                opacity: 0,
+                y: 30,
+                force3D: true
+            });
+        }
+
+        // Create timeline for program detail hero animations - NO SCROLL TRIGGER
+        const programDetailHeroTimeline = gsap.timeline({
+            paused: false,
+            delay: 0
+        });
+
+        // Animate blur backgrounds bersamaan
+        if (programDetailHeroBlur1) {
+            programDetailHeroTimeline.to(programDetailHeroBlur1, {
+                opacity: 1,
+                scale: 1,
+                duration: 1.5,
+                ease: 'power2.out'
+            }, 0);
+        }
+
+        if (programDetailHeroBlur2) {
+            programDetailHeroTimeline.to(programDetailHeroBlur2, {
+                opacity: 1,
+                scale: 1,
+                duration: 1.5,
+                ease: 'power2.out'
+            }, 0);
+        }
+
+        // Animate image first (jika ada)
+        if (programDetailHeroImage) {
+            programDetailHeroTimeline.to(programDetailHeroImage, {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 1,
+                ease: 'power3.out',
+                force3D: true
+            }, 0.2);
+        }
+
+        // Animate title dengan fade-in dan slide-up
+        if (programDetailHeroTitle) {
+            programDetailHeroTimeline.to(programDetailHeroTitle, {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                ease: 'power3.out',
+                force3D: true
+            }, programDetailHeroImage ? 0.4 : 0);
+        }
+
+        // Animate description dengan fade-in dan slide-up
+        if (programDetailHeroDescription) {
+            programDetailHeroTimeline.to(programDetailHeroDescription, {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                ease: 'power3.out',
+                force3D: true
+            }, programDetailHeroImage ? 0.5 : 0.1);
+        }
+
+        // Mark program detail hero section sebagai sudah ter-animate
+        programDetailHeroAnimated = true;
+
+        // Force play timeline
+        programDetailHeroTimeline.play(0);
+    };
+
+    // Check if image exists and wait for it to load
     if (programDetailHeroImage) {
-        gsap.set(programDetailHeroImage, {
-            opacity: 0,
-            y: 30,
-            scale: 0.95
-        });
+        const img = programDetailHeroImage.querySelector('img');
+        if (img) {
+            if (img.complete) {
+                startAnimation();
+            } else {
+                img.addEventListener('load', startAnimation, { once: true });
+                img.addEventListener('error', startAnimation, { once: true });
+            }
+        } else {
+            startAnimation();
+        }
+    } else {
+        startAnimation();
     }
-
-    if (programDetailHeroTitle) {
-        gsap.set(programDetailHeroTitle, {
-            opacity: 0,
-            y: 30
-        });
-    }
-
-    if (programDetailHeroDescription) {
-        gsap.set(programDetailHeroDescription, {
-            opacity: 0,
-            y: 30
-        });
-    }
-
-    // Create timeline for program detail hero animations - NO SCROLL TRIGGER
-    const programDetailHeroTimeline = gsap.timeline({
-        paused: false,
-        delay: 0
-    });
-
-    // Animate blur backgrounds bersamaan
-    if (programDetailHeroBlur1) {
-        programDetailHeroTimeline.to(programDetailHeroBlur1, {
-            opacity: 1,
-            scale: 1,
-            duration: 1.5,
-            ease: 'power2.out'
-        }, 0);
-    }
-
-    if (programDetailHeroBlur2) {
-        programDetailHeroTimeline.to(programDetailHeroBlur2, {
-            opacity: 1,
-            scale: 1,
-            duration: 1.5,
-            ease: 'power2.out'
-        }, 0);
-    }
-
-    // Animate image first (jika ada)
-    if (programDetailHeroImage) {
-        programDetailHeroTimeline.to(programDetailHeroImage, {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 1,
-            ease: 'power3.out'
-        }, 0.2);
-    }
-
-    // Animate title dengan fade-in dan slide-up
-    if (programDetailHeroTitle) {
-        programDetailHeroTimeline.to(programDetailHeroTitle, {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: 'power3.out'
-        }, programDetailHeroImage ? 0.4 : 0);
-    }
-
-    // Animate description dengan fade-in dan slide-up
-    if (programDetailHeroDescription) {
-        programDetailHeroTimeline.to(programDetailHeroDescription, {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: 'power3.out'
-        }, programDetailHeroImage ? 0.5 : 0.1);
-    }
-
-    // Mark program detail hero section sebagai sudah ter-animate
-    programDetailHeroAnimated = true;
-
-    // Force play timeline
-    programDetailHeroTimeline.play(0);
 }
 
 /**
@@ -1297,7 +1511,8 @@ function initProgramDetailAnimations() {
         gsap.set(programDetailCard, {
             opacity: 0,
             y: 40,
-            scale: 0.95
+            scale: 0.95,
+            force3D: true
         });
 
         // Animate card on scroll
@@ -1307,10 +1522,15 @@ function initProgramDetailAnimations() {
             scale: 1,
             duration: 0.8,
             ease: 'power3.out',
+            force3D: true,
             scrollTrigger: {
                 trigger: programDetailSection,
                 start: 'top 80%',
-                toggleActions: 'play none none none'
+                toggleActions: 'play none none none',
+                refreshPriority: -1,
+                onEnter: () => {
+                    ScrollTrigger.refresh();
+                }
             }
         });
     }

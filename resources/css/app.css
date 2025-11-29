@@ -217,6 +217,43 @@ a[data-flux-sidebar-item][current],
     transition: opacity 0.3s ease-in-out;
 }
 
+/* Program Cards - GPU acceleration optimization */
+[data-gsap="program-card"] {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    contain: layout style paint;
+}
+
+[data-gsap="program-card"] img {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* Smooth hover transitions - pre-render untuk menghindari jank */
+[data-gsap="program-card"]:hover {
+    /* CSS fallback untuk smooth transition */
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-gsap="program-card"]:hover img {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth hover transitions */
+[data-gsap="program-card"] * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */

@@ -40,10 +40,28 @@ class Layanan extends Model implements HasMedia
 
     public function registerMediaConversions(Media $media = null): void
     {
+        // Thumbnail conversion
         $this->addMediaConversion('thumb')
             ->width(400)
             ->height(400)
             ->sharpen(10)
+            ->performOnCollections('layanan_cover');
+
+        // Responsive images untuk original image
+        // Spatie akan otomatis generate responsive images saat upload
+        // jika withResponsiveImages() dipanggil pada conversion apapun
+        $this->addMediaConversion('responsive')
+            ->withResponsiveImages()
+            ->performOnCollections('layanan_cover');
+
+        // WebP conversion untuk modern browsers
+        $this->addMediaConversion('webp')
+            ->format('webp')
+            ->performOnCollections('layanan_cover');
+
+        // AVIF conversion untuk browsers terbaru (optional, lebih kecil dari WebP)
+        $this->addMediaConversion('avif')
+            ->format('avif')
             ->performOnCollections('layanan_cover');
     }
 

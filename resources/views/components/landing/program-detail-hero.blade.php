@@ -9,10 +9,17 @@
     <div class="py-24 sm:py-32 lg:pb-40">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
             <div class="mx-auto max-w-4xl">
-                @if ($layanan->getFirstMediaUrl('layanan_cover'))
+                @if ($layanan->getFirstMedia('layanan_cover'))
                 <div class="mb-8 overflow-hidden rounded-2xl shadow-2xl ring-1 ring-gray-900/5 dark:ring-white/10" data-gsap="program-detail-hero-image">
-                    <img src="{{ $layanan->getFirstMediaUrl('layanan_cover') }}" alt="{{ $layanan->name }}"
-                        class="h-full w-full object-cover" />
+                    <x-optimized-image 
+                        :model="$layanan"
+                        collection="layanan_cover"
+                        :alt="$layanan->name"
+                        sizes="(max-width: 768px) 100vw, 1200px"
+                        loading="eager"
+                        class="h-full w-full"
+                        :responsive="true"
+                        :placeholder="true" />
                 </div>
                 @endif
                 <div class="text-center">

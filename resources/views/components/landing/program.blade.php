@@ -16,12 +16,20 @@
         <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
             <div class="grid max-w-xl grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
                 @forelse ($layanans as $index => $layanan)
-                <div class="group flex flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-900/5 transition-all hover:shadow-xl dark:bg-white/5 dark:ring-white/10"
-                    data-gsap="program-card">
-                    @if ($layanan->getFirstMediaUrl('layanan_cover'))
-                    <div class="aspect-[16/9] w-full overflow-hidden">
-                        <img src="{{ $layanan->getFirstMediaUrl('layanan_cover') }}" alt="{{ $layanan->name }}"
-                            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                <div class="group flex flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-900/5 dark:bg-white/5 dark:ring-white/10"
+                    data-gsap="program-card"
+                    style="will-change: transform; transform: translateZ(0); backface-visibility: hidden;">
+                    @if ($layanan->getFirstMedia('layanan_cover'))
+                    <div class="aspect-[16/9] w-full overflow-hidden" style="transform: translateZ(0); backface-visibility: hidden;">
+                        <x-optimized-image 
+                            :model="$layanan"
+                            collection="layanan_cover"
+                            :alt="$layanan->name"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            loading="lazy"
+                            class="h-full w-full"
+                            :responsive="true"
+                            :placeholder="true" />
                     </div>
                     @else
                     <div
