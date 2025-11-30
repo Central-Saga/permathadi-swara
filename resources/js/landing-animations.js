@@ -21,6 +21,8 @@ export function initLandingAnimations() {
                                          document.querySelector('[data-gsap="program-detail-hero-description"]');
         const galeriHeroSection = document.querySelector('[data-gsap="galeri-hero-title"]') || 
                                   document.querySelector('[data-gsap="galeri-hero-description"]');
+        const kontakHeroSection = document.querySelector('[data-gsap="kontak-hero-title"]') || 
+                                  document.querySelector('[data-gsap="kontak-hero-description"]');
         
         if (heroSection) {
             // Init navbar dan hero bersamaan tanpa delay
@@ -54,6 +56,13 @@ export function initLandingAnimations() {
             // Init navbar dan galeri hero bersamaan tanpa delay
             initNavbarAnimation();
             initGaleriHeroAnimations();
+            // Footer bisa sedikit delay
+            initFooterAnimation();
+            return true;
+        } else if (kontakHeroSection) {
+            // Init navbar dan kontak hero bersamaan tanpa delay
+            initNavbarAnimation();
+            initKontakHeroAnimations();
             // Footer bisa sedikit delay
             initFooterAnimation();
             return true;
@@ -178,6 +187,7 @@ let aboutHeroAnimated = false;
 let programHeroAnimated = false;
 let programDetailHeroAnimated = false;
 let galeriHeroAnimated = false;
+let kontakHeroAnimated = false;
 
 /**
  * Initialize navbar animation - fade-in dari atas
@@ -799,6 +809,107 @@ function initProgramHeroAnimations() {
 
     // Force play timeline
     programHeroTimeline.play(0);
+}
+
+/**
+ * Initialize Kontak Hero section animations (NO SCROLL TRIGGER)
+ * Kontak Hero section langsung di-animate saat pertama kali page diakses
+ */
+function initKontakHeroAnimations() {
+    const kontakHeroTitle = document.querySelector('[data-gsap="kontak-hero-title"]');
+    const kontakHeroDescription = document.querySelector('[data-gsap="kontak-hero-description"]');
+    const kontakHeroBlur1 = document.querySelector('[data-gsap="kontak-hero-blur-1"]');
+    const kontakHeroBlur2 = document.querySelector('[data-gsap="kontak-hero-blur-2"]');
+
+    // Check if kontak hero elements exist
+    if (!kontakHeroTitle && !kontakHeroDescription) {
+        return; // Exit if no kontak hero elements found
+    }
+
+    // Check if kontak hero section sudah ter-animate (untuk mencegah re-animation)
+    if (kontakHeroAnimated) {
+        return; // Skip jika sudah ter-animate
+    }
+
+    // Set initial states
+    if (kontakHeroBlur1) {
+        gsap.set(kontakHeroBlur1, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (kontakHeroBlur2) {
+        gsap.set(kontakHeroBlur2, {
+            opacity: 0,
+            scale: 0.8
+        });
+    }
+
+    if (kontakHeroTitle) {
+        gsap.set(kontakHeroTitle, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    if (kontakHeroDescription) {
+        gsap.set(kontakHeroDescription, {
+            opacity: 0,
+            y: 30
+        });
+    }
+
+    // Create timeline for kontak hero animations - NO SCROLL TRIGGER
+    const kontakHeroTimeline = gsap.timeline({
+        paused: false,
+        delay: 0
+    });
+
+    // Animate blur backgrounds dan title bersamaan
+    if (kontakHeroBlur1) {
+        kontakHeroTimeline.to(kontakHeroBlur1, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    if (kontakHeroBlur2) {
+        kontakHeroTimeline.to(kontakHeroBlur2, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: 'power2.out'
+        }, 0);
+    }
+
+    // Animate title dengan fade-in dan slide-up
+    if (kontakHeroTitle) {
+        kontakHeroTimeline.to(kontakHeroTitle, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        }, 0);
+    }
+
+    // Animate description dengan fade-in dan slide-up
+    if (kontakHeroDescription) {
+        kontakHeroTimeline.to(kontakHeroDescription, {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        }, 0.1);
+    }
+
+    // Mark kontak hero section sebagai sudah ter-animate
+    kontakHeroAnimated = true;
+
+    // Force play timeline
+    kontakHeroTimeline.play(0);
 }
 
 /**
