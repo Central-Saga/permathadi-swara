@@ -103,13 +103,23 @@
                 <span class="info-value">{{ $contactMessage->subject }}</span>
             </div>
             <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">{{ $contactMessage->email }}</span>
+            </div>
+            @if($contactMessage->phone)
+            <div class="info-row">
+                <span class="info-label">Telepon:</span>
+                <span class="info-value">{{ $contactMessage->phone }}</span>
+            </div>
+            @endif
+            <div class="info-row">
                 <span class="info-label">Tanggal:</span>
                 <span class="info-value">{{ $contactMessage->created_at->format('d F Y, H:i') }} WITA</span>
             </div>
         </div>
         
         <div class="message">
-            <p>Tim kami akan memproses pesan Anda dan akan menghubungi Anda melalui email <strong>{{ $contactMessage->email }}</strong> dalam waktu 1-2 hari kerja.</p>
+            <p>Tim kami akan memproses pesan Anda dan akan menghubungi Anda melalui email <strong>{{ $contactMessage->email }}</strong>@if($contactMessage->phone) atau telepon <strong>{{ $contactMessage->phone }}</strong>@endif dalam waktu 1-2 hari kerja.</p>
             
             <p>Jika Anda memiliki pertanyaan mendesak, jangan ragu untuk menghubungi kami kembali.</p>
         </div>

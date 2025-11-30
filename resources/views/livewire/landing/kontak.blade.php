@@ -11,6 +11,7 @@ layout('components.layouts.landing');
 state([
     'name' => '',
     'email' => '',
+    'phone' => '',
     'subject' => '',
     'message' => '',
 ]);
@@ -19,6 +20,7 @@ $submit = action(function () {
     $validated = $this->validate([
         'name' => ['required', 'string', 'max:255'],
         'email' => ['required', 'string', 'email', 'max:255'],
+        'phone' => ['nullable', 'string', 'max:20'],
         'subject' => ['required', 'string', 'max:255'],
         'message' => ['required', 'string', 'max:5000'],
     ]);
@@ -37,7 +39,7 @@ $submit = action(function () {
     // Email akan di-queue secara otomatis karena Mailable implement ShouldQueue
     Mail::to($contactMessage->email)->queue(new ContactConfirmation($contactMessage));
 
-    $this->reset('name', 'email', 'subject', 'message');
+    $this->reset('name', 'email', 'phone', 'subject', 'message');
 
     $this->dispatch('message-sent');
 }); ?>
@@ -53,6 +55,9 @@ $submit = action(function () {
                         <flux:input wire:model="name" name="name" :label="__('Nama')" type="text" required autofocus />
 
                         <flux:input wire:model="email" name="email" :label="__('Email')" type="email" required />
+
+                        <flux:input wire:model="phone" name="phone" :label="__('Telepon')" type="tel"
+                            placeholder="{{ __('Contoh: 081234567890') }}" />
 
                         <flux:input wire:model="subject" name="subject" :label="__('Subjek')" type="text" required />
 
