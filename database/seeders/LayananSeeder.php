@@ -80,19 +80,52 @@ class LayananSeeder extends Seeder
             ],
         ];
 
-        foreach ($layananData as $data) {
-            $layanan = Layanan::create($data);
+        // Array gambar dummy yang tersedia (hanya file yang benar-benar ada)
+        $dummyImages = [
+            'ABD07813.jpg',
+            'ABD07970.jpg',
+            'ABD08518.jpg',
+        ];
 
-            // Attach placeholder image via Spatie Media Library
+        foreach ($layananData as $index => $data) {
+            // Cek apakah layanan sudah ada, jika ada update, jika tidak create
+            $layanan = Layanan::updateOrCreate(
+                ['slug' => $data['slug']],
+                $data
+            );
+
+            // Hapus media lama jika ada (untuk re-seed dengan gambar baru)
+            if ($layanan->hasMedia('layanan_cover')) {
+                $layanan->clearMediaCollection('layanan_cover');
+            }
+
+            // Attach gambar dummy via Spatie Media Library dengan distribusi round-robin
             try {
-                // Menggunakan placeholder image dari placeholder.com
-                $imageUrl = 'https://via.placeholder.com/800x600/FF6B35/FFFFFF?text=' . urlencode($data['name']);
-                
-                $layanan->addMediaFromUrl($imageUrl)
-                    ->toMediaCollection('layanan_cover');
+                // Pilih gambar secara round-robin
+                $imageIndex = $index % count($dummyImages);
+                $imageFileName = $dummyImages[$imageIndex];
+                $imagePath = public_path('images/dummy/' . $imageFileName);
+
+                if (file_exists($imagePath)) {
+                    $media = $layanan->addMedia($imagePath)
+                        ->usingName($data['name'])
+                        ->usingFileName($imageFileName)
+                        ->toMediaCollection('layanan_cover');
+
+                    // Verifikasi media sudah ter-attach
+                    if ($media) {
+                        \Log::info("Successfully attached image for layanan: {$data['name']} - {$imageFileName}");
+                    } else {
+                        \Log::warning("Failed to attach image for layanan: {$data['name']} - Media object is null");
+                    }
+                } else {
+                    \Log::warning("Image file not found for layanan: {$data['name']} - {$imagePath}");
+                }
             } catch (\Exception $e) {
-                // Jika gagal download, skip attachment
-                \Log::warning("Failed to attach image for layanan: {$data['name']} - {$e->getMessage()}");
+                // Jika gagal, skip attachment
+                \Log::error("Failed to attach image for layanan: {$data['name']} - {$e->getMessage()}", [
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         }
     }

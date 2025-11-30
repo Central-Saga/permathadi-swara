@@ -243,7 +243,8 @@ $payments = computed(function () {
                             <flux:icon :name="$this->sortIconCreatedAt" variant="mini" />
                         </button>
                     </flux:table.column>
-                    @if (auth()->user()->can('melihat payment') || auth()->user()->can('mengubah payment') || auth()->user()->can('menghapus payment'))
+                    @if (auth()->user()->can('melihat payment') || auth()->user()->can('mengubah payment') ||
+                    auth()->user()->can('menghapus payment'))
                     <flux:table.column>{{ __('Aksi') }}</flux:table.column>
                     @endif
                 </flux:table.columns>
@@ -251,27 +252,34 @@ $payments = computed(function () {
                     @forelse ($this->payments as $payment)
                     <flux:table.row>
                         <flux:table.cell>
-                            <div class="font-medium text-gray-900 dark:text-white">{{ $payment->subscription->anggota->user->name ?? '-' }}</div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $payment->subscription->layanan->name ?? '-' }}</div>
+                            <div class="font-medium text-gray-900 dark:text-white">{{
+                                $payment->subscription->anggota->user->name ?? '-' }}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">{{
+                                $payment->subscription->layanan->name ?? '-' }}</div>
                         </flux:table.cell>
                         <flux:table.cell>
-                            <div class="text-gray-600 dark:text-gray-400 font-semibold">{{ $payment->formatted_amount }}</div>
+                            <div class="text-gray-600 dark:text-gray-400 font-semibold">{{ $payment->formatted_amount }}
+                            </div>
                         </flux:table.cell>
                         <flux:table.cell>
                             <div class="text-gray-600 dark:text-gray-400">{{ ucfirst($payment->method) }}</div>
                         </flux:table.cell>
                         <flux:table.cell>
-                            <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $payment->status_badge_color }}">
+                            <span
+                                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $payment->status_badge_color }}">
                                 {{ ucfirst($payment->status) }}
                             </span>
                         </flux:table.cell>
                         <flux:table.cell>
-                            <div class="text-gray-600 dark:text-gray-400">{{ $payment->paid_at ? $payment->paid_at->format('d/m/Y H:i') : '-' }}</div>
+                            <div class="text-gray-600 dark:text-gray-400">{{ $payment->paid_at ?
+                                $payment->paid_at->format('d/m/Y H:i') : '-' }}</div>
                         </flux:table.cell>
                         <flux:table.cell>
-                            <div class="text-gray-600 dark:text-gray-400">{{ $payment->created_at->format('d/m/Y H:i') }}</div>
+                            <div class="text-gray-600 dark:text-gray-400">{{ $payment->created_at->format('d/m/Y H:i')
+                                }}</div>
                         </flux:table.cell>
-                        @if (auth()->user()->can('melihat payment') || auth()->user()->can('mengubah payment') || auth()->user()->can('menghapus payment'))
+                        @if (auth()->user()->can('melihat payment') || auth()->user()->can('mengubah payment') ||
+                        auth()->user()->can('menghapus payment'))
                         <flux:table.cell>
                             <div class="flex items-center gap-2">
                                 @can('melihat payment')
@@ -287,8 +295,8 @@ $payments = computed(function () {
                                     title="{{ __('Edit') }}" />
                                 @endcan
                                 @can('menghapus payment')
-                                <flux:button wire:click="openDeleteModal({{ $payment->id }})"
-                                    variant="ghost" size="sm" icon="trash"
+                                <flux:button wire:click="openDeleteModal({{ $payment->id }})" variant="ghost" size="sm"
+                                    icon="trash"
                                     class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
                                     title="{{ __('Hapus') }}" />
                                 @endcan
@@ -338,54 +346,96 @@ $payments = computed(function () {
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <flux:label>{{ __('Anggota') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedPayment->subscription->anggota->user->name ?? '-' }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $selectedPayment->subscription->anggota->user->email ?? '-' }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                $selectedPayment->subscription->anggota->user->name ?? '-' }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{
+                                $selectedPayment->subscription->anggota->user->email ?? '-' }}</div>
                         </div>
                         <div>
                             <flux:label>{{ __('Layanan') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedPayment->subscription->layanan->name ?? '-' }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                $selectedPayment->subscription->layanan->name ?? '-' }}</div>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">{{ __('Data Pembayaran') }}</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">{{ __('Data Pembayaran') }}
+                    </h3>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <flux:label>{{ __('Amount') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white font-semibold">{{ $selectedPayment->formatted_amount }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white font-semibold">{{
+                                $selectedPayment->formatted_amount }}</div>
                         </div>
                         <div>
                             <flux:label>{{ __('Method') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ ucfirst($selectedPayment->method) }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ ucfirst($selectedPayment->method)
+                                }}</div>
                         </div>
                         <div>
                             <flux:label>{{ __('Status') }}</flux:label>
                             <div class="mt-1">
-                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $selectedPayment->status_badge_color }}">
+                                <span
+                                    class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $selectedPayment->status_badge_color }}">
                                     {{ ucfirst($selectedPayment->status) }}
                                 </span>
                             </div>
                         </div>
                         <div>
                             <flux:label>{{ __('Paid At') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedPayment->paid_at ? $selectedPayment->paid_at->format('d/m/Y H:i') : '-' }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedPayment->paid_at ?
+                                $selectedPayment->paid_at->format('d/m/Y H:i') : '-' }}</div>
                         </div>
+                        @if ($selectedPayment->method === 'transfer' && ($selectedPayment->bank_name ||
+                        $selectedPayment->account_number || $selectedPayment->account_holder))
+                        <div class="col-span-2 border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">{{ __('Informasi
+                                Rekening Tujuan') }}</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                @if ($selectedPayment->bank_name)
+                                <div>
+                                    <flux:label>{{ __('Bank') }}</flux:label>
+                                    <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                        $selectedPayment->bank_name }}</div>
+                                </div>
+                                @endif
+                                @if ($selectedPayment->account_number)
+                                <div>
+                                    <flux:label>{{ __('Nomor Rekening') }}</flux:label>
+                                    <div class="mt-1 text-sm text-gray-900 dark:text-white font-mono">{{
+                                        $selectedPayment->account_number }}</div>
+                                </div>
+                                @endif
+                                @if ($selectedPayment->account_holder)
+                                <div class="col-span-2">
+                                    <flux:label>{{ __('Atas Nama') }}</flux:label>
+                                    <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                        $selectedPayment->account_holder }}</div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                        @endif
                         @if ($selectedPayment->getFirstMediaUrl('payment_proof'))
                         <div class="col-span-2">
                             <flux:label>{{ __('Bukti Pembayaran') }}</flux:label>
                             <div class="mt-2">
-                                <img src="{{ $selectedPayment->getFirstMediaUrl('payment_proof') }}" alt="Bukti Pembayaran" class="max-w-full h-auto rounded-lg border border-gray-300 dark:border-gray-700">
+                                <img src="{{ $selectedPayment->getFirstMediaUrl('payment_proof') }}"
+                                    alt="Bukti Pembayaran"
+                                    class="max-w-full h-auto rounded-lg border border-gray-300 dark:border-gray-700">
                             </div>
                         </div>
                         @endif
                         <div>
                             <flux:label>{{ __('Created At') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedPayment->created_at->format('d/m/Y H:i') }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                $selectedPayment->created_at->format('d/m/Y H:i') }}</div>
                         </div>
                         <div>
                             <flux:label>{{ __('Updated At') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedPayment->updated_at->format('d/m/Y H:i') }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                $selectedPayment->updated_at->format('d/m/Y H:i') }}</div>
                         </div>
                     </div>
                 </div>
@@ -416,8 +466,8 @@ $payments = computed(function () {
             @if ($paymentToDelete)
             <div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
                 <p class="text-sm text-red-800 dark:text-red-200">
-                    Pembayaran untuk <strong>{{ $paymentToDelete->subscription->anggota->user->name ?? '-' }}</strong> 
-                    ({{ $paymentToDelete->subscription->layanan->name ?? '-' }}) 
+                    Pembayaran untuk <strong>{{ $paymentToDelete->subscription->anggota->user->name ?? '-' }}</strong>
+                    ({{ $paymentToDelete->subscription->layanan->name ?? '-' }})
                     sebesar <strong>{{ $paymentToDelete->formatted_amount }}</strong> akan dihapus secara permanen.
                 </p>
             </div>
@@ -432,4 +482,3 @@ $payments = computed(function () {
         </div>
     </flux:modal>
 </div>
-

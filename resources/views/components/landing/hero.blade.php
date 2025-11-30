@@ -16,18 +16,9 @@
                     tradisional Bali. Kami menawarkan program pembelajaran berkualitas untuk semua kalangan yang ingin
                     mempelajari kekayaan budaya Bali.</p>
                 <div class="mt-10 flex items-center justify-center gap-x-6">
-                    @auth
-                    <a href="{{ route('dashboard') }}"
+                    <a href="{{ route('landing.program') }}"
                         class="rounded-md bg-orange-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 dark:bg-orange-500 dark:hover:bg-orange-400 dark:focus-visible:outline-orange-500"
-                        data-gsap="hero-button">Dashboard</a>
-                    @else
-                    @if (Route::has('register'))
-                    <a href="{{ route('register') }}"
-                        class="rounded-md bg-orange-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 dark:bg-orange-500 dark:hover:bg-orange-400 dark:focus-visible:outline-orange-500"
-                        data-gsap="hero-button">Daftar
-                        Sekarang</a>
-                    @endif
-                    @endauth
+                        data-gsap="hero-button">Lihat Program</a>
                     <a href="{{ route('landing.tentang') }}"
                         class="text-sm/6 font-semibold text-gray-900 dark:text-white"
                         data-gsap="hero-button">Pelajari Lebih

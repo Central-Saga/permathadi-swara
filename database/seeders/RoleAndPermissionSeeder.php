@@ -27,6 +27,7 @@ class RoleAndPermissionSeeder extends Seeder
             'subscription',
             'payment',
             'pesan kontak',
+            'galeri',
         ];
 
         // Define actions
@@ -48,13 +49,21 @@ class RoleAndPermissionSeeder extends Seeder
             }
         }
 
-        // Create Super Admin role and assign all permissions
+        // Create special permission for accessing godmode/admin area
+        $godmodePermission = 'akses godmode';
+        Permission::create(['name' => $godmodePermission]);
+        $permissions[] = $godmodePermission;
+
+        // Create Super Admin role and assign all permissions (including akses godmode)
         $superAdmin = Role::create(['name' => 'Super Admin']);
         $superAdmin->givePermissionTo($permissions);
 
         // Create Admin role and assign specific permissions
         $admin = Role::create(['name' => 'Admin']);
         $admin->givePermissionTo([
+            // Godmode access permission (required to access admin area)
+            'akses godmode',
+
             // User permissions
             'melihat user',
             'mengubah user',
@@ -96,6 +105,13 @@ class RoleAndPermissionSeeder extends Seeder
             'mengubah pesan kontak',
             'menghapus pesan kontak',
             'mengekspor pesan kontak',
+
+            // Galeri permissions
+            'membuat galeri',
+            'melihat galeri',
+            'mengubah galeri',
+            'menghapus galeri',
+            'mengekspor galeri',
         ]);
 
         // Create Anggota (Pelanggan) role and assign limited permissions
