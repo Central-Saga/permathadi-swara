@@ -14,68 +14,118 @@ class LayananSeeder extends Seeder
     public function run(): void
     {
         $layananData = [
+            // Latihan - Per Datang
             [
-                'name' => 'Kelas Tari Tradisional',
-                'slug' => 'kelas-tari-tradisional',
-                'description' => 'Pelajari berbagai tarian tradisional Indonesia dengan instruktur berpengalaman. Program ini mencakup tari Bali, Jawa, Sunda, dan daerah lainnya.',
+                'name' => 'Latihan Gong Kebyar (Per Datang)',
+                'slug' => 'latihan-gong-kebyar-per-datang',
+                'description' => 'Latihan gong kebyar per pertemuan. Cocok untuk yang ingin belajar secara fleksibel.',
+                'price' => 10000,
+                'duration' => 1, // 1 hari
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Latihan Gong Kebyar (Per Bulan)',
+                'slug' => 'latihan-gong-kebyar-per-bulan',
+                'description' => 'Paket latihan gong kebyar 10x pertemuan per bulan. Hemat dan lebih terjadwal.',
+                'price' => 100000,
+                'duration' => 30, // 1 bulan
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Latihan Mekendang Tunggal (Per Datang)',
+                'slug' => 'latihan-mekendang-tunggal-per-datang',
+                'description' => 'Latihan mekendang tunggal per pertemuan. Fokus pada teknik kendang tunggal.',
+                'price' => 15000,
+                'duration' => 1, // 1 hari
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Latihan Mekendang Tunggal (Per Bulan)',
+                'slug' => 'latihan-mekendang-tunggal-per-bulan',
+                'description' => 'Paket latihan mekendang tunggal 10x pertemuan per bulan. Program intensif untuk penguasaan teknik.',
+                'price' => 150000,
+                'duration' => 30, // 1 bulan
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Latihan Gong Suling (Per Datang)',
+                'slug' => 'latihan-gong-suling-per-datang',
+                'description' => 'Latihan gong suling per pertemuan. Belajar memainkan gong suling dengan teknik yang benar.',
+                'price' => 10000,
+                'duration' => 1, // 1 hari
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Latihan Gong Suling (Per Bulan)',
+                'slug' => 'latihan-gong-suling-per-bulan',
+                'description' => 'Paket latihan gong suling 10x pertemuan per bulan. Program terstruktur untuk pemula hingga mahir.',
+                'price' => 100000,
+                'duration' => 30, // 1 bulan
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Latihan Gender (Per Datang)',
+                'slug' => 'latihan-gender-per-datang',
+                'description' => 'Latihan gender per pertemuan. Pelajari teknik memainkan gender wayang dengan benar.',
+                'price' => 15000,
+                'duration' => 1, // 1 hari
+                'is_active' => true,
+            ],
+            // Event - Sewa Gamelan
+            [
+                'name' => 'Sewa Gamelan Gong Kebyar (Per Hari)',
+                'slug' => 'sewa-gamelan-gong-kebyar-per-hari',
+                'description' => 'Sewa 1 set gamelan gong kebyar per hari. Hanya alat musik, tanpa penabuh.',
                 'price' => 500000,
-                'duration' => 30, // 1 bulan
+                'duration' => 1, // 1 hari
                 'is_active' => true,
             ],
             [
-                'name' => 'Jasa Website Development',
-                'slug' => 'jasa-website-development',
-                'description' => 'Layanan pembuatan website profesional untuk bisnis Anda. Mulai dari company profile hingga e-commerce dengan teknologi terbaru.',
-                'price' => 5000000,
-                'duration' => 90, // 3 bulan
+                'name' => 'Sewa Gamelan Baleganjur (Per Hari)',
+                'slug' => 'sewa-gamelan-baleganjur-per-hari',
+                'description' => 'Sewa 1 set gamelan baleganjur per hari. Hanya alat musik, tanpa penabuh.',
+                'price' => 250000,
+                'duration' => 1, // 1 hari
                 'is_active' => true,
             ],
             [
-                'name' => 'Kelas Musik Gamelan',
-                'slug' => 'kelas-musik-gamelan',
-                'description' => 'Belajar memainkan alat musik gamelan tradisional. Cocok untuk semua usia dan tingkat keahlian.',
-                'price' => 400000,
-                'duration' => 30, // 1 bulan
+                'name' => 'Sewa Gamelan Gong Kebyar + Penabuh',
+                'slug' => 'sewa-gamelan-gong-kebyar-penabuh',
+                'description' => 'Sewa 1 set gamelan gong kebyar lengkap dengan penabuh profesional. Siap untuk acara Anda.',
+                'price' => 2500000,
+                'duration' => 1, // 1 hari
                 'is_active' => true,
             ],
             [
-                'name' => 'Konsultasi Desain Grafis',
-                'slug' => 'konsultasi-desain-grafis',
-                'description' => 'Konsultasi dan jasa desain grafis untuk kebutuhan branding, marketing, dan komunikasi visual bisnis Anda.',
-                'price' => 1500000,
-                'duration' => 60, // 2 bulan
+                'name' => 'Sewa Gamelan Baleganjur + Penabuh',
+                'slug' => 'sewa-gamelan-baleganjur-penabuh',
+                'description' => 'Sewa 1 set gamelan baleganjur lengkap dengan penabuh profesional. Cocok untuk acara keagamaan dan upacara.',
+                'price' => 1300000,
+                'duration' => 1, // 1 hari
                 'is_active' => true,
             ],
             [
-                'name' => 'Workshop Fotografi',
-                'slug' => 'workshop-fotografi',
-                'description' => 'Workshop fotografi untuk pemula hingga advanced. Pelajari teknik komposisi, lighting, dan editing foto profesional.',
-                'price' => 800000,
-                'duration' => 30, // 1 bulan
+                'name' => 'Sewa Gamelan Gong Suling + Penabuh',
+                'slug' => 'sewa-gamelan-gong-suling-penabuh',
+                'description' => 'Sewa 1 set gamelan gong suling lengkap dengan penabuh profesional. Suara yang lembut dan merdu.',
+                'price' => 1000000,
+                'duration' => 1, // 1 hari
                 'is_active' => true,
             ],
             [
-                'name' => 'Kelas Tari Modern',
-                'slug' => 'kelas-tari-modern',
-                'description' => 'Kelas tari modern dan kontemporer untuk mengembangkan kreativitas dan ekspresi melalui gerakan.',
-                'price' => 450000,
-                'duration' => 30, // 1 bulan
+                'name' => 'Sewa Jasa Gender Wayang/Pawiwahan + Penabuh',
+                'slug' => 'sewa-jasa-gender-wayang-penabuh',
+                'description' => 'Sewa jasa gender wayang/pawiwahan lengkap dengan penabuh profesional. Khusus untuk acara pernikahan dan upacara adat.',
+                'price' => 500000,
+                'duration' => 1, // 1 hari
                 'is_active' => true,
             ],
             [
-                'name' => 'Jasa Branding & Logo',
-                'slug' => 'jasa-branding-logo',
-                'description' => 'Layanan pembuatan logo dan identitas visual brand yang profesional dan memorable untuk bisnis Anda.',
-                'price' => 3000000,
-                'duration' => 60, // 2 bulan
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Kelas Vokal',
-                'slug' => 'kelas-vokal',
-                'description' => 'Kelas vokal untuk mengembangkan kemampuan bernyanyi dengan teknik yang benar dan sehat.',
-                'price' => 600000,
-                'duration' => 30, // 1 bulan
+                'name' => 'Kenaikan Tingkat Siswa (Per Semester)',
+                'slug' => 'kenaikan-tingkat-siswa-per-semester',
+                'description' => 'Biaya kenaikan tingkat siswa per semester. Untuk siswa yang telah menyelesaikan level sebelumnya.',
+                'price' => 300000,
+                'duration' => 180, // 6 bulan (1 semester)
                 'is_active' => true,
             ],
         ];

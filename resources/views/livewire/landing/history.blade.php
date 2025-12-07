@@ -360,11 +360,7 @@ $uploadProof = action(function () {
                 <div class="mt-2 space-y-3">
                     @php
                     $banks = [
-                    ['name' => 'BCA', 'account' => '1234567890', 'holder' => 'Permathadi Swara'],
-                    ['name' => 'Mandiri', 'account' => '9876543210', 'holder' => 'Permathadi Swara'],
-                    ['name' => 'BNI', 'account' => '1122334455', 'holder' => 'Permathadi Swara'],
-                    ['name' => 'BRI', 'account' => '5566778899', 'holder' => 'Permathadi Swara'],
-                    ['name' => 'CIMB Niaga', 'account' => '9988776655', 'holder' => 'Permathadi Swara'],
+                    ['name' => 'BCA', 'account' => '0402988779', 'holder' => 'Permathadi Swara'],
                     ];
                     @endphp
                     @foreach($banks as $bank)
