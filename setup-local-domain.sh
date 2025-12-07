@@ -35,15 +35,27 @@ echo ""
 echo "🔧 Setting up nginx configuration..."
 
 # Detect nginx installation
+NGINX_DIR=""
 if [ -d "$NGINX_SITES_DIR" ]; then
+    # Homebrew nginx
     NGINX_DIR="$NGINX_SITES_DIR"
 elif [ -d "$NGINX_SITES_DIR_ALT" ]; then
+    # Alternative Homebrew path
     NGINX_DIR="$NGINX_SITES_DIR_ALT"
+elif [ -d "/Applications/ServBay/package/etc/nginx/vhosts" ]; then
+    # ServBay nginx
+    NGINX_DIR="/Applications/ServBay/package/etc/nginx/vhosts"
+    echo "✅ Detected ServBay nginx installation"
 else
-    echo "⚠️  Nginx sites directory not found. Please install nginx first:"
-    echo "   brew install nginx"
+    echo "⚠️  Nginx sites directory not found."
     echo ""
-    echo "Or manually copy $NGINX_CONF to your nginx sites directory"
+    echo "Options:"
+    echo "1. Install nginx via Homebrew: brew install nginx"
+    echo "2. Use ServBay (if installed)"
+    echo "3. Manually copy $NGINX_CONF to your nginx vhosts/servers directory"
+    echo ""
+    echo "For ServBay, copy to: /Applications/ServBay/package/etc/nginx/vhosts/"
+    echo "For Homebrew, copy to: /opt/homebrew/etc/nginx/servers/ or /usr/local/etc/nginx/servers/"
     exit 1
 fi
 
@@ -63,8 +75,17 @@ if [ -f "$NGINX_CONF" ]; then
         # Reload nginx
         echo ""
         echo "🔄 Reloading nginx..."
-        sudo nginx -s reload
-        echo "✅ Nginx reloaded"
+        if sudo nginx -s reload 2>/dev/null; then
+            echo "✅ Nginx reloaded"
+        else
+            echo "⚠️  Could not reload nginx automatically."
+            if [ -d "/Applications/ServBay" ]; then
+                echo "   Please reload nginx via ServBay application or run:"
+                echo "   sudo /Applications/ServBay/sbin/nginx -s reload"
+            else
+                echo "   Please reload nginx manually: sudo nginx -s reload"
+            fi
+        fi
     else
         echo "❌ Nginx configuration test failed. Please check the config."
         exit 1
