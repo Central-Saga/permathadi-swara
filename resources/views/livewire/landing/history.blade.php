@@ -359,9 +359,7 @@ $uploadProof = action(function () {
                 <flux:label>{{ __('Pilih Bank Tujuan') }} <span class="text-red-500">*</span></flux:label>
                 <div class="mt-2 space-y-3">
                     @php
-                    $banks = [
-                    ['name' => 'BCA', 'account' => '0402988779', 'holder' => 'Permathadi Swara'],
-                    ];
+                    $banks = config('payment.banks', []);
                     @endphp
                     @foreach($banks as $bank)
                     <label
