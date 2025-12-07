@@ -141,7 +141,7 @@
             loading="{{ $loading }}"
             decoding="async"
             class="optimized-image {{ $class }}"
-            style="transform: translateZ(0); backface-visibility: hidden; will-change: transform; width: 100%; height: 100%; object-fit: cover; display: block; @if($placeholderUrl) opacity: 0; transition: opacity 0.3s ease-in-out; @endif"
+            style="transform: translateZ(0); backface-visibility: hidden; will-change: transform; width: 100%; height: 100%; object-fit: cover; display: block; @if($placeholderUrl) opacity: 0; transition: opacity 0.3s ease-in-out; @else opacity: 1; @endif"
             @if($placeholderUrl) 
                 data-placeholder="{{ $placeholderUrl }}"
                 onload="this.style.opacity = 1; this.parentElement.parentElement.style.backgroundImage = 'none';"
@@ -170,6 +170,20 @@
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
+    }
+    
+    /* Fix for dark theme visibility */
+    .dark .optimized-image-wrapper {
+        background-color: transparent;
+    }
+    
+    .dark .optimized-image {
+        opacity: 1 !important;
+        filter: none;
+    }
+    
+    .dark .optimized-image-wrapper[style*="background-image"] {
+        background-color: rgba(0, 0, 0, 0.1);
     }
 </style>
 @endpush

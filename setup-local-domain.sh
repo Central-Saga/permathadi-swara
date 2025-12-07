@@ -59,19 +59,59 @@ else
     exit 1
 fi
 
+# 3. Setup SSL certificate
+echo ""
+echo "🔐 Setting up SSL certificate..."
+
+SSL_DIR="/Applications/ServBay/ssl/private/tls-certs/permathadi-swara.test"
+SSL_CERT="$SSL_DIR/permathadi-swara.test+1.pem"
+SSL_KEY="$SSL_DIR/permathadi-swara.test+1-key.pem"
+
+# Check if mkcert is installed
+if ! command -v mkcert &> /dev/null; then
+    echo "⚠️  mkcert not found. Installing via Homebrew..."
+    if command -v brew &> /dev/null; then
+        brew install mkcert
+        mkcert -install
+    else
+        echo "❌ Homebrew not found. Please install mkcert manually:"
+        echo "   brew install mkcert"
+        echo "   mkcert -install"
+        exit 1
+    fi
+fi
+
+# Create SSL directory if it doesn't exist
+if [ ! -d "$SSL_DIR" ]; then
+    mkdir -p "$SSL_DIR"
+    echo "✅ Created SSL directory"
+fi
+
+# Generate certificate if it doesn't exist
+if [ ! -f "$SSL_CERT" ] || [ ! -f "$SSL_KEY" ]; then
+    echo "Generating SSL certificate for $DOMAIN..."
+    cd "$SSL_DIR"
+    mkcert permathadi-swara.test www.permathadi-swara.test
+    cd - > /dev/null
+    echo "✅ SSL certificate generated"
+else
+    echo "✅ SSL certificate already exists"
+fi
+
 # Check if nginx config exists
 if [ -f "$NGINX_CONF" ]; then
     # Copy nginx config
+    echo ""
     echo "Copying nginx config to $NGINX_DIR..."
     sudo cp "$NGINX_CONF" "$NGINX_DIR/"
     echo "✅ Nginx config copied"
-    
+
     # Test nginx config
     echo ""
     echo "🧪 Testing nginx configuration..."
     if sudo nginx -t; then
         echo "✅ Nginx configuration is valid"
-        
+
         # Reload nginx
         echo ""
         echo "🔄 Reloading nginx..."
@@ -104,11 +144,12 @@ echo "1. Make sure Laravel Sail is running:"
 echo "   ./vendor/bin/sail up -d"
 echo ""
 echo "2. Update your .env file:"
-echo "   APP_URL=http://$DOMAIN"
+echo "   APP_URL=https://$DOMAIN"
 echo ""
 echo "3. Access your application at:"
-echo "   http://$DOMAIN"
-echo "   http://www.$DOMAIN"
+echo "   https://$DOMAIN (HTTPS - recommended)"
+echo "   https://www.$DOMAIN"
+echo "   http://$DOMAIN (will redirect to HTTPS)"
 echo ""
 echo "💡 Note: If you're not using nginx, you can access directly at:"
 echo "   http://localhost (default Sail port)"
