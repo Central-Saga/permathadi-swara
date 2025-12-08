@@ -243,12 +243,12 @@ function initHeroAnimations() {
     const heroTitle = document.querySelector('[data-gsap="hero-title"]');
     const heroDescription = document.querySelector('[data-gsap="hero-description"]');
     const heroButtons = document.querySelectorAll('[data-gsap="hero-button"]');
-    const heroImage = document.querySelector('[data-gsap="hero-image"]');
+    const heroImages = document.querySelectorAll('[data-gsap="hero-image"]');
     const heroBlur1 = document.querySelector('[data-gsap="hero-blur-1"]');
     const heroBlur2 = document.querySelector('[data-gsap="hero-blur-2"]');
 
     // Check if hero elements exist
-    if (!heroTitle && !heroDescription && heroButtons.length === 0 && !heroImage) {
+    if (!heroTitle && !heroDescription && heroButtons.length === 0 && heroImages.length === 0) {
         return; // Exit if no hero elements found
     }
 
@@ -318,9 +318,10 @@ function initHeroAnimations() {
         }, 0.2); // Start 0.2s after title
     }
 
-    // Animate image dengan fade-in dan slide-up - sedikit delay
-    if (heroImage) {
-        heroTimeline.to(heroImage, {
+    // Animate images dengan fade-in dan slide-up - sedikit delay
+    // Animate semua gambar hero (light mode dan dark mode)
+    if (heroImages.length > 0) {
+        heroTimeline.to(heroImages, {
             opacity: 1,
             y: 0,
             duration: 1,

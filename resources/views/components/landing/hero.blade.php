@@ -31,7 +31,7 @@
                 data-gsap="hero-image" />
 
             <img src="{{ asset('images/cover-1.jpg') }}" alt="Sanggar Tari Bali - Permathadi Swara"
-                class="mt-16 rounded-md bg-white/5 shadow-2xl ring-1 ring-white/10 not-dark:hidden sm:mt-24 w-full"
+                class="mt-16 rounded-md bg-white/5 shadow-2xl ring-1 ring-white/10 hidden dark:block sm:mt-24 w-full"
                 data-gsap="hero-image" />
         </div>
     </div>
