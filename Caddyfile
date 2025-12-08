@@ -1,0 +1,59 @@
+permathadi-swara.test {
+	# TLS/SSL - Caddy akan auto-generate certificate untuk local domain
+	tls internal
+
+	# Logging (optional)
+	log {
+		output stdout
+		format console
+	}
+
+	# Increase body size for file uploads (using reverse_proxy directive)
+
+	# Vite dev server - proxy all Vite-related paths
+	# Order matters: more specific paths first
+
+	# Proxy @vite and @ paths
+	handle /@vite* {
+		reverse_proxy http://127.0.0.1:5173 {
+			header_up Host {host}
+			header_up X-Real-IP {remote}
+		}
+	}
+
+	handle /@* {
+		reverse_proxy http://127.0.0.1:5173 {
+			header_up Host {host}
+			header_up X-Real-IP {remote}
+		}
+	}
+
+	# Proxy node_modules (Vite dependencies)
+	handle /node_modules* {
+		reverse_proxy http://127.0.0.1:5173 {
+			header_up Host {host}
+			header_up X-Real-IP {remote}
+		}
+	}
+
+	# Proxy resources path
+	handle /resources* {
+		reverse_proxy http://127.0.0.1:5173 {
+			header_up Host {host}
+			header_up X-Real-IP {remote}
+		}
+	}
+
+	# Max request body size (20MB) - applies to all requests
+	request_body {
+		max_size 20MB
+	}
+
+	# Proxy to Laravel Sail container (default)
+	handle {
+		reverse_proxy http://127.0.0.1:8080 {
+			header_up Host {host}
+			header_up X-Real-IP {remote}
+		}
+	}
+}
