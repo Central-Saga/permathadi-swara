@@ -52,11 +52,16 @@ class GaleriSeeder extends Seeder
             ],
         ];
 
-        // Array gambar dummy yang tersedia
+        // Array gambar dummy yang tersedia (hanya file yang benar-benar ada)
         $dummyImages = [
-            'ABD07813.jpg',
-            'ABD07970.jpg',
-            'ABD08518.jpg',
+            '1.jpg',
+            '2.jpg',
+            '3.jpg',
+            '4.jpg',
+            '5.jpg',
+            '6.jpg',
+            '7.jpg',
+            '8.jpg',
         ];
 
         foreach ($galeriData as $index => $data) {
@@ -88,6 +93,7 @@ class GaleriSeeder extends Seeder
 
                     if (file_exists($imagePath)) {
                         $galeri->addMedia($imagePath)
+                            ->preservingOriginal()
                             ->usingName($data['title'] . ' - ' . ($i + 1))
                             ->usingFileName($imageFileName)
                             ->toMediaCollection('galeri_images');

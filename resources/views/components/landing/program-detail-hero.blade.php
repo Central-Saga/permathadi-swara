@@ -21,6 +21,15 @@
                         :responsive="true"
                         :placeholder="true" />
                 </div>
+                @else
+                <div class="mb-8 overflow-hidden rounded-2xl shadow-2xl ring-1 ring-gray-900/5 dark:ring-white/10" data-gsap="program-detail-hero-image">
+                    <img 
+                        src="{{ asset('images/dummy/' . (($layanan->id % 8) + 1) . '.jpg') }}" 
+                        alt="{{ $layanan->name }}"
+                        class="h-full w-full object-cover"
+                        loading="eager"
+                    />
+                </div>
                 @endif
                 <div class="text-center">
                     <h1

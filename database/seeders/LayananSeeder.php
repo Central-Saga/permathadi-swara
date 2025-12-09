@@ -132,9 +132,14 @@ class LayananSeeder extends Seeder
 
         // Array gambar dummy yang tersedia (hanya file yang benar-benar ada)
         $dummyImages = [
-            'ABD07813.jpg',
-            'ABD07970.jpg',
-            'ABD08518.jpg',
+            '1.jpg',
+            '2.jpg',
+            '3.jpg',
+            '4.jpg',
+            '5.jpg',
+            '6.jpg',
+            '7.jpg',
+            '8.jpg',
         ];
 
         foreach ($layananData as $index => $data) {
@@ -158,6 +163,7 @@ class LayananSeeder extends Seeder
 
                 if (file_exists($imagePath)) {
                     $media = $layanan->addMedia($imagePath)
+                        ->preservingOriginal()
                         ->usingName($data['name'])
                         ->usingFileName($imageFileName)
                         ->toMediaCollection('layanan_cover');
