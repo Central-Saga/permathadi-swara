@@ -8,10 +8,8 @@ services:
         image: "sail-8.4/app"
         extra_hosts:
             - "host.docker.internal:host-gateway"
-        ports:
-            - "${APP_PORT:-80}:80"
-            # Vite port mapping tidak diperlukan karena Vite dev server dijalankan di HOST
-            # - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
+        # Port mapping tidak diperlukan karena Laravel diakses via Caddy (internal network)
+        # Caddy akan mengakses Laravel menggunakan service name 'laravel.test:80'
         environment:
             WWWUSER: "${WWWUSER}"
             LARAVEL_SAIL: 1
