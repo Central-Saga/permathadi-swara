@@ -19,10 +19,20 @@ services:
         volumes:
             - ".:/var/www/html"
         networks:
-            - sail
+            sail:
+                aliases:
+                    - laravel
         depends_on:
-            - mysql
-            - redis
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "php artisan --version || exit 1"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 40s
     mysql:
         image: "mysql/mysql-server:8.0"
         ports:
@@ -86,8 +96,10 @@ services:
         networks:
             - sail
         depends_on:
-            - laravel.test
-            - vite
+            laravel.test:
+                condition: service_healthy
+            vite:
+                condition: service_started
 networks:
     sail:
         driver: bridge

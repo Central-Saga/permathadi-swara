@@ -62,9 +62,19 @@ permathadi-swara.test {
 	# Proxy to Laravel Sail container (default handler)
 	# Semua request lainnya akan di-proxy ke Laravel container via service name
 	handle {
-		reverse_proxy http://laravel.test:80 {
+		reverse_proxy http://laravel:80 {
 			header_up Host {host}
 			header_up X-Real-IP {remote}
+			header_up X-Forwarded-Proto {scheme}
+			header_up X-Forwarded-For {remote}
+			transport http {
+				dial_timeout 10s
+				response_header_timeout 10s
+			}
+			# Retry logic untuk handle connection issues
+			fail_duration 5s
+			max_fails 3
+			unhealthy_status 500 502 503 504
 		}
 	}
 }
