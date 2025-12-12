@@ -1,15 +1,14 @@
 #!/bin/bash
 
-# Script untuk menjalankan development environment dengan Docker dan Caddy
+# Script untuk menjalankan development environment dengan Docker Full
 # Usage: ./dev.sh
 
 set -e
 
 DOMAIN="permathadi-swara.test"
-CADDYFILE="Caddyfile"
 ENV_FILE=".env"
 
-echo "🚀 Starting development environment..."
+echo "🚀 Starting development environment (Dockerized)..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -30,20 +29,7 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-# 1. Check Caddy installation
-print_info "Checking Caddy installation..."
-if ! command -v caddy &> /dev/null; then
-    print_error "Caddy tidak ditemukan!"
-    echo ""
-    echo "Silakan install Caddy terlebih dahulu:"
-    echo "  brew install caddy"
-    echo ""
-    echo "Atau download dari: https://caddyserver.com/download"
-    exit 1
-fi
-print_info "Caddy sudah terinstall ✓"
-
-# 2. Check /etc/hosts entry
+# 1. Check /etc/hosts entry
 print_info "Checking /etc/hosts entry..."
 if ! grep -q "$DOMAIN" /etc/hosts 2>/dev/null; then
     print_warning "Entry untuk $DOMAIN belum ada di /etc/hosts"
@@ -60,89 +46,33 @@ if ! grep -q "$DOMAIN" /etc/hosts 2>/dev/null; then
         echo "127.0.0.1 $DOMAIN www.$DOMAIN" >> /etc/hosts
         print_info "Entry berhasil ditambahkan ke /etc/hosts ✓"
     else
-        print_warning "Tidak bisa menambahkan entry tanpa sudo. Silakan tambahkan manual."
-        read -p "Tekan Enter untuk melanjutkan (pastikan sudah menambahkan entry) atau Ctrl+C untuk keluar..."
+        # Try to add with sudo (non-interactive)
+        if sudo -n true 2>/dev/null; then
+            echo "127.0.0.1 $DOMAIN www.$DOMAIN" | sudo tee -a /etc/hosts > /dev/null
+            print_info "Entry berhasil ditambahkan ke /etc/hosts ✓"
+        else
+            print_warning "Tidak bisa menambahkan entry tanpa sudo. Silakan tambahkan manual."
+            read -p "Tekan Enter untuk melanjutkan (pastikan sudah menambahkan entry) atau Ctrl+C untuk keluar..."
+        fi
     fi
 else
     print_info "Entry untuk $DOMAIN sudah ada di /etc/hosts ✓"
 fi
 
-# 3. Check and update APP_PORT in .env
-print_info "Checking APP_PORT configuration..."
-if [ ! -f "$ENV_FILE" ]; then
-    print_warning "File .env tidak ditemukan. Pastikan sudah copy dari .env.example"
-    exit 1
-fi
-
-# Check if APP_PORT is set to 80, change to 8080
-if grep -q "^APP_PORT=80" "$ENV_FILE" 2>/dev/null || ! grep -q "^APP_PORT=" "$ENV_FILE" 2>/dev/null; then
-    print_warning "APP_PORT perlu diubah ke 8080 (Caddy akan menggunakan port 80)"
-
-    if grep -q "^APP_PORT=" "$ENV_FILE" 2>/dev/null; then
-        # Replace existing APP_PORT
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS
-            sed -i '' "s/^APP_PORT=.*/APP_PORT=8080/" "$ENV_FILE"
-        else
-            # Linux
-            sed -i "s/^APP_PORT=.*/APP_PORT=8080/" "$ENV_FILE"
-        fi
-    else
-        # Add APP_PORT if not exists
-        echo "APP_PORT=8080" >> "$ENV_FILE"
-    fi
-    print_info "APP_PORT sudah diubah ke 8080 ✓"
-else
-    print_info "APP_PORT sudah dikonfigurasi dengan benar ✓"
-fi
-
-# 4. Validate Caddyfile
-print_info "Validating Caddyfile..."
-if [ ! -f "$CADDYFILE" ]; then
-    print_error "Caddyfile tidak ditemukan!"
-    exit 1
-fi
-
-if ! sudo caddy validate --config "$CADDYFILE" 2>/dev/null; then
-    print_error "Caddyfile validation gagal!"
-    sudo caddy validate --config "$CADDYFILE"
-    exit 1
-fi
-print_info "Caddyfile valid ✓"
-
-# 5. Check Caddy status and start if needed
-print_info "Checking Caddy status..."
-CADDY_RUNNING=false
-
-# Check if Caddy is running
-if sudo caddy status 2>/dev/null | grep -q "running"; then
-    CADDY_RUNNING=true
-    print_info "Caddy sudah running ✓"
-else
-    print_warning "Caddy belum running, akan di-start..."
-
-    # Try to start Caddy
-    if sudo caddy start --config "$CADDYFILE" 2>/dev/null; then
-        print_info "Caddy berhasil di-start ✓"
-        CADDY_RUNNING=true
-        sleep 2
-    else
-        print_error "Gagal start Caddy. Coba jalankan manual:"
-        echo "  sudo caddy start --config $CADDYFILE"
-        exit 1
-    fi
-fi
-
-# 6. Check if Sail is available
+# 2. Check if Sail is available
 print_info "Checking Laravel Sail..."
-if ! command -v sail &> /dev/null; then
+if [ -f "./vendor/bin/sail" ]; then
     SAIL="./vendor/bin/sail"
-else
+elif command -v sail &> /dev/null; then
     SAIL="sail"
+else
+    # Fallback to docker compose
+    SAIL="docker compose"
+    print_warning "Sail tidak ditemukan, menggunakan docker compose"
 fi
 
-# 7. Start Docker containers
-print_info "Starting Docker containers..."
+# 3. Start Docker containers (including Caddy and Vite)
+print_info "Starting Docker containers (App + Caddy + Vite)..."
 $SAIL up -d
 
 # Wait for containers to be ready
@@ -150,25 +80,27 @@ print_info "Waiting for containers to be ready..."
 sleep 5
 
 # Verify containers are running
-if ! $SAIL ps | grep -q "Up"; then
+if ! $SAIL ps 2>/dev/null | grep -q "Up"; then
     print_warning "Beberapa container mungkin belum ready. Cek dengan: $SAIL ps"
 else
     print_info "Docker containers running ✓"
 fi
 
-# 8. Start NPM dev server
-print_info "Starting NPM dev server..."
+# 4. Display status
 echo ""
 print_info "✅ Development environment siap!"
 echo ""
 echo "Aplikasi dapat diakses di:"
 echo "  🌐 https://$DOMAIN"
 echo ""
-echo "Pastikan:"
-echo "  - Caddy running: sudo caddy status"
-echo "  - Docker containers running: $SAIL ps"
-echo "  - Vite dev server akan start di bawah ini..."
+echo "Services yang berjalan:"
+echo "  - Laravel: http://laravel.test:80 (internal)"
+echo "  - Caddy: Port 80/443 (reverse proxy)"
+echo "  - Vite: http://vite:5173 (internal)"
+echo "  - MySQL: Port ${FORWARD_DB_PORT:-3306}"
+echo "  - Redis: Port ${FORWARD_REDIS_PORT:-6379}"
 echo ""
-
-# Start NPM dev server (this will block)
-npm run dev
+echo "Untuk melihat logs:"
+echo "  $SAIL logs -f"
+echo ""
+echo "Catatan: Vite dev server sudah berjalan di container, tidak perlu menjalankan 'npm run dev' lagi."

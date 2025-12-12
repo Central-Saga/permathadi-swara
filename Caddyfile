@@ -1,11 +1,11 @@
 # Caddy Reverse Proxy Configuration untuk Permathadi Swara
 #
-# Port Configuration:
-# - Caddy: Port 80 (HTTP) dan 443 (HTTPS) - untuk reverse proxy
-# - Laravel Sail: Port 8080 (APP_PORT di .env) - diakses oleh Caddy
-# - Vite Dev Server: Port 5173 - diakses oleh Caddy untuk dev assets
+# Setup Full Docker:
+# - Caddy: Port 80 (HTTP) dan 443 (HTTPS) - berjalan di container
+# - Laravel Sail: Port 80 (dalam container) - diakses oleh Caddy via service name
+# - Vite Dev Server: Port 5173 (dalam container) - diakses oleh Caddy via service name
 #
-# Pastikan APP_PORT=8080 di file .env agar tidak konflik dengan Caddy
+# Semua service berjalan di Docker network 'sail' dan saling akses via service names
 
 permathadi-swara.test {
 	# TLS/SSL - Caddy akan auto-generate certificate untuk local domain
@@ -20,18 +20,18 @@ permathadi-swara.test {
 
 	# Vite dev server - proxy all Vite-related paths
 	# Order matters: more specific paths first
-	# Semua request ke path Vite akan di-proxy ke Vite dev server (port 5173)
+	# Semua request ke path Vite akan di-proxy ke Vite dev server container
 
 	# Proxy @vite and @ paths (Vite HMR)
 	handle /@vite* {
-		reverse_proxy http://127.0.0.1:5173 {
+		reverse_proxy http://vite:5173 {
 			header_up Host {host}
 			header_up X-Real-IP {remote}
 		}
 	}
 
 	handle /@* {
-		reverse_proxy http://127.0.0.1:5173 {
+		reverse_proxy http://vite:5173 {
 			header_up Host {host}
 			header_up X-Real-IP {remote}
 		}
@@ -39,7 +39,7 @@ permathadi-swara.test {
 
 	# Proxy node_modules (Vite dependencies)
 	handle /node_modules* {
-		reverse_proxy http://127.0.0.1:5173 {
+		reverse_proxy http://vite:5173 {
 			header_up Host {host}
 			header_up X-Real-IP {remote}
 		}
@@ -47,7 +47,7 @@ permathadi-swara.test {
 
 	# Proxy resources path (Vite assets)
 	handle /resources* {
-		reverse_proxy http://127.0.0.1:5173 {
+		reverse_proxy http://vite:5173 {
 			header_up Host {host}
 			header_up X-Real-IP {remote}
 		}
@@ -60,10 +60,9 @@ permathadi-swara.test {
 	}
 
 	# Proxy to Laravel Sail container (default handler)
-	# Semua request lainnya akan di-proxy ke Laravel (port 8080)
-	# Pastikan APP_PORT=8080 di .env
+	# Semua request lainnya akan di-proxy ke Laravel container via service name
 	handle {
-		reverse_proxy http://127.0.0.1:8080 {
+		reverse_proxy http://laravel.test:80 {
 			header_up Host {host}
 			header_up X-Real-IP {remote}
 		}
