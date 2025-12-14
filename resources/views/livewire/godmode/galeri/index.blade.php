@@ -71,6 +71,11 @@ $closeDeleteModal = action(function () {
 });
 
 $deleteGaleri = action(function () {
+    if (!auth()->user()->can('menghapus galeri')) {
+        $this->dispatch('toast', message: __('Anda tidak memiliki izin untuk menghapus galeri.'), variant: 'error');
+        return;
+    }
+
     if ($this->galeriToDelete) {
         $this->galeriToDelete->delete();
         $this->dispatch('toast', message: __('Galeri berhasil dihapus.'), variant: 'success');
@@ -79,6 +84,11 @@ $deleteGaleri = action(function () {
 });
 
 $exportExcel = action(function () {
+    if (!auth()->user()->can('mengekspor galeri')) {
+        $this->dispatch('toast', message: __('Anda tidak memiliki izin untuk mengekspor galeri.'), variant: 'error');
+        return;
+    }
+
     $query = Galeri::with('media');
 
     if (!empty($this->search)) {
@@ -127,6 +137,11 @@ $exportExcel = action(function () {
 });
 
 $exportPdf = action(function () {
+    if (!auth()->user()->can('mengekspor galeri')) {
+        $this->dispatch('toast', message: __('Anda tidak memiliki izin untuk mengekspor galeri.'), variant: 'error');
+        return;
+    }
+
     $query = Galeri::with('media');
 
     if (!empty($this->search)) {
@@ -189,6 +204,7 @@ $galeri = computed(function () {
                 <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola galeri dokumentasi sanggar') }}</p>
             </div>
             <div class="flex items-center gap-2">
+                @can('mengekspor galeri')
                 <flux:button wire:click="exportExcel" variant="ghost" icon="table-cells"
                     class="!bg-green-600 hover:!bg-green-700 dark:!bg-green-500 dark:hover:!bg-green-600 !text-white">
                     {{ __('Excel') }}
@@ -197,9 +213,12 @@ $galeri = computed(function () {
                     class="!bg-red-900 hover:!bg-red-950 dark:!bg-red-950 dark:hover:!bg-red-900 !text-white">
                     {{ __('PDF') }}
                 </flux:button>
+                @endcan
+                @can('membuat galeri')
                 <flux:button :href="route('godmode.galeri.create')" variant="primary" icon="plus" wire:navigate>
                     {{ __('Tambah Galeri') }}
                 </flux:button>
+                @endcan
             </div>
         </div>
 
@@ -272,14 +291,18 @@ $galeri = computed(function () {
                                     icon="eye"
                                     class="!p-2 !bg-purple-600 hover:!bg-purple-700 dark:!bg-purple-500 dark:hover:!bg-purple-600 !text-white !rounded-md"
                                     title="{{ __('Detail') }}" />
+                                @can('mengubah galeri')
                                 <flux:button :href="route('godmode.galeri.edit', $item)" variant="ghost" size="sm"
                                     icon="pencil" wire:navigate
                                     class="!p-2 !bg-blue-600 hover:!bg-blue-700 dark:!bg-blue-500 dark:hover:!bg-blue-600 !text-white !rounded-md"
                                     title="{{ __('Edit') }}" />
+                                @endcan
+                                @can('menghapus galeri')
                                 <flux:button wire:click="openDeleteModal({{ $item->id }})" variant="ghost" size="sm"
                                     icon="trash"
                                     class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
                                     title="{{ __('Hapus') }}" />
+                                @endcan
                             </div>
                         </flux:table.cell>
                     </flux:table.row>
@@ -388,9 +411,11 @@ $galeri = computed(function () {
                 <flux:button variant="ghost" wire:click="closeDetail">
                     {{ __('Tutup') }}
                 </flux:button>
+                @can('mengubah galeri')
                 <flux:button :href="route('godmode.galeri.edit', $selectedGaleri)" variant="primary" wire:navigate>
                     {{ __('Edit') }}
                 </flux:button>
+                @endcan
             </div>
         </div>
     </flux:modal>
@@ -418,7 +443,9 @@ $galeri = computed(function () {
                 <flux:modal.close>
                     <flux:button variant="ghost" wire:click="closeDeleteModal">{{ __('Batal') }}</flux:button>
                 </flux:modal.close>
+                @can('menghapus galeri')
                 <flux:button wire:click="deleteGaleri" variant="danger">{{ __('Hapus') }}</flux:button>
+                @endcan
             </div>
         </div>
     </flux:modal>

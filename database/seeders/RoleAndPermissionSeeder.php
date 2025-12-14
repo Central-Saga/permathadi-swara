@@ -45,22 +45,36 @@ class RoleAndPermissionSeeder extends Seeder
             foreach ($actions as $action) {
                 $permissionName = "{$action} {$entity}";
                 $permissions[] = $permissionName;
-                Permission::create(['name' => $permissionName]);
+                Permission::firstOrCreate(['name' => $permissionName]);
             }
         }
 
         // Create special permission for accessing godmode/admin area
         $godmodePermission = 'akses godmode';
-        Permission::create(['name' => $godmodePermission]);
+        Permission::firstOrCreate(['name' => $godmodePermission]);
         $permissions[] = $godmodePermission;
 
-        // Create Super Admin role and assign all permissions (including akses godmode)
-        $superAdmin = Role::create(['name' => 'Super Admin']);
-        $superAdmin->givePermissionTo($permissions);
+        // Create special permissions for activity log and log viewer
+        $activityLogPermission = 'melihat activity log';
+        Permission::firstOrCreate(['name' => $activityLogPermission]);
+        $permissions[] = $activityLogPermission;
 
-        // Create Admin role and assign specific permissions
-        $admin = Role::create(['name' => 'Admin']);
-        $admin->givePermissionTo([
+        $logViewerPermission = 'melihat log viewer';
+        Permission::firstOrCreate(['name' => $logViewerPermission]);
+        $permissions[] = $logViewerPermission;
+
+        // Permission untuk export activity log
+        $exportActivityLogPermission = 'mengekspor activity log';
+        Permission::firstOrCreate(['name' => $exportActivityLogPermission]);
+        $permissions[] = $exportActivityLogPermission;
+
+        // Create or get Super Admin role and assign all permissions (including akses godmode)
+        $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
+        $superAdmin->syncPermissions($permissions);
+
+        // Create or get Admin role and assign specific permissions
+        $admin = Role::firstOrCreate(['name' => 'Admin']);
+        $admin->syncPermissions([
             // Godmode access permission (required to access admin area)
             'akses godmode',
 
@@ -112,11 +126,18 @@ class RoleAndPermissionSeeder extends Seeder
             'mengubah galeri',
             'menghapus galeri',
             'mengekspor galeri',
+
+            // Activity Log permissions
+            'melihat activity log',
+            'mengekspor activity log',
+
+            // Log Viewer permissions
+            'melihat log viewer',
         ]);
 
-        // Create Anggota (Pelanggan) role and assign limited permissions
-        $anggota = Role::create(['name' => 'Anggota']);
-        $anggota->givePermissionTo([
+        // Create or get Anggota (Pelanggan) role and assign limited permissions
+        $anggota = Role::firstOrCreate(['name' => 'Anggota']);
+        $anggota->syncPermissions([
             // Layanan permissions (read only - untuk melihat layanan yang tersedia)
             'melihat layanan',
 

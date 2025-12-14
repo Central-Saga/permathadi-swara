@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Payment extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\PaymentFactory> */
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, LogsActivity;
 
     protected $fillable = [
         'subscription_id',
@@ -58,7 +60,7 @@ class Payment extends Model implements HasMedia
 
     public function getStatusBadgeColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'paid' => 'bg-green-50 text-green-700 ring-green-700/10 dark:bg-green-900/50 dark:text-green-200',
             'pending' => 'bg-orange-50 text-orange-700 ring-orange-700/10 dark:bg-orange-900/50 dark:text-orange-200',
             'failed' => 'bg-red-50 text-red-700 ring-red-700/10 dark:bg-red-900/50 dark:text-red-200',
@@ -92,5 +94,14 @@ class Payment extends Model implements HasMedia
                 $payment->paid_at = now();
             }
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['subscription_id', 'amount', 'method', 'status', 'paid_at', 'proof_url', 'bank_name', 'account_number', 'account_holder'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Payment {$eventName}");
     }
 }

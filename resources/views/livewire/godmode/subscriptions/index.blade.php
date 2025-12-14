@@ -71,6 +71,11 @@ $closeDeleteModal = action(function () {
 });
 
 $deleteSubscription = action(function () {
+    if (!auth()->user()->can('menghapus subscription')) {
+        $this->dispatch('toast', message: __('Anda tidak memiliki izin untuk menghapus langganan.'), variant: 'error');
+        return;
+    }
+
     if ($this->subscriptionToDelete) {
         $this->subscriptionToDelete->delete();
         $this->dispatch('toast', message: __('Langganan berhasil dihapus.'), variant: 'success');
@@ -79,6 +84,11 @@ $deleteSubscription = action(function () {
 });
 
 $exportExcel = action(function () {
+    if (!auth()->user()->can('mengekspor subscription')) {
+        $this->dispatch('toast', message: __('Anda tidak memiliki izin untuk mengekspor langganan.'), variant: 'error');
+        return;
+    }
+
     $query = Subscription::with(['anggota.user', 'layanan']);
 
     if (!empty($this->search)) {
@@ -130,6 +140,11 @@ $exportExcel = action(function () {
 });
 
 $exportPdf = action(function () {
+    if (!auth()->user()->can('mengekspor subscription')) {
+        $this->dispatch('toast', message: __('Anda tidak memiliki izin untuk mengekspor langganan.'), variant: 'error');
+        return;
+    }
+
     $query = Subscription::with(['anggota.user', 'layanan']);
 
     if (!empty($this->search)) {
@@ -198,6 +213,7 @@ $subscriptions = computed(function () {
                 <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola data langganan anggota') }}</p>
             </div>
             <div class="flex items-center gap-2">
+                @can('mengekspor subscription')
                 <flux:button wire:click="exportExcel" variant="ghost" icon="table-cells"
                     class="!bg-green-600 hover:!bg-green-700 dark:!bg-green-500 dark:hover:!bg-green-600 !text-white">
                     {{ __('Excel') }}
@@ -206,9 +222,12 @@ $subscriptions = computed(function () {
                     class="!bg-red-900 hover:!bg-red-950 dark:!bg-red-950 dark:hover:!bg-red-900 !text-white">
                     {{ __('PDF') }}
                 </flux:button>
+                @endcan
+                @can('membuat subscription')
                 <flux:button :href="route('godmode.subscriptions.create')" variant="primary" icon="plus" wire:navigate>
                     {{ __('Tambah Langganan') }}
                 </flux:button>
+                @endcan
             </div>
         </div>
 
@@ -244,26 +263,33 @@ $subscriptions = computed(function () {
                     @forelse ($this->subscriptions as $subscription)
                     <flux:table.row>
                         <flux:table.cell>
-                            <div class="font-medium text-gray-900 dark:text-white">{{ $subscription->anggota->user->name ?? '-' }}</div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $subscription->anggota->user->email ?? '-' }}</div>
+                            <div class="font-medium text-gray-900 dark:text-white">{{ $subscription->anggota->user->name
+                                ?? '-' }}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $subscription->anggota->user->email
+                                ?? '-' }}</div>
                         </flux:table.cell>
                         <flux:table.cell>
-                            <div class="text-gray-600 dark:text-gray-400">{{ $subscription->layanan->name ?? '-' }}</div>
+                            <div class="text-gray-600 dark:text-gray-400">{{ $subscription->layanan->name ?? '-' }}
+                            </div>
                         </flux:table.cell>
                         <flux:table.cell>
-                            <div class="text-gray-600 dark:text-gray-400">{{ $subscription->start_date->format('d/m/Y') }}</div>
+                            <div class="text-gray-600 dark:text-gray-400">{{ $subscription->start_date->format('d/m/Y')
+                                }}</div>
                         </flux:table.cell>
                         <flux:table.cell>
-                            <div class="text-gray-600 dark:text-gray-400">{{ $subscription->end_date ? $subscription->end_date->format('d/m/Y') : '-' }}</div>
+                            <div class="text-gray-600 dark:text-gray-400">{{ $subscription->end_date ?
+                                $subscription->end_date->format('d/m/Y') : '-' }}</div>
                         </flux:table.cell>
                         <flux:table.cell>
-                            <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $subscription->status_badge_color }}">
+                            <span
+                                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $subscription->status_badge_color }}">
                                 {{ ucfirst($subscription->status) }}
                             </span>
                         </flux:table.cell>
                         <flux:table.cell>
                             <div class="text-gray-600 dark:text-gray-400">
-                                <span class="font-semibold">{{ $subscription->payments->count() }}</span> {{ __('pembayaran') }}
+                                <span class="font-semibold">{{ $subscription->payments->count() }}</span> {{
+                                __('pembayaran') }}
                             </div>
                         </flux:table.cell>
                         <flux:table.cell>
@@ -272,14 +298,18 @@ $subscriptions = computed(function () {
                                     icon="eye"
                                     class="!p-2 !bg-purple-600 hover:!bg-purple-700 dark:!bg-purple-500 dark:hover:!bg-purple-600 !text-white !rounded-md"
                                     title="{{ __('Detail') }}" />
-                                <flux:button :href="route('godmode.subscriptions.edit', $subscription)" variant="ghost" size="sm"
-                                    icon="pencil" wire:navigate
+                                @can('mengubah subscription')
+                                <flux:button :href="route('godmode.subscriptions.edit', $subscription)" variant="ghost"
+                                    size="sm" icon="pencil" wire:navigate
                                     class="!p-2 !bg-blue-600 hover:!bg-blue-700 dark:!bg-blue-500 dark:hover:!bg-blue-600 !text-white !rounded-md"
                                     title="{{ __('Edit') }}" />
-                                <flux:button wire:click="openDeleteModal({{ $subscription->id }})"
-                                    variant="ghost" size="sm" icon="trash"
+                                @endcan
+                                @can('menghapus subscription')
+                                <flux:button wire:click="openDeleteModal({{ $subscription->id }})" variant="ghost"
+                                    size="sm" icon="trash"
                                     class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
                                     title="{{ __('Hapus') }}" />
+                                @endcan
                             </div>
                         </flux:table.cell>
                     </flux:table.row>
@@ -324,11 +354,13 @@ $subscriptions = computed(function () {
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <flux:label>{{ __('Nama') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedSubscription->anggota->user->name ?? '-' }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                $selectedSubscription->anggota->user->name ?? '-' }}</div>
                         </div>
                         <div>
                             <flux:label>{{ __('Email') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedSubscription->anggota->user->email ?? '-' }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                $selectedSubscription->anggota->user->email ?? '-' }}</div>
                         </div>
                     </div>
                 </div>
@@ -338,28 +370,33 @@ $subscriptions = computed(function () {
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <flux:label>{{ __('Layanan') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedSubscription->layanan->name ?? '-' }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                $selectedSubscription->layanan->name ?? '-' }}</div>
                         </div>
                         <div>
                             <flux:label>{{ __('Status') }}</flux:label>
                             <div class="mt-1">
-                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $selectedSubscription->status_badge_color }}">
+                                <span
+                                    class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $selectedSubscription->status_badge_color }}">
                                     {{ ucfirst($selectedSubscription->status) }}
                                 </span>
                             </div>
                         </div>
                         <div>
                             <flux:label>{{ __('Tanggal Mulai') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedSubscription->start_date->format('d/m/Y') }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{
+                                $selectedSubscription->start_date->format('d/m/Y') }}</div>
                         </div>
                         <div>
                             <flux:label>{{ __('Tanggal Berakhir') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedSubscription->end_date ? $selectedSubscription->end_date->format('d/m/Y') : '-' }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedSubscription->end_date ?
+                                $selectedSubscription->end_date->format('d/m/Y') : '-' }}</div>
                         </div>
                         @if ($selectedSubscription->notes)
                         <div class="col-span-2">
                             <flux:label>{{ __('Catatan') }}</flux:label>
-                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedSubscription->notes }}</div>
+                            <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedSubscription->notes }}
+                            </div>
                         </div>
                         @endif
                     </div>
@@ -377,25 +414,28 @@ $subscriptions = computed(function () {
                                 <div class="text-xs text-gray-500 dark:text-gray-400">
                                     {{ ucfirst($payment->status) }}
                                     @if ($payment->paid_at)
-                                        - {{ $payment->paid_at->format('d/m/Y H:i') }}
+                                    - {{ $payment->paid_at->format('d/m/Y H:i') }}
                                     @endif
                                 </div>
                             </div>
                             <div>
-                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $payment->status_badge_color }}">
+                                <span
+                                    class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $payment->status_badge_color }}">
                                     {{ ucfirst($payment->status) }}
                                 </span>
                             </div>
                         </div>
                         @empty
-                        <div class="text-sm text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div
+                            class="text-sm text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             {{ __('Belum ada pembayaran') }}
                         </div>
                         @endforelse
                     </div>
                     @can('membuat payment')
                     <div class="mt-3">
-                        <flux:button :href="route('godmode.subscriptions.payments.create', $selectedSubscription)" variant="primary" size="sm" wire:navigate>
+                        <flux:button :href="route('godmode.subscriptions.payments.create', $selectedSubscription)"
+                            variant="primary" size="sm" wire:navigate>
                             {{ __('Tambah Pembayaran') }}
                         </flux:button>
                     </div>
@@ -407,9 +447,12 @@ $subscriptions = computed(function () {
                 <flux:button variant="ghost" wire:click="closeDetail">
                     {{ __('Tutup') }}
                 </flux:button>
-                <flux:button :href="route('godmode.subscriptions.edit', $selectedSubscription)" variant="primary" wire:navigate>
+                @can('mengubah subscription')
+                <flux:button :href="route('godmode.subscriptions.edit', $selectedSubscription)" variant="primary"
+                    wire:navigate>
                     {{ __('Edit') }}
                 </flux:button>
+                @endcan
             </div>
         </div>
     </flux:modal>
@@ -426,7 +469,8 @@ $subscriptions = computed(function () {
             @if ($subscriptionToDelete)
             <div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
                 <p class="text-sm text-red-800 dark:text-red-200">
-                    Langganan <strong>{{ $subscriptionToDelete->anggota->user->name ?? '-' }}</strong> untuk layanan <strong>{{ $subscriptionToDelete->layanan->name ?? '-' }}</strong> akan dihapus secara permanen.
+                    Langganan <strong>{{ $subscriptionToDelete->anggota->user->name ?? '-' }}</strong> untuk layanan
+                    <strong>{{ $subscriptionToDelete->layanan->name ?? '-' }}</strong> akan dihapus secara permanen.
                 </p>
             </div>
             @endif
@@ -435,9 +479,10 @@ $subscriptions = computed(function () {
                 <flux:modal.close>
                     <flux:button variant="ghost" wire:click="closeDeleteModal">{{ __('Batal') }}</flux:button>
                 </flux:modal.close>
+                @can('menghapus subscription')
                 <flux:button wire:click="deleteSubscription" variant="danger">{{ __('Hapus') }}</flux:button>
+                @endcan
             </div>
         </div>
     </flux:modal>
 </div>
-

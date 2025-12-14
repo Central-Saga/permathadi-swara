@@ -33,14 +33,18 @@
                 {{ __('Anggota') }}
             </flux:sidebar.item>
             @endcan
+            @can('melihat layanan')
             <flux:sidebar.item icon="sparkles" :href="route('godmode.layanan.index')"
                 :current="request()->routeIs('godmode.layanan.*')" wire:navigate>
                 {{ __('Layanan') }}
             </flux:sidebar.item>
+            @endcan
+            @can('melihat subscription')
             <flux:sidebar.item icon="document-text" :href="route('godmode.subscriptions.index')"
                 :current="request()->routeIs('godmode.subscriptions.*')" wire:navigate>
                 {{ __('Langganan') }}
             </flux:sidebar.item>
+            @endcan
             @can('melihat payment')
             <flux:sidebar.item icon="banknotes" :href="route('godmode.payments.index')"
                 :current="request()->routeIs('godmode.payments.*')" wire:navigate>
@@ -53,14 +57,28 @@
                 {{ __('Pesan Kontak') }}
             </flux:sidebar.item>
             @endcan
+            @can('melihat galeri')
             <flux:sidebar.item icon="photo" :href="route('godmode.galeri.index')"
                 :current="request()->routeIs('godmode.galeri.*')" wire:navigate>
                 {{ __('Galeri') }}
             </flux:sidebar.item>
+            @endcan
             @can('melihat role')
             <flux:sidebar.item icon="shield-check" :href="route('godmode.roles.index')"
                 :current="request()->routeIs('godmode.roles.*')" wire:navigate>
                 {{ __('Role') }}
+            </flux:sidebar.item>
+            @endcan
+            @can('melihat activity log')
+            <flux:sidebar.item icon="clipboard-document-list" :href="route('godmode.activity-logs.index')"
+                :current="request()->routeIs('godmode.activity-logs.*')" wire:navigate>
+                {{ __('Activity Log') }}
+            </flux:sidebar.item>
+            @endcan
+            @can('melihat log viewer')
+            <flux:sidebar.item icon="code-bracket" :href="route('godmode.log-viewer.index')"
+                :current="request()->routeIs('godmode.log-viewer.*')" wire:navigate>
+                {{ __('Log Viewer') }}
             </flux:sidebar.item>
             @endcan
         </flux:sidebar.nav>
@@ -163,17 +181,14 @@
     <flux:toast position="bottom end" />
     @endpersist
 
-    <div 
-        x-data
-        x-on:toast.window="
+    <div x-data x-on:toast.window="
             if (window.Flux && typeof window.Flux.toast === 'function') {
                 window.Flux.toast({
                     variant: $event.detail.variant || 'success',
                     text: $event.detail.message
                 });
             }
-        "
-    ></div>
+        "></div>
 
     @if (session('success'))
     <script>

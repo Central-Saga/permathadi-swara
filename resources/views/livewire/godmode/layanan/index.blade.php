@@ -71,6 +71,11 @@ $closeDeleteModal = action(function () {
 });
 
 $deleteLayanan = action(function () {
+    if (!auth()->user()->can('menghapus layanan')) {
+        $this->dispatch('toast', message: __('Anda tidak memiliki izin untuk menghapus layanan.'), variant: 'error');
+        return;
+    }
+
     if ($this->layananToDelete) {
         $this->layananToDelete->delete();
         $this->dispatch('toast', message: __('Layanan berhasil dihapus.'), variant: 'success');
@@ -79,6 +84,11 @@ $deleteLayanan = action(function () {
 });
 
 $exportPdf = action(function () {
+    if (!auth()->user()->can('mengekspor layanan')) {
+        $this->dispatch('toast', message: __('Anda tidak memiliki izin untuk mengekspor layanan.'), variant: 'error');
+        return;
+    }
+
     $query = Layanan::query();
 
     if (!empty($this->search)) {
@@ -109,6 +119,11 @@ $exportPdf = action(function () {
 });
 
 $exportExcel = action(function () {
+    if (!auth()->user()->can('mengekspor layanan')) {
+        $this->dispatch('toast', message: __('Anda tidak memiliki izin untuk mengekspor layanan.'), variant: 'error');
+        return;
+    }
+
     $query = Layanan::query();
 
     if (!empty($this->search)) {
@@ -191,6 +206,7 @@ $layanans = computed(function () {
                 <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Kelola data layanan sanggar') }}</p>
             </div>
             <div class="flex items-center gap-2">
+                @can('mengekspor layanan')
                 <flux:button wire:click="exportExcel" variant="ghost" icon="table-cells"
                     class="!bg-green-600 hover:!bg-green-700 dark:!bg-green-500 dark:hover:!bg-green-600 !text-white">
                     {{ __('Excel') }}
@@ -199,9 +215,12 @@ $layanans = computed(function () {
                     class="!bg-red-900 hover:!bg-red-950 dark:!bg-red-950 dark:hover:!bg-red-900 !text-white">
                     {{ __('PDF') }}
                 </flux:button>
+                @endcan
+                @can('membuat layanan')
                 <flux:button :href="route('godmode.layanan.create')" variant="primary" icon="plus" wire:navigate>
                     {{ __('Tambah Layanan') }}
                 </flux:button>
+                @endcan
             </div>
         </div>
 
@@ -236,11 +255,11 @@ $layanans = computed(function () {
                     <flux:table.row>
                         <flux:table.cell>
                             @if ($layanan->getFirstMediaUrl('layanan_cover', 'thumb'))
-                            <img src="{{ $layanan->getFirstMediaUrl('layanan_cover', 'thumb') }}" 
-                                alt="{{ $layanan->name }}"
-                                class="h-16 w-16 rounded-lg object-cover" />
+                            <img src="{{ $layanan->getFirstMediaUrl('layanan_cover', 'thumb') }}"
+                                alt="{{ $layanan->name }}" class="h-16 w-16 rounded-lg object-cover" />
                             @else
-                            <div class="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700">
+                            <div
+                                class="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700">
                                 <flux:icon name="photo" class="h-8 w-8 text-gray-400" />
                             </div>
                             @endif
@@ -261,7 +280,8 @@ $layanans = computed(function () {
                             </div>
                         </flux:table.cell>
                         <flux:table.cell>
-                            <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $layanan->is_active ? 'bg-green-50 text-green-700 ring-green-700/10 dark:bg-green-900/50 dark:text-green-200' : 'bg-red-50 text-red-700 ring-red-700/10 dark:bg-red-900/50 dark:text-red-200' }}">
+                            <span
+                                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $layanan->is_active ? 'bg-green-50 text-green-700 ring-green-700/10 dark:bg-green-900/50 dark:text-green-200' : 'bg-red-50 text-red-700 ring-red-700/10 dark:bg-red-900/50 dark:text-red-200' }}">
                                 {{ $layanan->is_active ? __('Aktif') : __('Tidak Aktif') }}
                             </span>
                         </flux:table.cell>
@@ -271,14 +291,18 @@ $layanans = computed(function () {
                                     icon="eye"
                                     class="!p-2 !bg-purple-600 hover:!bg-purple-700 dark:!bg-purple-500 dark:hover:!bg-purple-600 !text-white !rounded-md"
                                     title="{{ __('Detail') }}" />
+                                @can('mengubah layanan')
                                 <flux:button :href="route('godmode.layanan.edit', $layanan)" variant="ghost" size="sm"
                                     icon="pencil" wire:navigate
                                     class="!p-2 !bg-blue-600 hover:!bg-blue-700 dark:!bg-blue-500 dark:hover:!bg-blue-600 !text-white !rounded-md"
                                     title="{{ __('Edit') }}" />
-                                <flux:button wire:click="openDeleteModal({{ $layanan->id }})"
-                                    variant="ghost" size="sm" icon="trash"
+                                @endcan
+                                @can('menghapus layanan')
+                                <flux:button wire:click="openDeleteModal({{ $layanan->id }})" variant="ghost" size="sm"
+                                    icon="trash"
                                     class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
                                     title="{{ __('Hapus') }}" />
+                                @endcan
                             </div>
                         </flux:table.cell>
                     </flux:table.row>
@@ -321,9 +345,8 @@ $layanans = computed(function () {
                 <div>
                     <flux:label>{{ __('Gambar Cover') }}</flux:label>
                     <div class="mt-2">
-                        <img src="{{ $selectedLayanan->getFirstMediaUrl('layanan_cover') }}" 
-                            alt="{{ $selectedLayanan->name }}"
-                            class="h-64 w-full rounded-lg object-cover" />
+                        <img src="{{ $selectedLayanan->getFirstMediaUrl('layanan_cover') }}"
+                            alt="{{ $selectedLayanan->name }}" class="h-64 w-full rounded-lg object-cover" />
                     </div>
                 </div>
                 @endif
@@ -350,7 +373,8 @@ $layanans = computed(function () {
                     <div>
                         <flux:label>{{ __('Status Aktif') }}</flux:label>
                         <div class="mt-1">
-                            <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $selectedLayanan->is_active ? 'bg-green-50 text-green-700 ring-green-700/10 dark:bg-green-900/50 dark:text-green-200' : 'bg-red-50 text-red-700 ring-red-700/10 dark:bg-red-900/50 dark:text-red-200' }}">
+                            <span
+                                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $selectedLayanan->is_active ? 'bg-green-50 text-green-700 ring-green-700/10 dark:bg-green-900/50 dark:text-green-200' : 'bg-red-50 text-red-700 ring-red-700/10 dark:bg-red-900/50 dark:text-red-200' }}">
                                 {{ $selectedLayanan->is_active ? __('Aktif') : __('Tidak Aktif') }}
                             </span>
                         </div>
@@ -358,7 +382,8 @@ $layanans = computed(function () {
                     @if ($selectedLayanan->description)
                     <div class="col-span-2">
                         <flux:label>{{ __('Deskripsi Lengkap') }}</flux:label>
-                        <div class="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ $selectedLayanan->description }}</div>
+                        <div class="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{
+                            $selectedLayanan->description }}</div>
                     </div>
                     @endif
                 </div>
@@ -368,6 +393,7 @@ $layanans = computed(function () {
                 <flux:button variant="ghost" wire:click="closeDetail">
                     {{ __('Tutup') }}
                 </flux:button>
+                @can('mengubah layanan')
                 <flux:button :href="route('godmode.layanan.edit', $selectedLayanan)" variant="primary" wire:navigate>
                     {{ __('Edit') }}
                 </flux:button>
@@ -399,9 +425,10 @@ $layanans = computed(function () {
                 <flux:modal.close>
                     <flux:button variant="ghost" wire:click="closeDeleteModal">{{ __('Batal') }}</flux:button>
                 </flux:modal.close>
+                @can('menghapus layanan')
                 <flux:button wire:click="deleteLayanan" variant="danger">{{ __('Hapus') }}</flux:button>
+                @endcan
             </div>
         </div>
     </flux:modal>
 </div>
-
