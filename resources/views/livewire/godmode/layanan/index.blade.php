@@ -397,6 +397,7 @@ $layanans = computed(function () {
                 <flux:button :href="route('godmode.layanan.edit', $selectedLayanan)" variant="primary" wire:navigate>
                     {{ __('Edit') }}
                 </flux:button>
+                @endcan
             </div>
         </div>
     </flux:modal>

@@ -66,55 +66,7 @@ $closeDetail = action(function () {
     $this->selectedActivity = null;
 });
 
-$exportExcel = action(function () use ($buildQuery) {
-    $query = $buildQuery();
-
-    $activities = $query->get();
-
-    $data = $activities->map(function ($activity) {
-        return [
-            $activity->id,
-            $activity->causer->name ?? 'System',
-            $activity->subject_type ? class_basename($activity->subject_type) : '-',
-            $activity->event,
-            $activity->description,
-            $activity->created_at->format('d/m/Y H:i:s'),
-        ];
-    });
-
-    $filename = 'activity_logs_' . now()->format('Y-m-d_His') . '.xlsx';
-
-    $export = new class(Collection::make($data)) implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
-        public function __construct(public Collection $data) {}
-
-        public function collection() {
-            return $this->data;
-        }
-
-        public function headings(): array {
-            return ['ID', 'User', 'Model', 'Event', 'Description', 'Created At'];
-        }
-    };
-
-    return Excel::download($export, $filename);
-});
-
-$exportPdf = action(function () use ($buildQuery) {
-    $query = $buildQuery();
-
-    $activities = $query->get();
-
-    $html = view('exports.activity-logs-pdf', ['activities' => $activities])->render();
-
-    $pdf = Pdf::loadHTML($html);
-    $filename = 'activity_logs_' . now()->format('Y-m-d_His') . '.pdf';
-
-    return Response::streamDownload(function () use ($pdf) {
-        echo $pdf->output();
-    }, $filename);
-});
-
-$buildQuery = function () {
+$exportExcel = action(function () {
     $query = Activity::with('causer');
 
     // Search
@@ -163,11 +115,147 @@ $buildQuery = function () {
         $query->orderBy('created_at', 'desc');
     }
 
-    return $query;
-};
+    $activities = $query->get();
 
-$activities = computed(function () use ($buildQuery) {
-    return $buildQuery()->paginate(15);
+    $data = $activities->map(function ($activity) {
+        return [
+            $activity->id,
+            $activity->causer->name ?? 'System',
+            $activity->subject_type ? class_basename($activity->subject_type) : '-',
+            $activity->event,
+            $activity->description,
+            $activity->created_at->format('d/m/Y H:i:s'),
+        ];
+    });
+
+    $filename = 'activity_logs_' . now()->format('Y-m-d_His') . '.xlsx';
+
+    $export = new class(Collection::make($data)) implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+        public function __construct(public Collection $data) {}
+
+        public function collection() {
+            return $this->data;
+        }
+
+        public function headings(): array {
+            return ['ID', 'User', 'Model', 'Event', 'Description', 'Created At'];
+        }
+    };
+
+    return Excel::download($export, $filename);
+});
+
+$exportPdf = action(function () {
+    $query = Activity::with('causer');
+
+    // Search
+    if (!empty($this->search)) {
+        $query->where(function ($q) {
+            $q->where('description', 'like', "%{$this->search}%")
+              ->orWhere('event', 'like', "%{$this->search}%")
+              ->orWhere('subject_type', 'like', "%{$this->search}%")
+              ->orWhereHas('causer', function ($q) {
+                  $q->where('name', 'like', "%{$this->search}%")
+                    ->orWhere('email', 'like', "%{$this->search}%");
+              });
+        });
+    }
+
+    // Filter User
+    if (!empty($this->filterUser)) {
+        $query->where('causer_id', $this->filterUser);
+    }
+
+    // Filter Model
+    if (!empty($this->filterModel)) {
+        $query->where('subject_type', 'like', "%{$this->filterModel}%");
+    }
+
+    // Filter Event
+    if (!empty($this->filterEvent)) {
+        $query->where('event', $this->filterEvent);
+    }
+
+    // Filter Date From
+    if (!empty($this->filterDateFrom)) {
+        $query->whereDate('created_at', '>=', $this->filterDateFrom);
+    }
+
+    // Filter Date To
+    if (!empty($this->filterDateTo)) {
+        $query->whereDate('created_at', '<=', $this->filterDateTo);
+    }
+
+    // Sorting
+    $allowedSorts = ['created_at', 'event', 'subject_type'];
+    if (in_array($this->sortBy, $allowedSorts)) {
+        $query->orderBy($this->sortBy, $this->sortDir);
+    } else {
+        $query->orderBy('created_at', 'desc');
+    }
+
+    $activities = $query->get();
+
+    $html = view('exports.activity-logs-pdf', ['activities' => $activities])->render();
+
+    $pdf = Pdf::loadHTML($html);
+    $filename = 'activity_logs_' . now()->format('Y-m-d_His') . '.pdf';
+
+    return Response::streamDownload(function () use ($pdf) {
+        echo $pdf->output();
+    }, $filename);
+});
+
+$activities = computed(function () {
+    $query = Activity::with('causer');
+
+    // Search
+    if (!empty($this->search)) {
+        $query->where(function ($q) {
+            $q->where('description', 'like', "%{$this->search}%")
+              ->orWhere('event', 'like', "%{$this->search}%")
+              ->orWhere('subject_type', 'like', "%{$this->search}%")
+              ->orWhereHas('causer', function ($q) {
+                  $q->where('name', 'like', "%{$this->search}%")
+                    ->orWhere('email', 'like', "%{$this->search}%");
+              });
+        });
+    }
+
+    // Filter User
+    if (!empty($this->filterUser)) {
+        $query->where('causer_id', $this->filterUser);
+    }
+
+    // Filter Model
+    if (!empty($this->filterModel)) {
+        $query->where('subject_type', 'like', "%{$this->filterModel}%");
+    }
+
+    // Filter Event
+    if (!empty($this->filterEvent)) {
+        $query->where('event', $this->filterEvent);
+    }
+
+    // Filter Date From
+    if (!empty($this->filterDateFrom)) {
+        $query->whereDate('created_at', '>=', $this->filterDateFrom);
+    }
+
+    // Filter Date To
+    if (!empty($this->filterDateTo)) {
+        $query->whereDate('created_at', '<=', $this->filterDateTo);
+    }
+
+    // Sorting
+    $allowedSorts = ['created_at', 'event', 'subject_type'];
+    if (in_array($this->sortBy, $allowedSorts)) {
+        $query->orderBy($this->sortBy, $this->sortDir);
+    } else {
+        $query->orderBy('created_at', 'desc');
+    }
+
+    return $query->paginate(15);
 });
 
 $users = computed(function () {
@@ -257,24 +345,22 @@ $eventTypes = computed(function () {
             </div>
 
             <flux:table>
-                <flux:table.head>
-                    <flux:table.row>
-                        <flux:table.header class="w-16">ID</flux:table.header>
-                        <flux:table.header>User</flux:table.header>
-                        <flux:table.header>Model</flux:table.header>
-                        <flux:table.header>Event</flux:table.header>
-                        <flux:table.header>Description</flux:table.header>
-                        <flux:table.header class="cursor-pointer" wire:click="sort('created_at')">
-                            <div class="flex items-center gap-2">
-                                <span>{{ __('Tanggal') }}</span>
-                                <flux:icon :name="$this->sortIconCreatedAt" class="size-4" />
-                            </div>
-                        </flux:table.header>
-                        <flux:table.header class="w-24">Aksi</flux:table.header>
-                    </flux:table.row>
-                </flux:table.head>
-
-                <flux:table.body>
+                <flux:table.columns>
+                    <flux:table.column class="w-16">ID</flux:table.column>
+                    <flux:table.column>User</flux:table.column>
+                    <flux:table.column>Model</flux:table.column>
+                    <flux:table.column>Event</flux:table.column>
+                    <flux:table.column>Description</flux:table.column>
+                    <flux:table.column>
+                        <button wire:click="sort('created_at')"
+                            class="flex items-center gap-1 hover:text-orange-600 dark:hover:text-orange-400">
+                            {{ __('Tanggal') }}
+                            <flux:icon :name="$this->sortIconCreatedAt" variant="mini" />
+                        </button>
+                    </flux:table.column>
+                    <flux:table.column class="w-24">Aksi</flux:table.column>
+                </flux:table.columns>
+                <flux:table.rows>
                     @forelse($this->activities as $activity)
                     <flux:table.row>
                         <flux:table.cell>{{ $activity->id }}</flux:table.cell>
@@ -327,7 +413,7 @@ $eventTypes = computed(function () {
                         </flux:table.cell>
                     </flux:table.row>
                     @endforelse
-                </flux:table.body>
+                </flux:table.rows>
             </flux:table>
 
             <div class="mt-4">
@@ -337,83 +423,88 @@ $eventTypes = computed(function () {
     </div>
 
     <!-- Detail Modal -->
-    <flux:modal wire:model="showDetailModal" name="detailModal" max-width="4xl">
-        <form wire:submit.prevent="closeDetail">
-            <flux:modal.header>
-                <h2 class="text-lg font-semibold">{{ __('Detail Activity Log') }}</h2>
-            </flux:modal.header>
+    <flux:modal name="detail-activity-log" :show="$showDetailModal" wire:model="showDetailModal" class="max-w-4xl">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Detail Activity Log') }}</flux:heading>
+                <flux:subheading>{{ __('Informasi lengkap activity log') }}</flux:subheading>
+            </div>
 
-            <flux:modal.body>
-                @if($selectedActivity)
-                <div class="space-y-4">
+            @if($selectedActivity)
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('ID') }}</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedActivity->id }}</p>
+                        <flux:label>{{ __('ID') }}</flux:label>
+                        <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedActivity->id }}</div>
                     </div>
 
                     <div>
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('User') }}</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                        <flux:label>{{ __('User') }}</flux:label>
+                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
                             {{ $selectedActivity->causer->name ?? 'System' }}
                             @if($selectedActivity->causer)
                             <span class="text-gray-500">({{ $selectedActivity->causer->email }})</span>
                             @endif
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Model') }}</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">
-                            {{ $selectedActivity->subject_type ? class_basename($selectedActivity->subject_type) : '-'
-                            }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Event') }}</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ ucfirst($selectedActivity->event ??
-                            '-') }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Description')
-                            }}</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedActivity->description ?? '-'
-                            }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Subject ID')
-                            }}</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedActivity->subject_id ?? '-' }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Properties')
-                            }}</label>
-                        <div class="mt-1 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-                            <pre
-                                class="text-xs text-gray-900 dark:text-white overflow-auto">{{ json_encode($selectedActivity->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
                         </div>
                     </div>
 
                     <div>
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Created At')
-                            }}</label>
-                        <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                        <flux:label>{{ __('Model') }}</flux:label>
+                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
+                            {{ $selectedActivity->subject_type ? class_basename($selectedActivity->subject_type) : '-'
+                            }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <flux:label>{{ __('Event') }}</flux:label>
+                        <div class="mt-1">
+                            <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium
+                                @if($selectedActivity->event === 'created') bg-green-50 text-green-700 ring-green-700/10 dark:bg-green-900/50 dark:text-green-200
+                                @elseif($selectedActivity->event === 'updated') bg-blue-50 text-blue-700 ring-blue-700/10 dark:bg-blue-900/50 dark:text-blue-200
+                                @elseif($selectedActivity->event === 'deleted') bg-red-50 text-red-700 ring-red-700/10 dark:bg-red-900/50 dark:text-red-200
+                                @else bg-gray-50 text-gray-700 ring-gray-700/10 dark:bg-gray-900/50 dark:text-gray-200
+                                @endif">
+                                {{ ucfirst($selectedActivity->event ?? '-') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <flux:label>{{ __('Subject ID') }}</flux:label>
+                        <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedActivity->subject_id ?? '-'
+                            }}</div>
+                    </div>
+
+                    <div>
+                        <flux:label>{{ __('Created At') }}</flux:label>
+                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
                             {{ $selectedActivity->created_at->format('d/m/Y H:i:s') }}
-                        </p>
+                        </div>
                     </div>
                 </div>
-                @endif
-            </flux:modal.body>
 
-            <flux:modal.footer>
-                <flux:button type="button" wire:click="closeDetail" variant="ghost">
+                <div>
+                    <flux:label>{{ __('Description') }}</flux:label>
+                    <div class="mt-1 text-sm text-gray-900 dark:text-white">{{ $selectedActivity->description ?? '-' }}
+                    </div>
+                </div>
+
+                <div>
+                    <flux:label>{{ __('Properties') }}</flux:label>
+                    <div class="mt-1 rounded-lg bg-gray-50 p-4 dark:bg-gray-800 max-h-96 overflow-auto">
+                        <pre
+                            class="text-xs text-gray-900 dark:text-white whitespace-pre-wrap">{{ json_encode($selectedActivity->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                <flux:button variant="ghost" wire:click="closeDetail">
                     {{ __('Tutup') }}
                 </flux:button>
-            </flux:modal.footer>
-        </form>
+            </div>
+        </div>
     </flux:modal>
 </div>
