@@ -9,7 +9,42 @@ Panduan lengkap untuk mengaktifkan semua fitur Media Library termasuk AVIF conve
 
 ## 🛠️ Langkah-langkah
 
-### Step 1: Install Image Optimization Tools
+### Step 1: Install Imagick Extension (WAJIB untuk AVIF!)
+
+**PENTING:** PHP GD tidak support AVIF! Harus install Imagick untuk AVIF support.
+
+```bash
+# Masuk ke container
+./vendor/bin/sail shell
+
+# Install ImageMagick library
+apt-get update
+apt-get install -y libmagickwand-dev imagemagick
+
+# Install PHP Imagick extension
+pecl install imagick
+
+# Enable extension
+docker-php-ext-enable imagick
+
+# Verify
+php -m | grep imagick
+php -r "echo (extension_loaded('imagick') && in_array('AVIF', Imagick::queryFormats())) ? 'AVIF supported!' : 'AVIF not supported';"
+```
+
+Atau gunakan script:
+
+```bash
+cat install-imagick.sh | ./vendor/bin/sail shell
+```
+
+**Update `.env`:**
+
+```env
+IMAGE_DRIVER=imagick
+```
+
+### Step 2: Install Image Optimization Tools
 
 Ada 2 cara untuk install tools:
 
@@ -46,7 +81,7 @@ cat install-image-tools.sh | ./vendor/bin/sail shell
 ./vendor/bin/sail exec laravel.test bash -c "$(cat install-image-tools.sh)"
 ```
 
-### Step 2: Enable AVIF Conversion
+### Step 3: Enable AVIF Conversion
 
 Edit file `app/Models/Layanan.php`:
 
@@ -79,7 +114,7 @@ public function registerMediaConversions(Media $media = null): void
 
 Edit file `app/Models/Galeri.php` dengan cara yang sama.
 
-### Step 3: Enable Image Optimizers
+### Step 4: Enable Image Optimizers
 
 Edit file `config/media-library.php`:
 
@@ -125,20 +160,20 @@ Edit file `config/media-library.php`:
 ],
 ```
 
-### Step 4: Clear Cache
+### Step 5: Clear Cache
 
 ```bash
 ./vendor/bin/sail artisan config:clear
 ./vendor/bin/sail artisan cache:clear
 ```
 
-### Step 5: Clear Failed Jobs
+### Step 6: Clear Failed Jobs
 
 ```bash
 ./vendor/bin/sail artisan queue:flush
 ```
 
-### Step 6: Restart Queue Worker
+### Step 7: Restart Queue Worker
 
 Stop queue worker yang sedang berjalan (Ctrl+C), lalu jalankan lagi:
 
@@ -226,6 +261,14 @@ Install tools setiap kali container di-rebuild (cukup untuk development).
 
 ## 🔍 Troubleshooting
 
+### Error: "AVIF image support has been disabled" atau "imageavif(): AVIF image support has been disabled"
+
+-   **Ini berarti PHP GD tidak support AVIF!**
+-   Install Imagick extension (lihat Step 1)
+-   Set `IMAGE_DRIVER=imagick` di `.env`
+-   Verify: `php -r "echo in_array('AVIF', Imagick::queryFormats()) ? 'YES' : 'NO';"`
+-   Lihat: `FIX_AVIF_GD_ERROR.md` untuk panduan lengkap
+
 ### Error: "avifenc: command not found"
 
 -   Pastikan `libavif-bin` sudah terinstall
@@ -274,6 +317,9 @@ Install tools setiap kali container di-rebuild (cukup untuk development).
 
 ## ✅ Checklist
 
+-   [ ] **Imagick extension sudah terinstall** (WAJIB untuk AVIF!)
+-   [ ] **AVIF support sudah terverifikasi** (`in_array('AVIF', Imagick::queryFormats())`)
+-   [ ] **IMAGE_DRIVER=imagick** sudah di-set di `.env`
 -   [ ] Tools sudah terinstall (jpegoptim, optipng, pngquant, gifsicle, webp, libavif-bin, svgo)
 -   [ ] AVIF conversion sudah di-enable di `Layanan.php` dan `Galeri.php`
 -   [ ] Image optimizers sudah di-enable di `config/media-library.php`

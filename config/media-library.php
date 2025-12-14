@@ -186,8 +186,11 @@ return [
     /*
      * The engine that should perform the image conversions.
      * Should be either `gd` or `imagick`.
+     *
+     * IMPORTANT: GD tidak support AVIF! Gunakan 'imagick' untuk AVIF support.
+     * Install Imagick: apt-get install -y libmagickwand-dev imagemagick && pecl install imagick
      */
-    'image_driver' => env('IMAGE_DRIVER', 'gd'),
+    'image_driver' => env('IMAGE_DRIVER', 'imagick'),
 
     /*
      * FFMPEG & FFProbe binaries paths, only used if you try to generate video
