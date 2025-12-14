@@ -119,6 +119,11 @@ return [
      * The media library will try to optimize all converted images by removing
      * metadata and applying a little bit of compression. These are
      * the optimizers that will be used by default.
+     *
+     * Memerlukan tools terinstall di container:
+     * - jpegoptim, optipng, pngquant, gifsicle, webp (cwebp), libavif-bin (avifenc), svgo
+     * Jalankan: ./vendor/bin/sail shell, lalu install tools
+     * Lihat: ENABLE_ALL_MEDIA_FEATURES.md untuk panduan lengkap
      */
     'image_optimizers' => [
         Spatie\ImageOptimizer\Optimizers\Jpegoptim::class => [

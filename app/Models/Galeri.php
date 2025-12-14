@@ -57,6 +57,7 @@ class Galeri extends Model implements HasMedia
             ->performOnCollections('galeri_images');
 
         // AVIF conversion untuk browsers terbaru
+        // Memerlukan libavif-bin terinstall di container
         $this->addMediaConversion('avif')
             ->format('avif')
             ->performOnCollections('galeri_images');

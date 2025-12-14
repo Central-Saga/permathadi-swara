@@ -62,6 +62,7 @@ class Layanan extends Model implements HasMedia
             ->performOnCollections('layanan_cover');
 
         // AVIF conversion untuk browsers terbaru (optional, lebih kecil dari WebP)
+        // Memerlukan libavif-bin terinstall di container
         $this->addMediaConversion('avif')
             ->format('avif')
             ->performOnCollections('layanan_cover');
