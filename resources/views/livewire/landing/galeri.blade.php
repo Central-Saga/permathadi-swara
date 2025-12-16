@@ -119,6 +119,31 @@ $closeLightbox = action(function () {
         </div>
     </div>
 
+
+    <!-- Video Section -->
+    <div class="bg-gray-50 py-24 sm:py-32 dark:bg-gray-800" data-gsap="galeri-video-section">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-white">Video Dokumentasi</h2>
+                <p class="mt-4 text-lg leading-8 text-gray-600 dark:text-gray-300">
+                    Saksikan penampilan dan kegiatan kami melalui video berikut.
+                </p>
+            </div>
+            <div class="mx-auto max-w-4xl">
+                <div class="relative w-full aspect-video rounded-2xl overflow-hidden shadow-xl">
+                     <iframe class="absolute top-0 left-0 w-full h-full"
+                        src="https://www.youtube-nocookie.com/embed/GyyPgoxu2Eo?si=-tez6nuruhiBl_Cf"
+                        title="YouTube video player"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Lightbox Modal -->
     @if($showLightbox && $selectedImage)
     @php
