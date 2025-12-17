@@ -34,8 +34,8 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
 
-          # build + run containers
-          docker compose -f docker-compose.prod.yml up -d --build
+          # build + run all services (including queue + scheduler)
+          docker compose -f docker-compose.prod.yml up -d --build app queue scheduler caddy
 
           # ===== FIX: copy Vite build assets to HOST so Caddy can serve them =====
           APP_CID=$(docker compose -f docker-compose.prod.yml ps -q app)
@@ -53,5 +53,6 @@ jobs:
 
           docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
           docker compose -f docker-compose.prod.yml exec -T app php artisan optimize:clear
+
           echo "== DONE =="
           EOF
