@@ -145,6 +145,7 @@
             @if($placeholderUrl) 
                 data-placeholder="{{ $placeholderUrl }}"
                 onload="this.style.opacity = 1; this.parentElement.parentElement.style.backgroundImage = 'none';"
+                onerror="this.style.opacity = 1; this.parentElement.parentElement.style.backgroundImage = 'none';"
             @endif
         />
     </picture>
