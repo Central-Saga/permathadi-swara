@@ -35,7 +35,8 @@ jobs:
           git reset --hard origin/main
 
           # build + run all services (including queue + scheduler)
-          docker compose -f docker-compose.prod.yml up -d --build app queue scheduler caddy
+          docker compose -f docker-compose.prod.yml up -d --build --force-recreate app queue scheduler caddy
+
 
           # ===== FIX: copy Vite build assets to HOST so Caddy can serve them =====
           APP_CID=$(docker compose -f docker-compose.prod.yml ps -q app)
