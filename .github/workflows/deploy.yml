@@ -22,22 +22,27 @@ jobs:
 
       - name: Deploy via SSH
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=yes -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
           set -e
 
           cd ${{ secrets.APP_DIR }}
 
           echo "== Pull latest code =="
-          git pull origin main
+          git fetch origin main
+          git reset --hard origin/main
 
           echo "== Build & restart containers =="
-          docker compose -f docker-compose.prod.yml build
-          docker compose -f docker-compose.prod.yml up -d
+          docker compose -f docker-compose.prod.yml up -d --build
 
-          echo "== Laravel optimize =="
+          echo "== Wait MySQL ready =="
+          until docker compose -f docker-compose.prod.yml exec -T mysql mysqladmin ping -h 127.0.0.1 -p"${DB_PASSWORD}" --silent; do
+            echo "waiting mysql..."
+            sleep 2
+          done
+
+          echo "== Laravel =="
           docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
           docker compose -f docker-compose.prod.yml exec -T app php artisan optimize:clear
-          docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
 
           echo "== DONE =="
           EOF
