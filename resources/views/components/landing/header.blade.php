@@ -2,7 +2,7 @@
     <nav aria-label="Global" class="flex items-center justify-between p-6 lg:px-8">
         <div class="flex lg:flex-1">
             <a href="{{ route('home') }}" class="-m-1.5 p-1.5" wire:navigate>
-                <span class="sr-only">Permathadi Swara</span>
+                <span class="sr-only">Permatadhi Swara</span>
                 <x-app-logo class="h-8 w-auto" />
             </a>
         </div>
@@ -102,7 +102,7 @@
             class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 dark:bg-gray-900 dark:sm:ring-gray-100/10">
             <div class="flex items-center justify-between">
                 <a href="{{ route('home') }}" class="-m-1.5 p-1.5" wire:navigate>
-                    <span class="sr-only">Permathadi Swara</span>
+                    <span class="sr-only">Permatadhi Swara</span>
                     <x-app-logo class="h-8 w-auto" />
                 </a>
                 <button type="button" @click="mobileMenuOpen = false"
@@ -134,9 +134,11 @@
                         @if(auth()->user()->hasRole('Anggota') || auth()->user()->isAnggota())
                         <div class="space-y-2">
                             <a href="{{ route('profile.edit') }}" @click="mobileMenuOpen = false"
-                                class="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-white/5">Profile Saya</a>
+                                class="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-white/5">Profile
+                                Saya</a>
                             <a href="{{ route('landing.history') }}" @click="mobileMenuOpen = false"
-                                class="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-white/5">History Saya</a>
+                                class="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-white/5">History
+                                Saya</a>
                             <form method="POST" action="{{ route('logout') }}" class="-mx-3">
                                 @csrf
                                 <button type="submit"

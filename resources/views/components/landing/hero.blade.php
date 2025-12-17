@@ -12,7 +12,7 @@
                     data-gsap="hero-title">
                     Melestarikan Seni Tari dan Tabuh Bali</h1>
                 <p class="mt-8 text-lg font-medium text-pretty text-gray-500 sm:text-xl/8 dark:text-gray-400"
-                    data-gsap="hero-description">Permathadi
+                    data-gsap="hero-description">Permatadhi
                     Swara adalah sanggar seni yang berdedikasi untuk melestarikan dan mengembangkan seni tari dan tabuh
                     tradisional Bali. Kami menawarkan program pembelajaran berkualitas untuk semua kalangan yang ingin
                     mempelajari kekayaan budaya Bali.</p>
@@ -27,11 +27,11 @@
                 </div>
             </div>
 
-            <img src="{{ asset('images/cover-1.jpg') }}" alt="Sanggar Tari Bali - Permathadi Swara"
+            <img src="{{ asset('images/cover-1.jpg') }}" alt="Sanggar Tari Bali - Permatadhi Swara"
                 class="mt-16 rounded-md bg-gray-50 shadow-xl ring-1 ring-gray-900/10 sm:mt-24 dark:hidden w-full"
                 data-gsap="hero-image" />
 
-            <img src="{{ asset('images/cover-1.jpg') }}" alt="Sanggar Tari Bali - Permathadi Swara"
+            <img src="{{ asset('images/cover-1.jpg') }}" alt="Sanggar Tari Bali - Permatadhi Swara"
                 class="mt-16 rounded-md bg-white/5 shadow-2xl ring-1 ring-white/10 hidden dark:block sm:mt-24 w-full"
                 data-gsap="hero-image" />
         </div>

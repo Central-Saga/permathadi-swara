@@ -14,24 +14,38 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup SSH
+        shell: bash
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST_IP }}" >> ~/.ssh/known_hosts
 
       - name: Deploy via SSH
+        shell: bash
         run: |
           ssh -o StrictHostKeyChecking=yes \
               -i ~/.ssh/id_ed25519 \
-              -p ${{ secrets.SSH_PORT }} \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_IP }} << 'EOF'
+              -p "${{ secrets.SSH_PORT }}" \
+              "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_IP }}" << 'EOF'
           set -e
-          cd ${{ secrets.APP_DIR }}
+
+          cd "${{ secrets.APP_DIR }}"
           git fetch origin main
           git reset --hard origin/main
+
+          # build + run containers
           docker compose -f docker-compose.prod.yml up -d --build
 
+          # ===== FIX: copy Vite build assets to HOST so Caddy can serve them =====
+          APP_CID=$(docker compose -f docker-compose.prod.yml ps -q app)
+          rm -rf public/build
+          docker cp "$APP_CID":/var/www/html/public/build ./public/build
+          chmod -R a+rX public/build
+          docker compose -f docker-compose.prod.yml restart caddy
+          # =====================================================================
+
+          # wait mysql ready
           until docker compose -f docker-compose.prod.yml exec -T mysql mysqladmin ping -h mysql --silent; do
             echo "waiting mysql..."
             sleep 2

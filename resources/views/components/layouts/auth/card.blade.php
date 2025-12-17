@@ -31,7 +31,7 @@
                 <span class="flex h-12 w-12 items-center justify-center rounded-xl">
                     <img src="{{ asset('favicon.svg') }}" alt="Logo" class="h-40 w-40 shrink-0 object-contain" />
                 </span>
-                <span class="text-lg font-semibold text-gray-900 dark:text-white">Permathadi Swara</span>
+                <span class="text-lg font-semibold text-gray-900 dark:text-white">Permatadhi Swara</span>
                 <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
             </a>
 
