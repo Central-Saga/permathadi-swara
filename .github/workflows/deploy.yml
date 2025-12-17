@@ -18,31 +18,26 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST_IP }} >> ~/.ssh/known_hosts
 
       - name: Deploy via SSH
         run: |
-          ssh -o StrictHostKeyChecking=yes -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=yes \
+              -i ~/.ssh/id_ed25519 \
+              -p ${{ secrets.SSH_PORT }} \
+              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_IP }} << 'EOF'
           set -e
-
           cd ${{ secrets.APP_DIR }}
-
-          echo "== Pull latest code =="
           git fetch origin main
           git reset --hard origin/main
-
-          echo "== Build & restart containers =="
           docker compose -f docker-compose.prod.yml up -d --build
 
-          echo "== Wait MySQL ready =="
-          until docker compose -f docker-compose.prod.yml exec -T mysql mysqladmin ping -h 127.0.0.1 -p"${DB_PASSWORD}" --silent; do
+          until docker compose -f docker-compose.prod.yml exec -T mysql mysqladmin ping -h mysql --silent; do
             echo "waiting mysql..."
             sleep 2
           done
 
-          echo "== Laravel =="
           docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
           docker compose -f docker-compose.prod.yml exec -T app php artisan optimize:clear
-
           echo "== DONE =="
           EOF
