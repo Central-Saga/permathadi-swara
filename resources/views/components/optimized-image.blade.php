@@ -22,65 +22,24 @@
     }
 
     // Determine if we should use responsive images
-    $useResponsive = $responsive && $media->hasResponsiveImages();
-    
-    // Get base URL
-    $baseUrl = $conversion 
-        ? $media->getUrl($conversion) 
-        : $media->getUrl();
-    
-    // Get responsive images if available
-    // Spatie Media Library menyimpan responsive images di custom_properties
-    $responsiveImages = [];
-    if ($useResponsive) {
-        $responsiveImagesData = $media->getCustomProperty('responsive_images', []);
-        if (!empty($responsiveImagesData)) {
-            foreach ($responsiveImagesData as $width => $path) {
-                $responsiveImages[$width] = $media->getUrl($conversion ?: '');
-            }
-        }
+   // Determine if we should use responsive images
+$useResponsive = $responsive && method_exists($media, 'hasResponsiveImages') && $media->hasResponsiveImages();
+
+// Get base URL
+$baseUrl = $conversion
+    ? $media->getUrl($conversion)
+    : $media->getUrl();
+
+// Generate srcset for responsive images (gunakan built-in Spatie)
+$srcset = '';
+if ($useResponsive && method_exists($media, 'getSrcset')) {
+    try {
+        $srcset = $media->getSrcset($conversion ?: '');
+    } catch (\Exception $e) {
+        $srcset = '';
     }
-    
-    // Get placeholder (blur/tiny image)
-    $placeholderUrl = null;
-    if ($placeholder && $useResponsive) {
-        try {
-            $placeholderUrl = $media->getTinyUrl();
-        } catch (\Exception $e) {
-            // Fallback jika tiny placeholder tidak ada
-            $placeholderUrl = null;
-        }
-    }
-    
-    // Generate srcset for responsive images
-    $srcset = '';
-    if ($useResponsive) {
-        try {
-            // Use media library's built-in method if available
-            if (method_exists($media, 'getSrcset')) {
-                $srcset = $media->getSrcset($conversion ?: '');
-            } else {
-                // Build srcset manually from responsive_images data
-                $responsiveImagesData = $media->getCustomProperty('responsive_images', []);
-                if (!empty($responsiveImagesData)) {
-                    $srcsetParts = [];
-                    foreach ($responsiveImagesData as $width => $path) {
-                        // Build URL for responsive image
-                        $responsiveUrl = str_replace(
-                            $media->file_name,
-                            "responsive-images/{$path}",
-                            $baseUrl
-                        );
-                        $srcsetParts[] = "{$responsiveUrl} {$width}w";
-                    }
-                    $srcset = implode(', ', $srcsetParts);
-                }
-            }
-        } catch (\Exception $e) {
-            // If responsive images not available, use base URL
-            $srcset = '';
-        }
-    }
+}
+
     
     // Get WebP/AVIF versions if available
     $webpUrl = null;
