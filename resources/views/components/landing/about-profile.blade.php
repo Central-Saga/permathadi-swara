@@ -32,7 +32,7 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Pendiri</h3>
                                 <p class="mt-2 text-base/7 text-gray-600 dark:text-gray-300">
-                                    I Komang Adi Sudiantara, S.Pd.
+                                    Komang Adi Sudiantara, S.Pd.
                                 </p>
                             </div>
                             <div>
