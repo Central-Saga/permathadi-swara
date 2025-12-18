@@ -69,7 +69,7 @@
                 {{ __('Role') }}
             </flux:sidebar.item>
             @endcan
-            @can('melihat activity log')
+            <!-- @can('melihat activity log')
             <flux:sidebar.item icon="clipboard-document-list" :href="route('godmode.activity-logs.index')"
                 :current="request()->routeIs('godmode.activity-logs.*')" wire:navigate>
                 {{ __('Activity Log') }}
@@ -80,7 +80,7 @@
                 :current="request()->routeIs('godmode.log-viewer.*')" wire:navigate>
                 {{ __('Log Viewer') }}
             </flux:sidebar.item>
-            @endcan
+            @endcan -->
         </flux:sidebar.nav>
 
         <flux:sidebar.spacer />

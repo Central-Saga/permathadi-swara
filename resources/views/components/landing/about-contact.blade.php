@@ -19,12 +19,12 @@
                         </svg>
                     </div>
                     <h3 class="mt-6 text-lg font-semibold text-gray-900 dark:text-white">Alamat</h3>
-                    <p class="mt-4 text-base/7 text-gray-600 dark:text-gray-300">
+                    <a href="https://www.google.com/maps/search/?api=1&query=Jl.+Pulau+Bangka+Gg.III+No.+3B,+Pedungan,+Denpasar,+Bali" target="_blank" rel="noopener noreferrer" class="mt-4 block text-base/7 text-gray-600 transition-colors hover:text-orange-600 dark:text-gray-300 dark:hover:text-orange-400">
                         Jl. Pulau Bangka Gg.III No. 3B<br>
                         Br. Sawah, Pedungan<br>
                         Kec. Denpasar Selatan<br>
                         Kota Denpasar, Bali
-                    </p>
+                    </a>
                 </div>
                 <div class="flex flex-col items-center text-center" data-gsap="about-contact-item">
                     <div class="flex size-12 items-center justify-center rounded-lg bg-orange-600 dark:bg-orange-500">
