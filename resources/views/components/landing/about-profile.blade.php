@@ -9,7 +9,7 @@
                     <div class="mt-6 space-y-6 text-base/7 text-gray-600 dark:text-gray-300">
                         <p>
                             Didirikan pada <strong class="text-gray-900 dark:text-white">24 Desember 2023</strong> oleh 
-                            <strong class="text-gray-900 dark:text-white">I Komang Adi Sudiantara, S.Pd.</strong>, 
+                            <strong class="text-gray-900 dark:text-white">Komang Adi Sudiantara, S.Pd.</strong>, 
                             Sanggar Tabuh Permatadhi Swara hadir sebagai wadah pelestarian musik tradisional Bali yang 
                             menggabungkan nilai budaya dengan profesionalitas.
                         </p>
