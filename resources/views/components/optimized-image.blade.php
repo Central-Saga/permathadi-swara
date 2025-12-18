@@ -13,62 +13,71 @@
 ])
 
 @php
+    // Defaults biar gak pernah "Undefined variable"
+    $placeholderUrl = null;
+    $placeholderStyle = '';
+    $srcset = '';
+    $baseUrl = '';
+    $webpUrl = null;
+    $avifUrl = null;
+
     // Get media instance
     $media = $model->getFirstMedia($collection);
-    
+
     if (!$media) {
-        // Fallback jika tidak ada media
         return;
     }
 
-    // Determine if we should use responsive images
-   // Determine if we should use responsive images
-$useResponsive = $responsive && method_exists($media, 'hasResponsiveImages') && $media->hasResponsiveImages();
+    // Responsive?
+    $useResponsive = $responsive
+        && method_exists($media, 'hasResponsiveImages')
+        && $media->hasResponsiveImages();
 
-// Get base URL
-$baseUrl = $conversion
-    ? $media->getUrl($conversion)
-    : $media->getUrl();
+    // Base URL
+    $baseUrl = $conversion ? $media->getUrl($conversion) : $media->getUrl();
 
-// Generate srcset for responsive images (gunakan built-in Spatie)
-$srcset = '';
-if ($useResponsive && method_exists($media, 'getSrcset')) {
-    try {
-        $srcset = $media->getSrcset($conversion ?: '');
-    } catch (\Exception $e) {
-        $srcset = '';
+    // Srcset (built-in)
+    if ($useResponsive && method_exists($media, 'getSrcset')) {
+        try {
+            $srcset = $media->getSrcset($conversion ?: '');
+        } catch (\Exception $e) {
+            $srcset = '';
+        }
     }
-}
 
-    
-    // Get WebP/AVIF versions if available
-    $webpUrl = null;
-    $avifUrl = null;
-    
+    // Placeholder (tiny) kalau ada
+    if ($placeholder) {
+        try {
+            if (method_exists($media, 'getTinyUrl')) {
+                $placeholderUrl = $media->getTinyUrl();
+            }
+        } catch (\Exception $e) {
+            $placeholderUrl = null;
+        }
+    }
+
+    // WebP/AVIF conversions
     try {
         if ($media->hasGeneratedConversion('webp')) {
             $webpUrl = $media->getUrl('webp');
         }
-    } catch (\Exception $e) {
-        // WebP not available
-    }
-    
+    } catch (\Exception $e) {}
+
     try {
         if ($media->hasGeneratedConversion('avif')) {
             $avifUrl = $media->getUrl('avif');
         }
-    } catch (\Exception $e) {
-        // AVIF not available
-    }
-    
-    // Default alt text
+    } catch (\Exception $e) {}
+
+    // Alt
     $altText = $alt ?: ($model->name ?? 'Image');
-    
-    // Style for placeholder blur effect
-    $placeholderStyle = $placeholderUrl 
+
+    // Placeholder style
+    $placeholderStyle = $placeholderUrl
         ? "background-image: url('{$placeholderUrl}'); background-size: cover; background-position: center; filter: blur(20px); transform: scale(1.1);"
         : '';
 @endphp
+
 
 <div 
     class="optimized-image-wrapper {{ $class }}"
