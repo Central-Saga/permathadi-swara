@@ -254,14 +254,22 @@ $layanans = computed(function () {
                     @forelse ($this->layanans as $layanan)
                     <flux:table.row>
                         <flux:table.cell>
-                            @if ($layanan->getFirstMediaUrl('layanan_cover', 'thumb'))
-                            <img src="{{ $layanan->getFirstMediaUrl('layanan_cover', 'thumb') }}"
-                                alt="{{ $layanan->name }}" class="h-16 w-16 rounded-lg object-cover" />
+                            @php
+                                $orig  = $layanan->getFirstMediaUrl('layanan_cover');
+                                $thumb = $layanan->getFirstMediaUrl('layanan_cover', 'thumb');
+                            @endphp
+
+                            @if ($orig)
+                                <img
+                                    src="{{ $thumb ?: $orig }}"
+                                    onerror="this.onerror=null;this.src='{{ $orig }}';"
+                                    alt="{{ $layanan->name }}"
+                                    class="h-16 w-16 rounded-lg object-cover"
+                                />
                             @else
-                            <div
-                                class="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700">
-                                <flux:icon name="photo" class="h-8 w-8 text-gray-400" />
-                            </div>
+                                <div class="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700">
+                                    <flux:icon name="photo" class="h-8 w-8 text-gray-400" />
+                                </div>
                             @endif
                         </flux:table.cell>
                         <flux:table.cell>
