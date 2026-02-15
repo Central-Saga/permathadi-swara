@@ -1,0 +1,16 @@
+:80 {
+    root * /var/www/html/public
+    encode gzip
+
+    # Serve static files
+    file_server
+
+    # PHP FastCGI proxy
+    php_fastcgi app:9000
+
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}
