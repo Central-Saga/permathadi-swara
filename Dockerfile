@@ -63,4 +63,12 @@ COPY . .
 COPY --from=phpbase /app/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
 
+
+# Create storage directory structure in final image
+RUN mkdir -p storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache \
+    storage/logs \
+    bootstrap/cache
+
 RUN chown -R www-data:www-data storage bootstrap/cache
