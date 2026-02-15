@@ -61,6 +61,7 @@ services:
         volumes:
             - ./Caddyfile.prod:/etc/caddy/Caddyfile
             - ./public:/var/www/html/public
+            - ./storage:/var/www/html/storage
             - caddy_data:/data
             - caddy_config:/config
         depends_on:
