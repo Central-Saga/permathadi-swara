@@ -4,7 +4,13 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
-use function Livewire\Volt\{layout, title, state, mount, action, computed};
+
+use function Livewire\Volt\action;
+use function Livewire\Volt\computed;
+use function Livewire\Volt\layout;
+use function Livewire\Volt\mount;
+use function Livewire\Volt\state;
+use function Livewire\Volt\title;
 
 layout('components.layouts.admin');
 title(fn () => __('Edit User'));
@@ -16,6 +22,7 @@ state([
     'password' => '',
     'password_confirmation' => '',
     'role' => null,
+    'is_active' => true,
 ]);
 
 mount(function (User $user) {
@@ -23,17 +30,19 @@ mount(function (User $user) {
     $this->user->load('roles');
     $this->name = $user->name;
     $this->email = $user->email;
+    $this->is_active = $user->is_active;
     $this->role = $user->roles->first()?->name ?? old('role');
 });
 
 $update = action(function () {
     $rules = [
         'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $this->user->id],
+        'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$this->user->id],
         'role' => ['nullable', 'exists:roles,name'],
+        'is_active' => ['boolean'],
     ];
 
-    if (!empty($this->password)) {
+    if (! empty($this->password)) {
         $rules['password'] = ['required', 'string', Password::defaults(), 'confirmed'];
     }
 
@@ -42,15 +51,16 @@ $update = action(function () {
     $this->user->update([
         'name' => $validated['name'],
         'email' => $validated['email'],
+        'is_active' => $validated['is_active'],
     ]);
 
-    if (!empty($validated['password'])) {
+    if (! empty($validated['password'])) {
         $this->user->update([
             'password' => Hash::make($validated['password']),
         ]);
     }
 
-    if (!empty($validated['role'])) {
+    if (! empty($validated['role'])) {
         $this->user->syncRoles([$validated['role']]);
     } else {
         $this->user->syncRoles([]);
@@ -89,6 +99,8 @@ $roles = computed(fn () => Role::all()); ?>
                 <flux:radio value="{{ $roleItem->name }}" :label="$roleItem->name" />
                 @endforeach
             </flux:radio.group>
+
+            <flux:switch wire:model="is_active" name="is_active" label="{{ __('Status Aktif') }}" description="{{ __('User dapat login jika status aktif') }}" />
 
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary">

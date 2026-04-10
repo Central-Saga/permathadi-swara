@@ -15,8 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'active' => \App\Http\Middleware\EnsureUserIsActive::class,
         ]);
-        
+
+        // Apply active middleware to web routes
+        $middleware->web(append: [
+            'active',
+        ]);
+
         // Trust all proxies (for reverse proxy setup)
         $middleware->trustProxies(
             at: '*',
@@ -25,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
                      \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO |
                      \Illuminate\Http\Request::HEADER_X_FORWARDED_AWS_ELB
         );
-        
+
         // Fix Vite URL untuk tidak menambahkan port 443 (harus di awal)
         $middleware->web(prepend: [
             \App\Http\Middleware\FixViteUrl::class,

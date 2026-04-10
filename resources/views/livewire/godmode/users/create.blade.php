@@ -4,7 +4,13 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
-use function Livewire\Volt\{layout, title, state, mount, action, computed};
+
+use function Livewire\Volt\action;
+use function Livewire\Volt\computed;
+use function Livewire\Volt\layout;
+use function Livewire\Volt\mount;
+use function Livewire\Volt\state;
+use function Livewire\Volt\title;
 
 layout('components.layouts.admin');
 title(fn () => __('Tambah User'));
@@ -15,6 +21,7 @@ state([
     'password' => '',
     'password_confirmation' => '',
     'role' => null,
+    'is_active' => true,
 ]);
 
 mount(function () {
@@ -27,15 +34,17 @@ $store = action(function () {
         'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
         'password' => ['required', 'string', Password::defaults(), 'confirmed'],
         'role' => ['nullable', 'exists:roles,name'],
+        'is_active' => ['boolean'],
     ]);
 
     $user = User::create([
         'name' => $validated['name'],
         'email' => $validated['email'],
         'password' => Hash::make($validated['password']),
+        'is_active' => $validated['is_active'],
     ]);
 
-    if (!empty($validated['role'])) {
+    if (! empty($validated['role'])) {
         $user->assignRole($validated['role']);
     }
 
@@ -71,6 +80,8 @@ $roles = computed(fn () => Role::all()); ?>
                     <flux:radio value="{{ $roleItem->name }}" :label="$roleItem->name" />
                     @endforeach
                 </flux:radio.group>
+
+                <flux:switch wire:model="is_active" name="is_active" label="{{ __('Status Aktif') }}" description="{{ __('User dapat login jika status aktif') }}" />
 
                 <div class="flex items-center gap-4">
                     <flux:button type="submit" variant="primary">

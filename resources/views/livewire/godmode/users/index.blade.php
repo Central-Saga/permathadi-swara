@@ -1,12 +1,19 @@
 <?php
 
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Response;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Collection;
-use function Livewire\Volt\{layout, title, state, computed, on, action, uses};
+
+use function Livewire\Volt\action;
+use function Livewire\Volt\computed;
+use function Livewire\Volt\layout;
+use function Livewire\Volt\on;
+use function Livewire\Volt\state;
+use function Livewire\Volt\title;
+use function Livewire\Volt\uses;
 
 uses(WithPagination::class);
 
@@ -17,8 +24,6 @@ state([
     'search' => fn () => request()->get('search', ''),
     'sortBy' => fn () => request()->get('sort_by', 'name'),
     'sortDir' => fn () => request()->get('sort_dir', 'asc'),
-    'showDeleteModal' => false,
-    'userToDelete' => null,
 ]);
 
 on(['updatingSearch' => function () {
@@ -39,6 +44,7 @@ $sortIconName = computed(function () {
     if ($this->sortBy !== 'name') {
         return 'chevrons-up-down';
     }
+
     return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
 });
 
@@ -46,46 +52,49 @@ $sortIconEmail = computed(function () {
     if ($this->sortBy !== 'email') {
         return 'chevrons-up-down';
     }
+
     return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
 });
 
-$openDeleteModal = action(function ($userId) {
-    $this->userToDelete = User::findOrFail($userId);
-    $this->showDeleteModal = true;
-});
-
-$closeDeleteModal = action(function () {
-    $this->showDeleteModal = false;
-    $this->userToDelete = null;
-});
-
-$deleteUser = action(function () {
-    if ($this->userToDelete) {
-        $this->userToDelete->delete();
-        $this->dispatch('toast', message: __('User berhasil dihapus.'), variant: 'success');
-        $this->closeDeleteModal();
+$sortIconStatus = computed(function () {
+    if ($this->sortBy !== 'is_active') {
+        return 'chevrons-up-down';
     }
+
+    return $this->sortDir === 'asc' ? 'chevron-up' : 'chevron-down';
+});
+
+$toggleStatus = action(function ($userId) {
+    $user = User::findOrFail($userId);
+    $user->update(['is_active' => ! $user->is_active]);
+    $this->dispatch('toast',
+        message: __('User :name sekarang :status', [
+            'name' => $user->name,
+            'status' => $user->is_active ? __('Aktif') : __('Non Aktif'),
+        ]),
+        variant: 'success'
+    );
 });
 
 $exportExcel = action(function () {
     $query = User::with('roles')->whereDoesntHave('anggota');
-    
-    if (!empty($this->search)) {
+
+    if (! empty($this->search)) {
         $query->where(function ($q) {
             $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('email', 'like', "%{$this->search}%");
         });
     }
-    
+
     $allowedSorts = ['name', 'email', 'created_at'];
     if (in_array($this->sortBy, $allowedSorts)) {
         $query->orderBy($this->sortBy, $this->sortDir);
     } else {
         $query->orderBy('name', 'asc');
     }
-    
+
     $users = $query->get();
-    
+
     $data = $users->map(function ($user) {
         return [
             $user->name,
@@ -95,48 +104,51 @@ $exportExcel = action(function () {
             $user->created_at->format('d/m/Y H:i'),
         ];
     });
-    
-    $filename = 'users_' . now()->format('Y-m-d_His') . '.xlsx';
-    
-    $export = new class(Collection::make($data)) implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+
+    $filename = 'users_'.now()->format('Y-m-d_His').'.xlsx';
+
+    $export = new class(Collection::make($data)) implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings
+    {
         public function __construct(public Collection $data) {}
-        
-        public function collection() {
+
+        public function collection()
+        {
             return $this->data;
         }
-        
-        public function headings(): array {
+
+        public function headings(): array
+        {
             return ['Nama', 'Email', 'Role', 'Jumlah Role', 'Dibuat'];
         }
     };
-    
+
     return Excel::download($export, $filename);
 });
 
 $exportPdf = action(function () {
     $query = User::with('roles')->whereDoesntHave('anggota');
-    
-    if (!empty($this->search)) {
+
+    if (! empty($this->search)) {
         $query->where(function ($q) {
             $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('email', 'like', "%{$this->search}%");
         });
     }
-    
+
     $allowedSorts = ['name', 'email', 'created_at'];
     if (in_array($this->sortBy, $allowedSorts)) {
         $query->orderBy($this->sortBy, $this->sortDir);
     } else {
         $query->orderBy('name', 'asc');
     }
-    
+
     $users = $query->get();
-    
+
     $html = view('exports.users-pdf', ['users' => $users])->render();
-    
+
     $pdf = Pdf::loadHTML($html);
-    $filename = 'users_' . now()->format('Y-m-d_His') . '.pdf';
-    
+    $filename = 'users_'.now()->format('Y-m-d_His').'.pdf';
+
     return Response::streamDownload(function () use ($pdf) {
         echo $pdf->output();
     }, $filename);
@@ -146,7 +158,7 @@ $users = computed(function () {
     $query = User::with('roles')->whereDoesntHave('anggota');
 
     // Search
-    if (!empty($this->search)) {
+    if (! empty($this->search)) {
         $query->where(function ($q) {
             $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('email', 'like', "%{$this->search}%");
@@ -154,12 +166,12 @@ $users = computed(function () {
     }
 
     // Sorting
-    $allowedSorts = ['name', 'email', 'created_at'];
-    if (!in_array($this->sortBy, $allowedSorts)) {
+    $allowedSorts = ['name', 'email', 'is_active', 'created_at'];
+    if (! in_array($this->sortBy, $allowedSorts)) {
         $this->sortBy = 'name';
     }
 
-    if (!in_array($this->sortDir, ['asc', 'desc'])) {
+    if (! in_array($this->sortDir, ['asc', 'desc'])) {
         $this->sortDir = 'asc';
     }
 
@@ -216,6 +228,13 @@ $users = computed(function () {
                             <flux:icon :name="$this->sortIconEmail" variant="mini" />
                         </button>
                     </flux:table.column>
+                    <flux:table.column>
+                        <button wire:click="sort('is_active')"
+                            class="flex items-center gap-1 hover:text-orange-600 dark:hover:text-orange-400">
+                            {{ __('Status') }}
+                            <flux:icon :name="$this->sortIconStatus" variant="mini" />
+                        </button>
+                    </flux:table.column>
                     <flux:table.column>{{ __('Role') }}</flux:table.column>
                     @if (auth()->user()->can('mengubah user') || auth()->user()->can('menghapus user'))
                     <flux:table.column>{{ __('Aksi') }}</flux:table.column>
@@ -231,6 +250,11 @@ $users = computed(function () {
                             <div class="text-gray-600 dark:text-gray-400">{{ $user->email }}</div>
                         </flux:table.cell>
                         <flux:table.cell>
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $user->statusBadgeColor() }}">
+                                {{ $user->statusLabel() }}
+                            </span>
+                        </flux:table.cell>
+                        <flux:table.cell>
                             <div class="flex flex-wrap gap-1">
                                 @forelse ($user->roles as $role)
                                 <span
@@ -243,28 +267,24 @@ $users = computed(function () {
                                 @endforelse
                             </div>
                         </flux:table.cell>
-                        @if (auth()->user()->can('mengubah user') || auth()->user()->can('menghapus user'))
+                        @can('mengubah user')
                         <flux:table.cell>
                             <div class="flex items-center gap-2">
-                                @can('mengubah user')
+                                <flux:button wire:click="toggleStatus({{ $user->id }})" variant="ghost" size="sm"
+                                    icon="{{ $user->is_active ? 'x-mark' : 'check' }}"
+                                    class="!p-2 {{ $user->is_active ? '!bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600' : '!bg-green-600 hover:!bg-green-700 dark:!bg-green-500 dark:hover:!bg-green-600' }} !text-white !rounded-md"
+                                    title="{{ $user->is_active ? __('Nonaktifkan') : __('Aktifkan') }}" />
                                 <flux:button :href="route('godmode.users.edit', $user)" variant="ghost" size="sm"
                                     icon="pencil" wire:navigate
                                     class="!p-2 !bg-blue-600 hover:!bg-blue-700 dark:!bg-blue-500 dark:hover:!bg-blue-600 !text-white !rounded-md"
                                     title="{{ __('Edit') }}" />
-                                @endcan
-                                @can('menghapus user')
-                                <flux:button wire:click="openDeleteModal({{ $user->id }})"
-                                    variant="ghost" size="sm" icon="trash"
-                                    class="!p-2 !bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600 !text-white !rounded-md"
-                                    title="{{ __('Hapus') }}" />
-                                @endcan
                             </div>
                         </flux:table.cell>
-                        @endif
+                        @endcan
                     </flux:table.row>
                     @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="{{ auth()->user()->can('mengubah user') || auth()->user()->can('menghapus user') ? '4' : '3' }}" class="text-center text-gray-500 dark:text-gray-400">
+                        <flux:table.cell colspan="5" class="text-center text-gray-500 dark:text-gray-400">
                             {{ __('Tidak ada user') }}
                         </flux:table.cell>
                     </flux:table.row>
@@ -287,29 +307,4 @@ $users = computed(function () {
             </div>
         </flux:card>
     </div>
-
-    <!-- Delete Confirmation Modal -->
-    <flux:modal name="delete-user" :show="$showDeleteModal" wire:model="showDeleteModal" class="max-w-lg">
-        <div class="space-y-6">
-            <div>
-                <flux:heading size="lg">{{ __('Hapus User') }}</flux:heading>
-                <flux:subheading>{{ __('Apakah Anda yakin ingin menghapus user ini?') }}</flux:subheading>
-            </div>
-
-            @if ($userToDelete)
-            <div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
-                <p class="text-sm text-red-800 dark:text-red-200">
-                    <strong>{{ $userToDelete->name }}</strong> ({{ $userToDelete->email }}) akan dihapus secara permanen.
-                </p>
-            </div>
-            @endif
-
-            <div class="flex justify-end space-x-2 rtl:space-x-reverse">
-                <flux:modal.close>
-                    <flux:button variant="ghost" wire:click="closeDeleteModal">{{ __('Batal') }}</flux:button>
-                </flux:modal.close>
-                <flux:button wire:click="deleteUser" variant="danger">{{ __('Hapus') }}</flux:button>
-            </div>
-        </div>
-    </flux:modal>
 </div>

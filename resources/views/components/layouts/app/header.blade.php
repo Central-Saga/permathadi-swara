@@ -63,7 +63,12 @@
                                 </span>
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
+                                    <span class="truncate font-semibold flex items-center gap-2">
+                                        {{ auth()->user()->name }}
+                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {{ auth()->user()->statusBadgeColor() }}">
+                                            {{ auth()->user()->statusLabel() }}
+                                        </span>
+                                    </span>
                                     <span class="truncate text-xs">{{ auth()->user()->email }}</span>
                                 </div>
                             </div>

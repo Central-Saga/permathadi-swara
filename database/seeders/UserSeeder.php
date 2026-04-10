@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Models\Anggota;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -18,6 +17,7 @@ class UserSeeder extends Seeder
         $user = User::factory()->create([
             'name' => 'Super Admin',
             'email' => 'superadmin@example.com',
+            'is_active' => true,
             'password' => Hash::make('password'),
         ]);
         $user->assignRole('Super Admin');
@@ -26,6 +26,7 @@ class UserSeeder extends Seeder
         $user = User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@example.com',
+            'is_active' => true,
             'password' => Hash::make('password'),
         ]);
         $user->assignRole('Admin');

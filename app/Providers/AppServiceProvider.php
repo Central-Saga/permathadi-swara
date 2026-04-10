@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
             Subscription::shouldExpire()->update(['status' => 'expired']);
         })->daily();
         
-        // Fix untuk reverse proxy: force HTTPS
-        \Illuminate\Support\Facades\URL::forceScheme('https');
+        // Fix untuk reverse proxy: force HTTPS - DISABLED for local development
+        // \Illuminate\Support\Facades\URL::forceScheme('https');
     }
 }
