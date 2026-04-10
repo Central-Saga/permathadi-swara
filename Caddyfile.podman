@@ -1,0 +1,120 @@
+permathadi-swara.local {
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+
+    # TLS - menggunakan Caddy auto-HTTPS dengan self-signed certificate
+    tls internal
+
+    # Vite dev server paths
+    handle /@vite* {
+        reverse_proxy http://vite:5173 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+
+    handle /@* {
+        reverse_proxy http://vite:5173 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+
+    handle /node_modules* {
+        reverse_proxy http://vite:5173 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+
+    handle /resources* {
+        reverse_proxy http://vite:5173 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+
+    # Max request body size
+    request_body {
+        max_size 20MB
+    }
+
+    # Proxy to Laravel
+    handle {
+        reverse_proxy http://laravel.test:80 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-For {remote}
+            transport http {
+                dial_timeout 10s
+                response_header_timeout 10s
+            }
+            fail_duration 5s
+            max_fails 3
+            unhealthy_status 500 502 503 504
+        }
+    }
+}
+
+# Also serve on HTTP (port 8080) for fallback
+:8080 {
+    log {
+        output stdout
+        format console
+    }
+
+    # Vite dev server paths
+    handle /@vite* {
+        reverse_proxy http://vite:5173 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+
+    handle /@* {
+        reverse_proxy http://vite:5173 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+
+    handle /node_modules* {
+        reverse_proxy http://vite:5173 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+
+    handle /resources* {
+        reverse_proxy http://vite:5173 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+        }
+    }
+
+    # Max request body size
+    request_body {
+        max_size 20MB
+    }
+
+    # Proxy to Laravel
+    handle {
+        reverse_proxy http://laravel.test:80 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-For {remote}
+            transport http {
+                dial_timeout 10s
+                response_header_timeout 10s
+            }
+            fail_duration 5s
+            max_fails 3
+            unhealthy_status 500 502 503 504
+        }
+    }
+}
