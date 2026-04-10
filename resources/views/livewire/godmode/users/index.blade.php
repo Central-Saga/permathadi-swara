@@ -66,6 +66,40 @@ $sortIconStatus = computed(function () {
 
 $toggleStatus = action(function ($userId) {
     $user = User::findOrFail($userId);
+    $currentUser = auth()->user();
+
+    // Super Admin tidak bisa menonaktifkan dirinya sendiri
+    if ($user->id === $currentUser->id && $user->hasRole('Super Admin')) {
+        $this->dispatch('toast',
+            message: __('Anda tidak dapat menonaktifkan akun Super Admin Anda sendiri'),
+            variant: 'danger'
+        );
+
+        return;
+    }
+
+    // Admin tidak bisa menonaktifkan Super Admin atau Admin lain
+    // Hanya bisa menonaktifkan user biasa
+    if (! $currentUser->hasRole('Super Admin')) {
+        if ($user->hasRole('Super Admin')) {
+            $this->dispatch('toast',
+                message: __('Anda tidak memiliki izin untuk menonaktifkan Super Admin'),
+                variant: 'danger'
+            );
+
+            return;
+        }
+
+        if ($user->hasRole('Admin')) {
+            $this->dispatch('toast',
+                message: __('Anda tidak memiliki izin untuk menonaktifkan Admin'),
+                variant: 'danger'
+            );
+
+            return;
+        }
+    }
+
     $user->update(['is_active' => ! $user->is_active]);
     $this->dispatch('toast',
         message: __('User :name sekarang :status', [
@@ -270,10 +304,6 @@ $users = computed(function () {
                         @can('mengubah user')
                         <flux:table.cell>
                             <div class="flex items-center gap-2">
-                                <flux:button wire:click="toggleStatus({{ $user->id }})" variant="ghost" size="sm"
-                                    icon="{{ $user->is_active ? 'x-mark' : 'check' }}"
-                                    class="!p-2 {{ $user->is_active ? '!bg-red-600 hover:!bg-red-700 dark:!bg-red-500 dark:hover:!bg-red-600' : '!bg-green-600 hover:!bg-green-700 dark:!bg-green-500 dark:hover:!bg-green-600' }} !text-white !rounded-md"
-                                    title="{{ $user->is_active ? __('Nonaktifkan') : __('Aktifkan') }}" />
                                 <flux:button :href="route('godmode.users.edit', $user)" variant="ghost" size="sm"
                                     icon="pencil" wire:navigate
                                     class="!p-2 !bg-blue-600 hover:!bg-blue-700 dark:!bg-blue-500 dark:hover:!bg-blue-600 !text-white !rounded-md"

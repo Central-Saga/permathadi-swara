@@ -10,7 +10,7 @@
         class="bg-orange-50/50 dark:bg-orange-950/30 border-r border-orange-200 dark:border-orange-800/50">
         <flux:sidebar.header>
             <flux:sidebar.brand :href="route('dashboard')" :name="config('app.name', 'Permatadhi Swara')" wire:navigate>
-                <x-app-logo-icon class="size-6 fill-current text-orange-600 dark:text-orange-400" />
+                <img src="{{ asset('favicon.svg') }}" alt="Logo" class="size-6 text-orange-600 dark:text-orange-400" />
             </flux:sidebar.brand>
             <flux:sidebar.collapse
                 class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
